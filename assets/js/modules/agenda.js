@@ -1,4 +1,0 @@
-import {STATE} from '../core/state.js?v=546113';
-const $=(id)=>document.getElementById(id);
-export function mountAgenda(){const el=$('mod-agenda');el.innerHTML=`<div class="module-body"><div class="module-left"><div class="sec-lbl">Agenda / OS</div><div id="agendaLista" class="list"></div></div><aside class="module-right"><div class="sec-lbl">Etapas automáticas</div><div class="timeline"><div class="item"><div>Desmontagem → Funilaria → Pintura → Montagem → Entrega</div></div></div></aside></div>`}
-export function renderAgenda(){const clientes=STATE.clientes.lista;$('#agendaLista').innerHTML=STATE.agenda.eventos.map(e=>{const c=clientes.find(x=>x.id===e.clienteId);return `<div class="item"><div><div class="item-title">${e.titulo}</div><div class="item-sub">${e.data} · ${c?.nome||''} · ${e.status}</div></div><span class="tag ok">OS</span></div>`}).join('')||'<p class="muted">Sem eventos.</p>'}
