@@ -1,0 +1,6 @@
+{
+  "versao": "V546.11.3",
+  "correcao": "clientes.js protegido contra elementos DOM nulos; app.js com safe mount/render por modulo; cache-busting v=546113",
+  "erro_corrigido": "Cannot set properties of null em clientes.js",
+  "upload": "substituir todo o conteudo do repositorio e abrir ?v=546113"
+}
