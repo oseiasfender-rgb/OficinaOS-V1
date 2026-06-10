@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ofix V546.11 Modular — Limaprata</title>
+<meta name="description" content="Ofix V546.11 modular — simulação fictícia integrada.">
+<meta name="theme-color" content="#b8621a">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/modules.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="brand-logo">⚙</div><div><div class="brand-name">OFIX</div><div class="brand-sub">LIMAPRATA</div></div></div>
+  <nav class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-tab="orcamento"><span class="t-icon">🧾</span><span class="t-txt">Orçamento</span></button>
+    <button class="nav-tab" data-tab="financeiro"><span class="t-icon">💰</span><span class="t-txt">Financeiro</span></button>
+    <button class="nav-tab" data-tab="contas"><span class="t-icon">🚨</span><span class="t-txt">Contas</span></button>
+    <button class="nav-tab" data-tab="clientes"><span class="t-icon">👥</span><span class="t-txt">Clientes</span></button>
+    <button class="nav-tab" data-tab="agenda"><span class="t-icon">📅</span><span class="t-txt">Agenda</span></button>
+    <button class="nav-tab" data-tab="metas"><span class="t-icon">🎯</span><span class="t-txt">Metas</span></button>
+    <button class="nav-tab" data-tab="relatorios"><span class="t-icon">📈</span><span class="t-txt">Relatórios</span></button>
+    <button class="nav-tab" data-tab="ia"><span class="t-icon">🤖</span><span class="t-txt">IA</span></button>
+  </nav>
+  <div class="status-dot" title="Simulação ativa"></div>
+</header>
+<main id="app">
+  <section id="mod-orcamento" class="panel active"></section>
+  <section id="mod-financeiro" class="panel"></section>
+  <section id="mod-contas" class="panel"></section>
+  <section id="mod-clientes" class="panel"></section>
+  <section id="mod-agenda" class="panel"></section>
+  <section id="mod-metas" class="panel"></section>
+  <section id="mod-relatorios" class="panel"></section>
+  <section id="mod-ia" class="panel"></section>
+</main>
+<div id="toast" class="toast"></div>
+<script type="module" src="assets/js/core/app.js"></script>
+</body>
+</html>
