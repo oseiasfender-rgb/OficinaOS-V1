@@ -1,6 +1,0 @@
-{
-  "versao":"V546.11.1",
-  "correcao":"Corrigido erro orcamento.js: insertAdjacentHTML em elemento null; bind do Orçamento agora valida #orcHoras e recria as horas de forma segura.",
-  "github_pages":"Paths CSS/JS convertidos para ./assets/...",
-  "acao":"Substituir todo o conteúdo do repositório pelo conteúdo desta pasta/ZIP."
-}

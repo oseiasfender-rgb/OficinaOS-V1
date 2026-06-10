@@ -1,6 +1,0 @@
-{
-  "versao":"V546.11.2",
-  "tipo":"Modular cache-safe para GitHub Pages",
-  "correcao":"corrige erro orcamento.js insertAdjacentHTML null e adiciona cache busting ?v=546112 nos imports",
-  "acao_recomendada":"substituir todos os arquivos do repositorio e limpar cache do navegador"
-}
