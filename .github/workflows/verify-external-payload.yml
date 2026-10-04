@@ -6,6 +6,7 @@ on:
     branches:
       - homologacao/oficinaos-v0.9.1-rc1
     paths:
+      - '.ci/**'
       - '.ci4/**'
       - '.github/workflows/verify-external-payload.yml'
 
@@ -20,58 +21,63 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
 
-      - name: Rebuild partial tar.xz stream
+      - name: Recover old partial ZIP payload
         shell: bash
         run: |
-          set -euo pipefail
-          : > /tmp/oficinaos-external-payload.tar.xz
+          set -uo pipefail
+          : > /tmp/partial.zip
+          for i in $(seq 0 9); do
+            n=$(printf '%02d' "$i")
+            part=".ci/payload.part-${n}.b64"
+            test -s "$part" || continue
+            tr -d '\r\n' < "$part" | base64 --decode >> /tmp/partial.zip || true
+          done
+          echo "ZIP partial bytes: $(wc -c < /tmp/partial.zip)"
+          mkdir -p /tmp/zip-recovered
+          timeout 30s zip -FF /tmp/partial.zip --out /tmp/fixed.zip </dev/null > /tmp/zip-ff.log 2>&1 || true
+          cat /tmp/zip-ff.log || true
+          if [ -s /tmp/fixed.zip ]; then
+            unzip -o /tmp/fixed.zip -d /tmp/zip-recovered > /tmp/unzip-fixed.log 2>&1 || true
+            cat /tmp/unzip-fixed.log || true
+          fi
+          find /tmp/zip-recovered -type f -printf '%P\n' | sort | tee /tmp/zip-files.txt
+
+      - name: Recover old partial XZ payload
+        shell: bash
+        run: |
+          set -uo pipefail
+          : > /tmp/partial.tar.xz
           for i in $(seq 0 3); do
             n=$(printf '%02d' "$i")
             part=".ci4/payload4.part-${n}.b64"
-            test -s "$part" || { echo "Missing $part"; exit 1; }
-            tr -d '\r\n' < "$part" | base64 --decode >> /tmp/oficinaos-external-payload.tar.xz
+            test -s "$part" || continue
+            tr -d '\r\n' < "$part" | base64 --decode >> /tmp/partial.tar.xz || true
           done
-          echo "Compressed partial bytes: $(wc -c < /tmp/oficinaos-external-payload.tar.xz)"
-          if xz -t /tmp/oficinaos-external-payload.tar.xz; then
-            echo 'XZ_CONTAINER_COMPLETE=1' >> "$GITHUB_ENV"
-          else
-            echo 'XZ_CONTAINER_COMPLETE=0' >> "$GITHUB_ENV"
-            echo 'XZ container is truncated; attempting content recovery with cryptographic file verification.'
-          fi
-
-      - name: Recover decompressed TAR bytes
-        shell: bash
-        run: |
-          set -uo pipefail
-          xz -dc /tmp/oficinaos-external-payload.tar.xz > /tmp/recovered.tar 2>/tmp/xz-recovery.err || rc=$?
-          rc=${rc:-0}
-          echo "xz recovery exit=$rc; recovered bytes=$(wc -c < /tmp/recovered.tar)"
+          echo "XZ partial bytes: $(wc -c < /tmp/partial.tar.xz)"
+          xz -dc /tmp/partial.tar.xz > /tmp/recovered.tar 2>/tmp/xz-recovery.err || true
           cat /tmp/xz-recovery.err || true
-          test -s /tmp/recovered.tar
-          exit 0
-
-      - name: Inspect and extract recoverable files
-        shell: bash
-        run: |
-          set -uo pipefail
-          mkdir -p /tmp/payload
-          tar -tvf /tmp/recovered.tar > /tmp/tar-list.txt 2>/tmp/tar-list.err || list_rc=$?
-          echo "tar list exit=${list_rc:-0}"
-          cat /tmp/tar-list.err || true
-          tar -xf /tmp/recovered.tar -C /tmp/payload 2>/tmp/tar-extract.err || extract_rc=$?
-          echo "tar extract exit=${extract_rc:-0}"
+          mkdir -p /tmp/xz-recovered
+          tar -xf /tmp/recovered.tar -C /tmp/xz-recovered 2>/tmp/tar-extract.err || true
           cat /tmp/tar-extract.err || true
-          find /tmp/payload -type f -printf '%P\n' | sort | tee /tmp/recovered-files.txt
-          ROOT=$(find /tmp/payload -mindepth 1 -maxdepth 1 -type d | head -n1)
-          if [ -z "$ROOT" ]; then ROOT=/tmp/payload; fi
-          echo "PAYLOAD_ROOT=$ROOT" >> "$GITHUB_ENV"
-          exit 0
+          find /tmp/xz-recovered -type f -printf '%P\n' | sort | tee /tmp/xz-files.txt
 
-      - name: Verify recovered core against audited local kit
+      - name: Merge recoveries
         shell: bash
         run: |
           set -euo pipefail
-          cd "$PAYLOAD_ROOT"
+          rm -rf /tmp/merged && mkdir -p /tmp/merged
+          ZIPROOT=$(find /tmp/zip-recovered -mindepth 1 -maxdepth 1 -type d | head -n1 || true)
+          XZROOT=$(find /tmp/xz-recovered -mindepth 1 -maxdepth 1 -type d | head -n1 || true)
+          if [ -n "$ZIPROOT" ]; then cp -a "$ZIPROOT"/. /tmp/merged/; fi
+          if [ -n "$XZROOT" ]; then cp -a "$XZROOT"/. /tmp/merged/; fi
+          find /tmp/merged -type f -printf '%P\n' | sort | tee /tmp/merged-files.txt
+          echo "Merged files: $(wc -l < /tmp/merged-files.txt)"
+
+      - name: Verify merged core against audited local kit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/merged
           test -f package.json
           test -f index.html
           test -f vite.config.js
@@ -91,26 +97,24 @@ jobs:
           echo "core_manifest_sha256=$aggregate"
           test "$count" = '83'
           test "$aggregate" = '2eb6f67a0fe4907ec5b517826763c2c6f62ae889209fa4670780f7043ddd8994'
-
-          echo 'Recovered core matches audited local kit exactly.'
-          echo "RECOVERED_CORE_VERIFIED=1" >> "$GITHUB_ENV"
+          echo 'MERGED_CORE_VERIFIED=1' >> "$GITHUB_ENV"
+          echo 'Merged recovery matches audited local kit exactly.'
 
       - name: Write job summary
         if: always()
         shell: bash
         run: |
           {
-            echo '## Recuperação do payload externo OficinaOS-V1'
+            echo '## Recuperação combinada do payload OficinaOS-V1'
             echo
-            echo "- XZ container completo: ${XZ_CONTAINER_COMPLETE:-unknown}"
-            echo "- Core recuperado e verificado: ${RECOVERED_CORE_VERIFIED:-0}"
+            echo "- Core combinado verificado: ${MERGED_CORE_VERIFIED:-0}"
             echo '- Arquivos esperados no core: 83'
-            echo '- SHA-256 esperado do manifesto de hashes: `2eb6f67a0fe4907ec5b517826763c2c6f62ae889209fa4670780f7043ddd8994`'
+            echo '- SHA-256 esperado do manifesto: `2eb6f67a0fe4907ec5b517826763c2c6f62ae889209fa4670780f7043ddd8994`'
             echo
-            if [ -f /tmp/recovered-files.txt ]; then
-              echo '### Arquivos recuperados'
-              echo '```'
-              cat /tmp/recovered-files.txt
-              echo '```'
-            fi
+            echo '### ZIP recuperado'
+            echo '```'; cat /tmp/zip-files.txt 2>/dev/null || true; echo '```'
+            echo '### XZ recuperado'
+            echo '```'; cat /tmp/xz-files.txt 2>/dev/null || true; echo '```'
+            echo '### Conjunto mesclado'
+            echo '```'; cat /tmp/merged-files.txt 2>/dev/null || true; echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
