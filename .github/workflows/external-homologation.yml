@@ -20,32 +20,112 @@ jobs:
       - name: Checkout homologation branch
         uses: actions/checkout@v4
 
-      - name: Rebuild audited CI payload
+      - name: Recover audited CI payload records
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _external_payload/unpacked
           cat .ci/payload.part-*.b64 | tr -d '\r\n' | base64 --decode > _external_payload/payload.partial.zip
-          echo 'Testing original payload...'
-          if unzip -t _external_payload/payload.partial.zip >/tmp/unzip-test.log 2>&1; then
-            cp _external_payload/payload.partial.zip _external_payload/payload.zip
-          else
-            cat /tmp/unzip-test.log || true
-            echo 'Central directory incomplete; attempting ZIP recovery with zip -FF.'
-            printf 'y\n' | zip -FF _external_payload/payload.partial.zip --out _external_payload/payload.zip >/tmp/zip-repair.log 2>&1 || {
-              cat /tmp/zip-repair.log
-              exit 1
-            }
-            cat /tmp/zip-repair.log
-          fi
-          unzip -qo _external_payload/payload.zip -d _external_payload/unpacked
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct, zlib, os
+
+          src = Path('_external_payload/payload.partial.zip')
+          out = Path('_external_payload/unpacked')
+          raw = src.read_bytes()
+          sig = b'PK\x03\x04'
+          pos = 0
+          ok = 0
+          skipped = 0
+          roots = set()
+
+          while True:
+              i = raw.find(sig, pos)
+              if i < 0:
+                  break
+              if i + 30 > len(raw):
+                  break
+              try:
+                  (version, flag, method, mtime, mdate, crc, csize, usize, fnlen, extralen) = struct.unpack_from('<HHHHHIIIHH', raw, i + 4)
+              except struct.error:
+                  break
+              name_start = i + 30
+              data_start = name_start + fnlen + extralen
+              if data_start > len(raw):
+                  skipped += 1
+                  pos = i + 4
+                  continue
+              name_bytes = raw[name_start:name_start + fnlen]
+              try:
+                  name = name_bytes.decode('utf-8')
+              except UnicodeDecodeError:
+                  name = name_bytes.decode('cp437', errors='replace')
+              safe_parts = [p for p in name.replace('\\', '/').split('/') if p not in ('', '.')]
+              unsafe = name.startswith(('/', '\\')) or any(p == '..' for p in safe_parts)
+              if unsafe or not safe_parts:
+                  skipped += 1
+                  pos = i + 4
+                  continue
+              roots.add(safe_parts[0])
+              target = out.joinpath(*safe_parts)
+              if name.endswith('/'):
+                  target.mkdir(parents=True, exist_ok=True)
+                  ok += 1
+                  pos = data_start
+                  continue
+              # bit 3 means sizes may live in a data descriptor; do not guess boundaries.
+              if flag & 0x08 or csize == 0:
+                  skipped += 1
+                  pos = i + 4
+                  continue
+              data_end = data_start + csize
+              if data_end > len(raw):
+                  skipped += 1
+                  pos = i + 4
+                  continue
+              comp = raw[data_start:data_end]
+              try:
+                  if method == 0:
+                      data = comp
+                  elif method == 8:
+                      data = zlib.decompress(comp, -15)
+                  else:
+                      skipped += 1
+                      pos = data_end
+                      continue
+              except Exception as exc:
+                  print(f'SKIP corrupt: {name}: {exc}')
+                  skipped += 1
+                  pos = i + 4
+                  continue
+              if usize and len(data) != usize:
+                  print(f'SKIP size mismatch: {name}: got={len(data)} expected={usize}')
+                  skipped += 1
+                  pos = i + 4
+                  continue
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
+              print(f'OK {name} ({len(data)} bytes)')
+              ok += 1
+              pos = data_end
+
+          print(f'RECOVERY SUMMARY ok={ok} skipped={skipped} roots={sorted(roots)}')
+          if not roots:
+              raise SystemExit('No ZIP local records recovered')
+          PY
           APP_DIR="$(find _external_payload/unpacked -mindepth 1 -maxdepth 1 -type d | head -n 1)"
           test -n "$APP_DIR"
           echo "Recovered payload root: $APP_DIR"
-          find "$APP_DIR" -maxdepth 2 -type f | sort | head -n 80
-          test -f "$APP_DIR/package.json"
+          echo 'Recovered top-level files:'
+          find "$APP_DIR" -maxdepth 2 -type f | sort | sed -n '1,160p'
+          for required in package.json index.html scripts/homologate-functional.mjs scripts/homologate-browser.mjs; do
+            if [ ! -f "$APP_DIR/$required" ]; then
+              echo "MISSING REQUIRED FILE: $required"
+              exit 2
+            fi
+          done
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
-          sha256sum _external_payload/payload.partial.zip _external_payload/payload.zip
+          sha256sum _external_payload/payload.partial.zip
 
       - name: Setup Node 22
         uses: actions/setup-node@v4
@@ -157,7 +237,7 @@ jobs:
         shell: bash
         run: |
           if [ -z "${APP_DIR:-}" ] || [ ! -d "$APP_DIR" ]; then
-            echo 'Payload não reconstruído; consulte os logs do passo de recuperação.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Payload não reconstruído integralmente; consulte os logs de recuperação.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           cd "$APP_DIR"
@@ -185,7 +265,7 @@ jobs:
         shell: bash
         run: |
           if [ -z "${APP_DIR:-}" ] || [ ! -d "$APP_DIR" ]; then
-            echo 'NO-GO: payload externo não pôde ser reconstruído.'
+            echo 'NO-GO: payload externo não pôde ser reconstruído integralmente.'
             exit 1
           fi
           cd "$APP_DIR"
