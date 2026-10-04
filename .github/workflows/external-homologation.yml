@@ -24,22 +24,33 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p _external_payload
-          cat .ci/payload.part-*.b64 | tr -d '\r\n' | base64 --decode > _external_payload/payload.zip
+          mkdir -p _external_payload/unpacked
+          cat .ci/payload.part-*.b64 | tr -d '\r\n' | base64 --decode > _external_payload/payload.partial.zip
+          echo 'Testing original payload...'
+          if unzip -t _external_payload/payload.partial.zip >/tmp/unzip-test.log 2>&1; then
+            cp _external_payload/payload.partial.zip _external_payload/payload.zip
+          else
+            cat /tmp/unzip-test.log || true
+            echo 'Central directory incomplete; attempting ZIP recovery with zip -FF.'
+            printf 'y\n' | zip -FF _external_payload/payload.partial.zip --out _external_payload/payload.zip >/tmp/zip-repair.log 2>&1 || {
+              cat /tmp/zip-repair.log
+              exit 1
+            }
+            cat /tmp/zip-repair.log
+          fi
           unzip -q _external_payload/payload.zip -d _external_payload/unpacked
           APP_DIR="$(find _external_payload/unpacked -mindepth 1 -maxdepth 1 -type d | head -n 1)"
           test -n "$APP_DIR"
+          echo "Recovered payload root: $APP_DIR"
+          find "$APP_DIR" -maxdepth 2 -type f | sort | head -n 80
           test -f "$APP_DIR/package.json"
           echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
-          echo "Payload root: $APP_DIR"
-          sha256sum _external_payload/payload.zip
+          sha256sum _external_payload/payload.partial.zip _external_payload/payload.zip
 
       - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
 
       - name: Install dependencies
         shell: bash
@@ -145,6 +156,10 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ -z "${APP_DIR:-}" ] || [ ! -d "$APP_DIR" ]; then
+            echo 'Payload não reconstruído; consulte os logs do passo de recuperação.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           cd "$APP_DIR"
           for f in \
             homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.md \
@@ -158,16 +173,20 @@ jobs:
           done
 
       - name: Upload external homologation evidence
-        if: always()
+        if: always() && env.APP_DIR != ''
         uses: actions/upload-artifact@v4
         with:
           name: oficinaos-external-homologation-evidence
           path: ${{ env.APP_DIR }}/homologation/external-results/
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Enforce final production gate
         if: always()
         shell: bash
         run: |
+          if [ -z "${APP_DIR:-}" ] || [ ! -d "$APP_DIR" ]; then
+            echo 'NO-GO: payload externo não pôde ser reconstruído.'
+            exit 1
+          fi
           cd "$APP_DIR"
           node -e "const fs=require('fs'); const p='homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.json'; if(!fs.existsSync(p)){console.error('NO-GO: relatório final ausente'); process.exit(1)} const r=JSON.parse(fs.readFileSync(p)); console.log('FINAL STATUS:',r.status); if(r.status!=='GO'){console.error('NO-GO:',(r.reasons||[]).join(', ')); process.exit(1)}"
