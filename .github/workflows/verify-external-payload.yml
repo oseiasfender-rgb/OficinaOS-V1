@@ -1,0 +1,81 @@
+name: Verify External Homologation Payload
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - homologacao/oficinaos-v0.9.1-rc1
+    paths:
+      - '.ci/**'
+      - '.github/workflows/verify-external-payload.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-payload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Verify expected parts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for n in $(seq -w 0 9); do
+            test -s ".ci/payload.part-${n}.b64" || { echo "Missing .ci/payload.part-${n}.b64"; exit 1; }
+          done
+          echo "All 10 payload parts are present."
+
+      - name: Rebuild payload ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .ci/payload.part-*.b64 | tr -d '\r\n' | base64 --decode > /tmp/oficinaos-external-payload.zip
+          unzip -t /tmp/oficinaos-external-payload.zip
+          sha256sum /tmp/oficinaos-external-payload.zip | tee /tmp/payload.sha256
+
+      - name: Inspect payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/payload
+          unzip -q /tmp/oficinaos-external-payload.zip -d /tmp/payload
+          find /tmp/payload -maxdepth 4 -type f -printf '%P\n' | sort | tee /tmp/payload-files.txt
+          ROOT=$(find /tmp/payload -mindepth 1 -maxdepth 1 -type d | head -n1)
+          test -n "$ROOT"
+          echo "PAYLOAD_ROOT=$ROOT" >> "$GITHUB_ENV"
+          echo "Payload root: $ROOT"
+
+      - name: Validate CI payload contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$PAYLOAD_ROOT"
+          test -f "$ROOT/package.json" || { echo "package.json not found"; exit 1; }
+          test -f "$ROOT/homologation/fixtures/external-smoke-backup.json" || { echo "smoke fixture not found"; exit 1; }
+          test -f "$ROOT/GITHUB_TARGET.md" || { echo "GITHUB_TARGET.md not found"; exit 1; }
+          node -e "const p=require(process.env.PAYLOAD_ROOT + '/package.json'); console.log('package', p.name, p.version);"
+
+      - name: Write job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## Payload externo OficinaOS-V1'
+            echo
+            if [ -f /tmp/payload.sha256 ]; then
+              echo '### SHA-256'
+              echo '```'
+              cat /tmp/payload.sha256
+              echo '```'
+            fi
+            if [ -f /tmp/payload-files.txt ]; then
+              echo '### Arquivos encontrados'
+              echo '```'
+              cat /tmp/payload-files.txt
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
