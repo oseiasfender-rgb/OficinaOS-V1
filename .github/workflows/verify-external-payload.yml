@@ -43,9 +43,10 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-          xz -dc /tmp/oficinaos-external-payload.tar.xz > /tmp/recovered.tar
-          rc=$?
+          xz -dc /tmp/oficinaos-external-payload.tar.xz > /tmp/recovered.tar 2>/tmp/xz-recovery.err || rc=$?
+          rc=${rc:-0}
           echo "xz recovery exit=$rc; recovered bytes=$(wc -c < /tmp/recovered.tar)"
+          cat /tmp/xz-recovery.err || true
           test -s /tmp/recovered.tar
           exit 0
 
@@ -54,11 +55,11 @@ jobs:
         run: |
           set -uo pipefail
           mkdir -p /tmp/payload
-          tar -tvf /tmp/recovered.tar > /tmp/tar-list.txt 2>/tmp/tar-list.err
-          echo "tar list exit=$?"
+          tar -tvf /tmp/recovered.tar > /tmp/tar-list.txt 2>/tmp/tar-list.err || list_rc=$?
+          echo "tar list exit=${list_rc:-0}"
           cat /tmp/tar-list.err || true
-          tar -xf /tmp/recovered.tar -C /tmp/payload 2>/tmp/tar-extract.err
-          echo "tar extract exit=$?"
+          tar -xf /tmp/recovered.tar -C /tmp/payload 2>/tmp/tar-extract.err || extract_rc=$?
+          echo "tar extract exit=${extract_rc:-0}"
           cat /tmp/tar-extract.err || true
           find /tmp/payload -type f -printf '%P\n' | sort | tee /tmp/recovered-files.txt
           ROOT=$(find /tmp/payload -mindepth 1 -maxdepth 1 -type d | head -n1)
