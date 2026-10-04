@@ -1,0 +1,157 @@
+name: OficinaOS External Final Homologation Core
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - homologacao/oficinaos-v0.9.1-rc1
+    paths:
+      - '.ci5/**'
+      - '.github/workflows/homologacao-externa-core.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  homologate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: 'true'
+      OFICINAOS_BASE_URL: http://127.0.0.1:4173/
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Reconstruct audited core payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .ci5/core83.part-00.b64 .ci5/core83.part-01.b64 .ci5/core83.part-02.b64 .ci5/core83.part-03.b64 \
+            | tr -d '\r\n' | base64 --decode > /tmp/core83.tar.xz
+          echo '3098dc255631212bf4a8adf78b2c36cad90b36872ed9d426d648ebb370a9511e  /tmp/core83.tar.xz' | sha256sum -c -
+          xz -t /tmp/core83.tar.xz
+          rm -rf /tmp/oficinaos && mkdir -p /tmp/oficinaos
+          tar -xJf /tmp/core83.tar.xz -C /tmp/oficinaos
+
+      - name: Verify exact audited core
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/oficinaos
+          test -f package.json
+          test -f index.html
+          test -f vite.config.js
+          test -f GITHUB_TARGET.md
+          test -d src
+          test -d tests
+          test -d scripts
+          test -d public
+          test -d homologation/fixtures
+          find src tests scripts public homologation/fixtures -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/core-files.sha256
+          for f in package.json index.html vite.config.js GITHUB_TARGET.md; do sha256sum "$f" >> /tmp/core-files.sha256; done
+          sort -k2 /tmp/core-files.sha256 -o /tmp/core-files.sha256
+          count=$(wc -l < /tmp/core-files.sha256 | tr -d ' ')
+          aggregate=$(sha256sum /tmp/core-files.sha256 | awk '{print $1}')
+          echo "core_file_count=$count"
+          echo "core_manifest_sha256=$aggregate"
+          test "$count" = '83'
+          test "$aggregate" = '2eb6f67a0fe4907ec5b517826763c2c6f62ae889209fa4670780f7043ddd8994'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        working-directory: /tmp/oficinaos
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium for Playwright
+        working-directory: /tmp/oficinaos
+        run: npx playwright install --with-deps chromium
+
+      - name: Unit tests
+        working-directory: /tmp/oficinaos
+        run: npm test
+
+      - name: Service-level functional homologation
+        working-directory: /tmp/oficinaos
+        run: npm run homologate:functional -- homologation/external-results/functional.json homologation/external-results/functional.md
+
+      - name: Vite build
+        working-directory: /tmp/oficinaos
+        run: npm run build
+
+      - name: Generate CLEAN synthetic smoke fixture
+        working-directory: /tmp/oficinaos
+        run: npm run homologate:fixture
+
+      - name: Start Vite preview
+        shell: bash
+        working-directory: /tmp/oficinaos
+        run: |
+          set -euo pipefail
+          mkdir -p homologation/external-results
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 > homologation/external-results/vite-preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat homologation/external-results/vite-preview.log
+          exit 1
+
+      - name: Browser + IndexedDB + PDF + export smoke
+        working-directory: /tmp/oficinaos
+        run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/external-results/browser.json homologation/external-results/browser.md
+
+      - name: Final decision from available evidence
+        continue-on-error: true
+        working-directory: /tmp/oficinaos
+        env:
+          UNIT_PASS: '1'
+          BUILD_PASS: '1'
+          FUNCTIONAL_PASS: '1'
+          BROWSER_RESULT: homologation/external-results/browser.json
+          OFFICIAL_RESULT: homologation/external-results/official-backup.json
+          OFFICIAL_BROWSER_RESULT: homologation/external-results/browser-official.json
+          ACCEPTANCE_METRICS_DEFINED: '0'
+        run: npm run homologate:external:final
+
+      - name: Preserve external evidence
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/homologation-evidence"
+          mkdir -p "$GITHUB_WORKSPACE/homologation-evidence"
+          if [ -d /tmp/oficinaos/homologation/external-results ]; then
+            cp -a /tmp/oficinaos/homologation/external-results/. "$GITHUB_WORKSPACE/homologation-evidence/"
+          fi
+          cp /tmp/core-files.sha256 "$GITHUB_WORKSPACE/homologation-evidence/core-files.sha256" 2>/dev/null || true
+          sha256sum /tmp/core83.tar.xz > "$GITHUB_WORKSPACE/homologation-evidence/core83.tar.xz.sha256" 2>/dev/null || true
+
+      - name: Job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## OficinaOS — Homologação Externa Final'
+            echo
+            echo '- Núcleo auditado: 83 arquivos'
+            echo '- SHA-256 payload XZ: `3098dc255631212bf4a8adf78b2c36cad90b36872ed9d426d648ebb370a9511e`'
+            echo '- SHA-256 manifesto agregado: `2eb6f67a0fe4907ec5b517826763c2c6f62ae889209fa4670780f7043ddd8994`'
+            echo
+            if [ -f /tmp/oficinaos/homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.md ]; then
+              cat /tmp/oficinaos/homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.md
+            else
+              echo 'Parecer final não foi produzido; consulte a etapa que falhou.'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oficinaos-external-final-evidence
+          path: homologation-evidence/
+          if-no-files-found: error
