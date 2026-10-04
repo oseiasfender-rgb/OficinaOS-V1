@@ -38,7 +38,7 @@ jobs:
             }
             cat /tmp/zip-repair.log
           fi
-          unzip -q _external_payload/payload.zip -d _external_payload/unpacked
+          unzip -qo _external_payload/payload.zip -d _external_payload/unpacked
           APP_DIR="$(find _external_payload/unpacked -mindepth 1 -maxdepth 1 -type d | head -n 1)"
           test -n "$APP_DIR"
           echo "Recovered payload root: $APP_DIR"
