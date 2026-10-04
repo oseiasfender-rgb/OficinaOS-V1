@@ -34,7 +34,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .ci/payload.part-*.b64 | tr -d '\r\n' | base64 --decode > /tmp/oficinaos-external-payload.zip
+          : > /tmp/oficinaos-external-payload.zip
+          for i in $(seq 0 9); do
+            n=$(printf '%02d' "$i")
+            tr -d '\r\n' < ".ci/payload.part-${n}.b64" | base64 --decode >> /tmp/oficinaos-external-payload.zip
+          done
           unzip -t /tmp/oficinaos-external-payload.zip
           sha256sum /tmp/oficinaos-external-payload.zip | tee /tmp/payload.sha256
 
