@@ -20,39 +20,58 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
 
-      - name: Verify expected parts
+      - name: Diagnose payload parts
         shell: bash
         run: |
           set -euo pipefail
-          for i in $(seq 0 9); do
-            n=$(printf '%02d' "$i")
-            test -s ".ci/payload.part-${n}.b64" || { echo "Missing .ci/payload.part-${n}.b64"; exit 1; }
-          done
-          echo "All 10 payload parts are present."
+          python3 - <<'PY'
+          import base64, glob, hashlib, io, os, zipfile
+          parts = sorted(glob.glob('.ci/payload.part-*.b64'))
+          print('parts=', [os.path.basename(p) for p in parts])
+          if len(parts) != 10:
+              raise SystemExit(f'Expected 10 parts, found {len(parts)}')
+          cumulative = bytearray()
+          valid_prefixes = []
+          for idx, path in enumerate(parts):
+              raw = open(path, 'rb').read().replace(b'\r', b'').replace(b'\n', b'')
+              try:
+                  data = base64.b64decode(raw, validate=True)
+              except Exception as exc:
+                  print(f'{path}: BASE64_INVALID: {exc}')
+                  raise
+              cumulative.extend(data)
+              head = data[:8].hex()
+              tail = data[-16:].hex() if data else ''
+              local = data.find(b'PK\x03\x04')
+              eocd = data.find(b'PK\x05\x06')
+              print(f'{os.path.basename(path)} chars={len(raw)} bytes={len(data)} sha256={hashlib.sha256(data).hexdigest()} head={head} tail={tail} local={local} eocd={eocd}')
+              try:
+                  with zipfile.ZipFile(io.BytesIO(cumulative)) as zf:
+                      bad = zf.testzip()
+                      if bad is None:
+                          valid_prefixes.append(idx)
+                          print(f'VALID_ZIP_PREFIX 00..{idx:02d} files={len(zf.infolist())}')
+              except Exception as exc:
+                  print(f'prefix 00..{idx:02d}: not complete ({type(exc).__name__}: {exc})')
+          print('cumulative_bytes=', len(cumulative))
+          print('cumulative_sha256=', hashlib.sha256(cumulative).hexdigest())
+          print('valid_prefixes=', valid_prefixes)
+          open('/tmp/oficinaos-external-payload.zip','wb').write(cumulative)
+          if not valid_prefixes:
+              raise SystemExit('No complete valid ZIP prefix found')
+          PY
 
-      - name: Rebuild payload ZIP
+      - name: Inspect valid payload
         shell: bash
         run: |
           set -euo pipefail
-          : > /tmp/oficinaos-external-payload.zip
-          for i in $(seq 0 9); do
-            n=$(printf '%02d' "$i")
-            tr -d '\r\n' < ".ci/payload.part-${n}.b64" | base64 --decode >> /tmp/oficinaos-external-payload.zip
-          done
           unzip -t /tmp/oficinaos-external-payload.zip
-          sha256sum /tmp/oficinaos-external-payload.zip | tee /tmp/payload.sha256
-
-      - name: Inspect payload
-        shell: bash
-        run: |
-          set -euo pipefail
           mkdir -p /tmp/payload
           unzip -q /tmp/oficinaos-external-payload.zip -d /tmp/payload
           find /tmp/payload -maxdepth 4 -type f -printf '%P\n' | sort | tee /tmp/payload-files.txt
           ROOT=$(find /tmp/payload -mindepth 1 -maxdepth 1 -type d | head -n1)
           test -n "$ROOT"
           echo "PAYLOAD_ROOT=$ROOT" >> "$GITHUB_ENV"
-          echo "Payload root: $ROOT"
 
       - name: Validate CI payload contract
         shell: bash
@@ -69,14 +88,8 @@ jobs:
         shell: bash
         run: |
           {
-            echo '## Payload externo OficinaOS-V1'
+            echo '## Diagnóstico do payload externo OficinaOS-V1'
             echo
-            if [ -f /tmp/payload.sha256 ]; then
-              echo '### SHA-256'
-              echo '```'
-              cat /tmp/payload.sha256
-              echo '```'
-            fi
             if [ -f /tmp/payload-files.txt ]; then
               echo '### Arquivos encontrados'
               echo '```'
