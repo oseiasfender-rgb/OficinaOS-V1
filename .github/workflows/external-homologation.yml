@@ -1,0 +1,173 @@
+name: OficinaOS External Final Homologation
+
+on:
+  push:
+    branches:
+      - homologacao/oficinaos-v0.9.1-rc1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  homologate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: 'true'
+      OFICINAOS_BASE_URL: http://127.0.0.1:4173/
+    steps:
+      - name: Checkout homologation branch
+        uses: actions/checkout@v4
+
+      - name: Rebuild audited CI payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _external_payload
+          cat .ci/payload.part-*.b64 | tr -d '\r\n' | base64 --decode > _external_payload/payload.zip
+          unzip -q _external_payload/payload.zip -d _external_payload/unpacked
+          APP_DIR="$(find _external_payload/unpacked -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+          test -n "$APP_DIR"
+          test -f "$APP_DIR/package.json"
+          echo "APP_DIR=$APP_DIR" >> "$GITHUB_ENV"
+          echo "Payload root: $APP_DIR"
+          sha256sum _external_payload/payload.zip
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ${{ env.APP_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          npm install --no-audit --no-fund
+
+      - name: Install Chromium for Playwright
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          npx playwright install --with-deps chromium
+
+      - name: Unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          npm test
+
+      - name: Service-level functional homologation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          mkdir -p homologation/external-results
+          npm run homologate:functional -- homologation/external-results/functional.json homologation/external-results/functional.md
+
+      - name: Vite production build
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          npm run build
+
+      - name: Generate CLEAN synthetic smoke fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          npm run homologate:fixture
+
+      - name: Start Vite preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 > homologation/external-results/vite-preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat homologation/external-results/vite-preview.log
+          exit 1
+
+      - name: Browser + IndexedDB + reload + PDF + export smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/external-results/browser.json homologation/external-results/browser.md
+
+      - name: Audit official snapshot if present in encrypted form
+        id: official
+        shell: bash
+        env:
+          SNAPSHOT_PASSPHRASE: ${{ secrets.OFICINAOS_SNAPSHOT_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          ENC=homologation/private/official-snapshot.json.gpg
+          OUT=homologation/external-results/official-snapshot.json
+          if [ -f "$ENC" ] && [ -n "${SNAPSHOT_PASSPHRASE:-}" ]; then
+            gpg --batch --yes --pinentry-mode loopback --passphrase "$SNAPSHOT_PASSPHRASE" --output "$OUT" --decrypt "$ENC"
+            npm run homologate:backup -- "$OUT" homologation/external-results/official-backup.json homologation/external-results/official-backup.md
+            npm run homologate:browser -- "$OUT" homologation/external-results/browser-official.json homologation/external-results/browser-official.md
+            echo "present=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=0" >> "$GITHUB_OUTPUT"
+            printf '%s\n' '# Snapshot oficial não fornecido nesta execução' 'Gate de dados oficiais permanece bloqueado.' > homologation/external-results/OFFICIAL_SNAPSHOT_MISSING.md
+          fi
+
+      - name: Final GO / NO-GO decision
+        id: final
+        continue-on-error: true
+        shell: bash
+        env:
+          UNIT_PASS: '1'
+          BUILD_PASS: '1'
+          FUNCTIONAL_PASS: '1'
+          BROWSER_RESULT: homologation/external-results/browser.json
+          OFFICIAL_RESULT: homologation/external-results/official-backup.json
+          OFFICIAL_BROWSER_RESULT: homologation/external-results/browser-official.json
+          ACCEPTANCE_METRICS_DEFINED: '0'
+        run: |
+          set -euo pipefail
+          cd "$APP_DIR"
+          npm run homologate:external:final
+
+      - name: Publish job summary
+        if: always()
+        shell: bash
+        run: |
+          cd "$APP_DIR"
+          for f in \
+            homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.md \
+            homologation/external-results/browser.md \
+            homologation/external-results/official-backup.md \
+            homologation/external-results/OFFICIAL_SNAPSHOT_MISSING.md; do
+            if [ -f "$f" ]; then
+              printf '\n---\n' >> "$GITHUB_STEP_SUMMARY"
+              cat "$f" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+      - name: Upload external homologation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oficinaos-external-homologation-evidence
+          path: ${{ env.APP_DIR }}/homologation/external-results/
+          if-no-files-found: error
+
+      - name: Enforce final production gate
+        if: always()
+        shell: bash
+        run: |
+          cd "$APP_DIR"
+          node -e "const fs=require('fs'); const p='homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.json'; if(!fs.existsSync(p)){console.error('NO-GO: relatório final ausente'); process.exit(1)} const r=JSON.parse(fs.readFileSync(p)); console.log('FINAL STATUS:',r.status); if(r.status!=='GO'){console.error('NO-GO:',(r.reasons||[]).join(', ')); process.exit(1)}"
