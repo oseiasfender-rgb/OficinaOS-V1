@@ -27,46 +27,41 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .ci5/core83.part-00.b64 .ci5/core83.part-01.b64 .ci5/core83.part-02.b64 .ci5/core83.part-03.b64 \
-            | tr -d '\r\n' | base64 --decode > /tmp/core83.tar.xz
+          cat .ci5/core83.part-00.b64 .ci5/core83.part-01.b64 .ci5/core83.part-02.b64 .ci5/core83.part-03.b64 | tr -d '\r\n' | base64 --decode > /tmp/core83.tar.xz
           echo '3098dc255631212bf4a8adf78b2c36cad90b36872ed9d426d648ebb370a9511e  /tmp/core83.tar.xz' | sha256sum -c -
           xz -t /tmp/core83.tar.xz
-          rm -rf /tmp/oficinaos && mkdir -p /tmp/oficinaos
+          mkdir -p /tmp/oficinaos
           tar -xJf /tmp/core83.tar.xz -C /tmp/oficinaos
-          mkdir -p /tmp/oficinaos/homologation/external-results
 
       - name: Verify exact audited core
+        working-directory: /tmp/oficinaos
         shell: bash
         run: |
           set -euo pipefail
-          cd /tmp/oficinaos
-          test -f package.json
-          test -f index.html
-          test -f vite.config.js
-          test -f GITHUB_TARGET.md
-          test -d src
-          test -d tests
-          test -d scripts
-          test -d public
-          test -d homologation/fixtures
           find src tests scripts public homologation/fixtures -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/core-files.sha256
           for f in package.json index.html vite.config.js GITHUB_TARGET.md; do sha256sum "$f" >> /tmp/core-files.sha256; done
           sort -k2 /tmp/core-files.sha256 -o /tmp/core-files.sha256
-          count=$(wc -l < /tmp/core-files.sha256 | tr -d ' ')
-          aggregate=$(sha256sum /tmp/core-files.sha256 | awk '{print $1}')
-          echo "core_file_count=$count"
-          echo "core_manifest_sha256=$aggregate"
-          test "$count" = '83'
-          test "$aggregate" = '2eb6f67a0fe4907ec5b517826763c2c6f62ae889209fa4670780f7043ddd8994'
+          test "$(wc -l < /tmp/core-files.sha256 | tr -d ' ')" = '83'
+          test "$(sha256sum /tmp/core-files.sha256 | awk '{print $1}')" = '2eb6f67a0fe4907ec5b517826763c2c6f62ae889209fa4670780f7043ddd8994'
+
+      - name: Apply versioned homologation corrections
+        working-directory: /tmp/oficinaos
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -a "$GITHUB_WORKSPACE/.ci5/overrides/." /tmp/oficinaos/
+          sha256sum -c "$GITHUB_WORKSPACE/.ci5/overrides.sha256"
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > /tmp/patched-files.sha256
+          mkdir -p homologation/external-results
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: Install dependencies
+      - name: Install pinned dependencies
         working-directory: /tmp/oficinaos
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Install Chromium for Playwright
         working-directory: /tmp/oficinaos
@@ -87,17 +82,16 @@ jobs:
         working-directory: /tmp/oficinaos
         run: npm run build
 
-      - name: Generate CLEAN synthetic smoke fixture
+      - name: Generate isolated CLEAN synthetic fixture
         working-directory: /tmp/oficinaos
         run: npm run homologate:fixture
 
       - name: Start Vite preview
-        shell: bash
         working-directory: /tmp/oficinaos
+        shell: bash
         run: |
           set -euo pipefail
-          mkdir -p homologation/external-results
-          nohup npm run preview -- --host 127.0.0.1 --port 4173 > homologation/external-results/vite-preview.log 2>&1 &
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 --strictPort > homologation/external-results/vite-preview.log 2>&1 &
           for i in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
             sleep 1
@@ -105,38 +99,11 @@ jobs:
           cat homologation/external-results/vite-preview.log
           exit 1
 
-      - name: Complete mocked print lifecycle in browser harness
-        working-directory: /tmp/oficinaos
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('scripts/homologate-browser.mjs')
-          s=p.read_text()
-          anchor="  await page.getByRole('button',{name:'Migração',exact:true}).click();"
-          assert anchor in s
-          p.write_text(s.replace(anchor,"  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));\n"+anchor))
-          PY
-
-      - name: Browser + IndexedDB + PDF + export smoke
+      - name: Browser IndexedDB reload PDF and full-store export reimport
         working-directory: /tmp/oficinaos
         run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/external-results/browser.json homologation/external-results/browser.md
 
-      - name: Chromium PDF file and UI reimport verification
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        working-directory: /tmp/oficinaos
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          s=Path('scripts/homologate-browser.mjs').read_text()
-          s=s.replace("const printCalls=await page.evaluate", "await page.pdf({path:'homologation/external-results/commercial-quote.pdf',format:'A4',printBackground:true});gate('chromiumPdfFile',(await fs.readFile('homologation/external-results/commercial-quote.pdf')).subarray(0,5).toString()==='%PDF-','PDF gerado pelo Chromium');const printCalls=await page.evaluate")
-          s=s.replace("evidence.artifacts={exportedBackup:exportPath};", "evidence.artifacts={exportedBackup:exportPath};const again=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Importar backup JSON'}).click();await (await again).setFiles(exportPath);await page.locator('.status-line').filter({hasText:'Backup importado'}).waitFor({timeout:60000});await page.reload({waitUntil:'networkidle'});const restored=hashes(await dbSnapshot());const differences=Object.keys(importHashes).filter(k=>restored[k]!==importHashes[k]);gate('uiReimportReload',differences.length===0,differences.length?differences.join(', '):'reimportação pela UI e reload preservam todos os hashes críticos');")
-          Path('scripts/homologate-browser-extended.mjs').write_text(s)
-          PY
-          node scripts/homologate-browser-extended.mjs homologation/fixtures/external-smoke-backup.json homologation/external-results/browser-extended.json homologation/external-results/browser-extended.md
-
-      - name: Final decision from available evidence
+      - name: Final decision from actual evidence
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         continue-on-error: true
         working-directory: /tmp/oficinaos
@@ -144,43 +111,36 @@ jobs:
           UNIT_PASS: ${{ steps.unit.outcome == 'success' && '1' || '0' }}
           BUILD_PASS: ${{ steps.build.outcome == 'success' && '1' || '0' }}
           FUNCTIONAL_PASS: ${{ steps.functional.outcome == 'success' && '1' || '0' }}
-          BROWSER_RESULT: homologation/external-results/browser.json
-          OFFICIAL_RESULT: homologation/external-results/official-backup.json
-          OFFICIAL_BROWSER_RESULT: homologation/external-results/browser-official.json
-          ACCEPTANCE_METRICS_DEFINED: '0'
         run: npm run homologate:external:final
 
-      - name: Preserve external evidence
+      - name: Preserve synthetic evidence and manifests
         if: always()
         shell: bash
         run: |
-          rm -rf "$GITHUB_WORKSPACE/homologation-evidence"
           mkdir -p "$GITHUB_WORKSPACE/homologation-evidence"
           if [ -d /tmp/oficinaos/homologation/external-results ]; then
             cp -a /tmp/oficinaos/homologation/external-results/. "$GITHUB_WORKSPACE/homologation-evidence/"
           fi
-          cp /tmp/core-files.sha256 "$GITHUB_WORKSPACE/homologation-evidence/core-files.sha256" 2>/dev/null || true
+          for f in /tmp/core-files.sha256 /tmp/patched-files.sha256; do
+            if [ -f "$f" ]; then cp "$f" "$GITHUB_WORKSPACE/homologation-evidence/"; fi
+          done
+          cp "$GITHUB_WORKSPACE/.ci5/overrides.sha256" "$GITHUB_WORKSPACE/homologation-evidence/overrides.sha256"
           sha256sum /tmp/core83.tar.xz > "$GITHUB_WORKSPACE/homologation-evidence/core83.tar.xz.sha256" 2>/dev/null || true
+          if [ -f /tmp/oficinaos/HOMOLOGATION_CORRECTIONS_2026-10-05.md ]; then
+            cp /tmp/oficinaos/HOMOLOGATION_CORRECTIONS_2026-10-05.md "$GITHUB_WORKSPACE/homologation-evidence/"
+          fi
 
       - name: Job summary
         if: always()
         shell: bash
         run: |
-          {
-            echo '## OficinaOS — Homologação Externa Final'
-            echo
-            echo '- Núcleo auditado: 83 arquivos'
-            echo '- SHA-256 payload XZ: `3098dc255631212bf4a8adf78b2c36cad90b36872ed9d426d648ebb370a9511e`'
-            echo '- SHA-256 manifesto agregado: `2eb6f67a0fe4907ec5b517826763c2c6f62ae889209fa4670780f7043ddd8994`'
-            echo
-            if [ -f /tmp/oficinaos/homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.md ]; then
-              cat /tmp/oficinaos/homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.md
-            else
-              echo 'Parecer final não foi produzido; consulte a etapa que falhou.'
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -f /tmp/oficinaos/homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.md ]; then
+            cat /tmp/oficinaos/homologation/external-results/FINAL_EXTERNAL_HOMOLOGATION.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'NO-GO: evidência técnica incompleta; consultar a etapa que falhou.' >> "$GITHUB_STEP_SUMMARY"
+          fi
 
-      - name: Upload evidence
+      - name: Upload synthetic evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:

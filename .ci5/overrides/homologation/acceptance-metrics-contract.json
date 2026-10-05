@@ -1,0 +1,13 @@
+{
+  "schema": "oficinaos-acceptance-metrics-contract-v1",
+  "status": "BLOCKED_MISSING_HISTORICAL_DEFINITION",
+  "definitionRevision": null,
+  "sourceDocumentSha256": null,
+  "sourceReferences": ["GATE_ACCEPTANCE_METRICS_2026-09-18.md", "HOMOLOGATION_STATUS.md"],
+  "metrics": {
+    "derivedCount": {"expected": 0, "formula": null},
+    "missingExpectedCount": {"expected": 0, "formula": null}
+  },
+  "reason": "A fonte recuperada exige zero, mas não define algoritmo, universo esperado nem proveniência. Não calcular ou aprovar por presunção.",
+  "requiredEvidence": ["definição documental identificada por SHA-256", "algoritmo com casos positivos e negativos", "resultado vinculado ao SHA-256 do snapshot oficial", "derivedCount=0 e missingExpectedCount=0 calculados"]
+}
