@@ -73,14 +73,17 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Unit tests
+        id: unit
         working-directory: /tmp/oficinaos
         run: npm test
 
       - name: Service-level functional homologation
+        id: functional
         working-directory: /tmp/oficinaos
         run: npm run homologate:functional -- homologation/external-results/functional.json homologation/external-results/functional.md
 
       - name: Vite build
+        id: build
         working-directory: /tmp/oficinaos
         run: npm run build
 
@@ -120,6 +123,7 @@ jobs:
         run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/external-results/browser.json homologation/external-results/browser.md
 
       - name: Chromium PDF file and UI reimport verification
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         working-directory: /tmp/oficinaos
         shell: bash
         run: |
@@ -133,12 +137,13 @@ jobs:
           node scripts/homologate-browser-extended.mjs homologation/fixtures/external-smoke-backup.json homologation/external-results/browser-extended.json homologation/external-results/browser-extended.md
 
       - name: Final decision from available evidence
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         continue-on-error: true
         working-directory: /tmp/oficinaos
         env:
-          UNIT_PASS: '1'
-          BUILD_PASS: '1'
-          FUNCTIONAL_PASS: '1'
+          UNIT_PASS: ${{ steps.unit.outcome == 'success' && '1' || '0' }}
+          BUILD_PASS: ${{ steps.build.outcome == 'success' && '1' || '0' }}
+          FUNCTIONAL_PASS: ${{ steps.functional.outcome == 'success' && '1' || '0' }}
           BROWSER_RESULT: homologation/external-results/browser.json
           OFFICIAL_RESULT: homologation/external-results/official-backup.json
           OFFICIAL_BROWSER_RESULT: homologation/external-results/browser-official.json
