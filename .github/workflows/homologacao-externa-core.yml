@@ -102,6 +102,19 @@ jobs:
           cat homologation/external-results/vite-preview.log
           exit 1
 
+      - name: Complete mocked print lifecycle in browser harness
+        working-directory: /tmp/oficinaos
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/homologate-browser.mjs')
+          s=p.read_text()
+          anchor="  await page.getByRole('button',{name:'Migração',exact:true}).click();"
+          assert anchor in s
+          p.write_text(s.replace(anchor,"  await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));\n"+anchor))
+          PY
+
       - name: Browser + IndexedDB + PDF + export smoke
         working-directory: /tmp/oficinaos
         run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/external-results/browser.json homologation/external-results/browser.md
