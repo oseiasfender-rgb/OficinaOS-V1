@@ -33,6 +33,7 @@ jobs:
           xz -t /tmp/core83.tar.xz
           rm -rf /tmp/oficinaos && mkdir -p /tmp/oficinaos
           tar -xJf /tmp/core83.tar.xz -C /tmp/oficinaos
+          mkdir -p /tmp/oficinaos/homologation/external-results
 
       - name: Verify exact audited core
         shell: bash
@@ -104,6 +105,19 @@ jobs:
       - name: Browser + IndexedDB + PDF + export smoke
         working-directory: /tmp/oficinaos
         run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/external-results/browser.json homologation/external-results/browser.md
+
+      - name: Chromium PDF file and UI reimport verification
+        working-directory: /tmp/oficinaos
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('scripts/homologate-browser.mjs').read_text()
+          s=s.replace("const printCalls=await page.evaluate", "await page.pdf({path:'homologation/external-results/commercial-quote.pdf',format:'A4',printBackground:true});gate('chromiumPdfFile',(await fs.readFile('homologation/external-results/commercial-quote.pdf')).subarray(0,5).toString()==='%PDF-','PDF gerado pelo Chromium');const printCalls=await page.evaluate")
+          s=s.replace("evidence.artifacts={exportedBackup:exportPath};", "evidence.artifacts={exportedBackup:exportPath};const again=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Importar backup JSON'}).click();await (await again).setFiles(exportPath);await page.locator('.status-line').filter({hasText:'Backup importado'}).waitFor({timeout:60000});await page.reload({waitUntil:'networkidle'});const restored=hashes(await dbSnapshot());const differences=Object.keys(importHashes).filter(k=>restored[k]!==importHashes[k]);gate('uiReimportReload',differences.length===0,differences.length?differences.join(', '):'reimportação pela UI e reload preservam todos os hashes críticos');")
+          Path('scripts/homologate-browser-extended.mjs').write_text(s)
+          PY
+          node scripts/homologate-browser-extended.mjs homologation/fixtures/external-smoke-backup.json homologation/external-results/browser-extended.json homologation/external-results/browser-extended.md
 
       - name: Final decision from available evidence
         continue-on-error: true
