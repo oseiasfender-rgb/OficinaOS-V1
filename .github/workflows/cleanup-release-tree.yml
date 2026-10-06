@@ -1,0 +1,71 @@
+name: Clean Release Tree
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - homologacao/oficinaos-v0.9.1-rc1
+    paths:
+      - '.github/workflows/cleanup-release-tree.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RELEASE_BRANCH: release/oficinaos-v0.9.1-rc1-go
+      EXPECTED_RELEASE_COMMIT: 4a0c570ff4659879ef1fca2b613f12548626cde7
+    steps:
+      - name: Checkout clean release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/oficinaos-v0.9.1-rc1-go
+          fetch-depth: 0
+
+      - name: Verify release lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_RELEASE_COMMIT"
+          test "$(git rev-parse HEAD^)" = "$(git rev-parse origin/main)"
+
+      - name: Remove generated run evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf homologation/screenshots
+          rm -f \
+            homologation/commercial-quote.pdf \
+            homologation/exported-browser-backup.json \
+            homologation/release-browser.json \
+            homologation/release-browser.md \
+            homologation/release-functional.json \
+            homologation/release-functional.md
+          cat >> RELEASE_PROVENANCE.md <<'EOF'
+
+          ## Escopo do manifesto de release
+
+          `RELEASE_SHA256SUMS.txt` cobre o código, testes, configuração, fixture CLEAN e documentação pública da release. Arquivos em `.github/` são deliberadamente excluídos para permitir evolução independente do CI sem alterar o hash do código homologado. Evidências de execução (screenshots, PDF e export temporário) permanecem nos logs/artefatos do Actions e não são versionadas na release.
+          EOF
+          find . -type f \
+            ! -path './.git/*' \
+            ! -path './.github/*' \
+            ! -name 'RELEASE_SHA256SUMS.txt' \
+            -print0 | sort -z | xargs -0 sha256sum > RELEASE_SHA256SUMS.txt
+          test -s RELEASE_SHA256SUMS.txt
+          test ! -e homologation/official-backups
+          test ! -e .ci
+          test ! -e .ci5
+
+      - name: Commit clean release tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'release: remove generated evidence and freeze source manifest'
+          git push origin "HEAD:refs/heads/$RELEASE_BRANCH"
