@@ -1,0 +1,40 @@
+{
+  "schema": "oficinaos-acceptance-metrics-contract-v1",
+  "status": "APPROVED",
+  "definitionRevision": "acceptance-v1-2026-10-06",
+  "sourceDocumentSha256": "7e6bbe6c64599024acdff207403d5afcd6d5404b00169aeee4e592798d235953",
+  "sourceReferences": [
+    "GATE_ACCEPTANCE_METRICS_2026-09-18.md",
+    "HOMOLOGATION_STATUS.md"
+  ],
+  "metrics": {
+    "derivedCount": {
+      "expected": 0,
+      "formula": "sum_f max(a(f)-e(f),0)"
+    },
+    "missingExpectedCount": {
+      "expected": 0,
+      "formula": "sum_f max(e(f)-a(f),0)"
+    }
+  },
+  "requiredEvidence": [
+    "definição documental identificada por SHA-256",
+    "algoritmo com casos positivos e negativos",
+    "resultado vinculado ao SHA-256 do snapshot oficial",
+    "derivedCount=0 e missingExpectedCount=0 calculados"
+  ],
+  "sourceDocumentPath": "homologation/ACCEPTANCE_SPEC_V1_2026-10-06.md",
+  "snapshotSha256": "e9df0c002e4e5efb4e99f7e790939068886896711ff1699d0d4ee3f923c96945",
+  "auditorSha256": "ba72495edbf84a99b1e2b63fb15dab42588e5d77392c535689651096761d7a94",
+  "historicalDefinitionRecovered": false,
+  "authorization": "Usuário autorizou concluir regra auditável, integrar auditor e calcular métricas em todas as etapas.",
+  "baselineSanitization": {
+    "originalSnapshotSha256": "8edaf955eccd9f56aa373825a379a667fcd719e46e768a4928b4fe4a1857a239",
+    "changedFields": [
+      "contas[11].fromTx"
+    ],
+    "changeCount": 11,
+    "financialFieldsUnchanged": true,
+    "authorization": "Usuário autorizou atualização/reorganização em 06/10/2026."
+  }
+}

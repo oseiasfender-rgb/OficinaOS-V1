@@ -1,0 +1,2098 @@
+{
+  "os_config": {
+    "nome": "Oficina Homologação Externa",
+    "dono": "Responsável de Teste",
+    "cidade": "Ambiente CI"
+  },
+  "version": "2.6-modular-compatible",
+  "exportedAt": "2026-10-06T13:06:28.901Z",
+  "ALL_TX": [
+    {
+      "id": "osrec_1",
+      "date": "2026-10-06",
+      "desc": "Receita OS — Cliente Sintético Homologação — Veículo Sintético",
+      "cat": "Serviços",
+      "val": 2250,
+      "type": "rec",
+      "paid": "Não pago",
+      "workOrderId": "os_muwp00io_6zho9",
+      "osId": "os_muwp00io_6zho9",
+      "jobId": 1,
+      "budgetId": "orc_muwp00ib_pzu17",
+      "source": "os",
+      "contaId": "",
+      "fromAccount": "",
+      "toAccount": "",
+      "transferId": "",
+      "clientId": null,
+      "updatedAt": null
+    },
+    {
+      "type": "dep",
+      "desc": "Energia sintética CI",
+      "cat": "Energia Elétrica",
+      "val": 250,
+      "date": "2026-09-18",
+      "id": "tx_muwp00is_0x22wx",
+      "paid": "Não pago",
+      "source": "manual",
+      "contaId": "ct_muwp00is_ohxak",
+      "fromAccount": "",
+      "toAccount": "",
+      "transferId": "",
+      "clientId": null,
+      "budgetId": null,
+      "workOrderId": null,
+      "updatedAt": null
+    }
+  ],
+  "jobs": [
+    {
+      "id": 1,
+      "cliente": "Cliente Sintético Homologação",
+      "veiculo": "Veículo Sintético",
+      "tipo": "Funilaria e pintura — cenário sintético de homologação",
+      "entrada": "2026-09-18",
+      "entrega": "2026-09-25",
+      "val": 2250,
+      "done": true,
+      "obs": "",
+      "orcamentoId": "orc_muwp00ib_pzu17",
+      "orcId": "orc_muwp00ib_pzu17",
+      "etapa": "entregue",
+      "status": "Entregue",
+      "osId": "os_muwp00io_6zho9",
+      "updatedAt": "2026-10-06T13:06:28.898Z"
+    }
+  ],
+  "fp_agenda": [
+    {
+      "id": "ag_muwp00ip_o2hmm",
+      "osId": "os_muwp00io_6zho9",
+      "clienteId": 100,
+      "orcamentoId": "orc_muwp00ib_pzu17",
+      "cliente": "Cliente Sintético Homologação",
+      "veiculo": "Veículo Sintético",
+      "servico": "Funilaria e pintura — cenário sintético de homologação",
+      "data": "2026-09-18",
+      "entrega": "2026-09-25",
+      "hora": "08:00",
+      "status": "Concluído"
+    }
+  ],
+  "clientes": [
+    {
+      "nome": "Cliente Sintético Homologação",
+      "fone": "11999990000",
+      "email": "homologacao@example.invalid",
+      "doc": "SINTETICO",
+      "veiculos": [
+        {
+          "marca": "Veículo Sintético",
+          "placa": "TST1A23",
+          "cor": "Prata",
+          "ano": "2024",
+          "id": 1000,
+          "obs": ""
+        }
+      ],
+      "id": 100,
+      "name": "Cliente Sintético Homologação",
+      "obs": "",
+      "criado": "2026-10-06",
+      "servicos": [],
+      "createdAt": "2026-10-06T13:06:28.882Z",
+      "updatedAt": "2026-10-06T13:06:28.882Z"
+    }
+  ],
+  "estoque": [],
+  "contas": [
+    {
+      "id": "ct_muwp00is_ohxak",
+      "name": "Energia sintética CI",
+      "cat": "Energia Elétrica",
+      "val": 250,
+      "due": "2026-09-18",
+      "paid": false,
+      "paidAt": "",
+      "recur": false,
+      "fromTx": "tx_muwp00is_0x22wx",
+      "paidTxId": "tx_muwp00is_0x22wx",
+      "category": "Energia Elétrica",
+      "recorrente": false,
+      "recurKey": "",
+      "competencia": "",
+      "recurTemplateId": "",
+      "recurOccurrenceId": "",
+      "updatedAt": null
+    }
+  ],
+  "metasCat": [],
+  "metaPrincipal": 0,
+  "nextTxId": 1,
+  "dasStatus": {},
+  "orcHistorico": [
+    {
+      "id": "orc_muwp00ib_pzu17",
+      "clientId": 100,
+      "clienteId": 100,
+      "clientName": "Cliente Sintético Homologação",
+      "cliente": "Cliente Sintético Homologação",
+      "clientPhone": "11999990000",
+      "vehicle": "Veículo Sintético",
+      "veiculo": "Veículo Sintético",
+      "vehicleColor": "Prata",
+      "vehiclePlate": "TST1A23",
+      "vehicleYear": "2024",
+      "vehicleKm": "",
+      "service": "Funilaria e pintura — cenário sintético de homologação",
+      "servico": "Funilaria e pintura — cenário sintético de homologação",
+      "descricao": "Funilaria e pintura — cenário sintético de homologação",
+      "entryDate": "2026-09-18",
+      "data": "2026-09-18",
+      "dueDate": "2026-09-25",
+      "priority": "normal",
+      "prioridade": "normal",
+      "payment": "À vista",
+      "pagto": "À vista",
+      "warrantyDays": "90",
+      "notes": "Documento sintético para CI.",
+      "obs": "Documento sintético para CI.",
+      "internalNotes": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+      "obsInterna": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+      "complexity": "basico",
+      "complexidade": "Básico",
+      "complexityMultiplier": 1,
+      "hourRate": 100,
+      "laborProcesses": [
+        {
+          "key": "funilaria",
+          "label": "Funilaria",
+          "hours": 10
+        }
+      ],
+      "materials": [
+        {
+          "id": "mat_1",
+          "name": "Material sintético",
+          "qty": 1,
+          "unit": 100,
+          "unid": ""
+        }
+      ],
+      "serviceItems": [
+        {
+          "id": "svc_1",
+          "desc": "Ajuste complementar",
+          "qty": 1,
+          "value": 200
+        }
+      ],
+      "serviceItemsDiscount": 0,
+      "parts": [
+        {
+          "id": "part_1",
+          "name": "Peça recuperada sintética",
+          "category": "",
+          "condition": "Boa",
+          "application": "",
+          "qty": 1,
+          "value": 300
+        }
+      ],
+      "thirdParties": [
+        {
+          "id": "third_1",
+          "desc": "Terceiro sintético",
+          "value": 150
+        }
+      ],
+      "freight": {
+        "displacement": 50,
+        "parts": 0,
+        "tow": 0
+      },
+      "marginPercent": 20,
+      "discountPercent": 0,
+      "calculation": {
+        "hours": 10,
+        "rate": 100,
+        "labor": 1000,
+        "materials": 100,
+        "serviceItems": 200,
+        "serviceItemsDiscount": 0,
+        "serviceItemsNet": 200,
+        "recoveredParts": 300,
+        "thirdParties": 150,
+        "freight": 50,
+        "extras": 200,
+        "manualBase": 1800,
+        "legacyTotal": 0,
+        "usesLegacyTotalFallback": false,
+        "complexity": {
+          "key": "basico",
+          "label": "Básico",
+          "multiplier": 1
+        },
+        "base": 1800,
+        "marginRate": 0.2,
+        "withMargin": 2250,
+        "discountRate": 0,
+        "discountAmount": 0,
+        "final": 2250,
+        "effectiveMarginPercent": 20,
+        "scenarios": {
+          "margin20": 2250,
+          "margin30": 2571.4285714285716,
+          "margin50": 3600
+        }
+      },
+      "total": 2250,
+      "totalFmt": "R$ 2.250,00",
+      "status": "Agendado",
+      "paginaOrcamento": {
+        "values": {
+          "dataEntrada": "2026-09-18",
+          "dataEntrega": "2026-09-25",
+          "clientName": "Cliente Sintético Homologação",
+          "clientPhone": "11999990000",
+          "vehicle": "Veículo Sintético",
+          "vehicleCor": "Prata",
+          "vehiclePlaca": "TST1A23",
+          "vehicleAno": "2024",
+          "vehicleKm": "",
+          "serviceType": "Funilaria e pintura — cenário sintético de homologação",
+          "notes": "Documento sintético para CI.",
+          "orcObsInterna": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+          "orcGarantia": "90",
+          "orcPagamento": "À vista",
+          "svcsDesconto": 0,
+          "freteDeslocamento": 50,
+          "fretePecas": 0,
+          "freteReboque": 0,
+          "thirdParty": 150,
+          "transport": 50,
+          "hourRate": 100,
+          "rateSlider": 100,
+          "marginSlider": 20,
+          "discSlider": 0,
+          "hours": 10,
+          "orc-h-total": "10"
+        },
+        "complexity": "Básico",
+        "laborProcesses": [
+          {
+            "key": "funilaria",
+            "label": "Funilaria",
+            "hours": 10
+          }
+        ],
+        "services": [
+          {
+            "id": "svc_1",
+            "desc": "Ajuste complementar",
+            "qty": 1,
+            "value": 200
+          }
+        ],
+        "thirdParties": [
+          {
+            "id": "third_1",
+            "desc": "Terceiro sintético",
+            "value": 150
+          }
+        ],
+        "materials": [
+          {
+            "id": "mat_1",
+            "name": "Material sintético",
+            "qty": 1,
+            "unit": 100,
+            "unid": ""
+          }
+        ],
+        "parts": [
+          {
+            "id": "part_1",
+            "name": "Peça recuperada sintética",
+            "category": "",
+            "condition": "Boa",
+            "application": "",
+            "qty": 1,
+            "value": 300
+          }
+        ],
+        "checklist": null,
+        "savedAt": "2026-10-06T13:06:28.894Z"
+      },
+      "createdAt": "2026-10-06T13:06:28.883Z",
+      "updatedAt": "2026-10-06T13:06:28.896Z",
+      "source": "modular-v0.6",
+      "osId": "os_muwp00io_6zho9"
+    }
+  ],
+  "fp_orc_historico": [
+    {
+      "id": "orc_muwp00ib_pzu17",
+      "clientId": 100,
+      "clienteId": 100,
+      "clientName": "Cliente Sintético Homologação",
+      "cliente": "Cliente Sintético Homologação",
+      "clientPhone": "11999990000",
+      "vehicle": "Veículo Sintético",
+      "veiculo": "Veículo Sintético",
+      "vehicleColor": "Prata",
+      "vehiclePlate": "TST1A23",
+      "vehicleYear": "2024",
+      "vehicleKm": "",
+      "service": "Funilaria e pintura — cenário sintético de homologação",
+      "servico": "Funilaria e pintura — cenário sintético de homologação",
+      "descricao": "Funilaria e pintura — cenário sintético de homologação",
+      "entryDate": "2026-09-18",
+      "data": "2026-09-18",
+      "dueDate": "2026-09-25",
+      "priority": "normal",
+      "prioridade": "normal",
+      "payment": "À vista",
+      "pagto": "À vista",
+      "warrantyDays": "90",
+      "notes": "Documento sintético para CI.",
+      "obs": "Documento sintético para CI.",
+      "internalNotes": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+      "obsInterna": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+      "complexity": "basico",
+      "complexidade": "Básico",
+      "complexityMultiplier": 1,
+      "hourRate": 100,
+      "laborProcesses": [
+        {
+          "key": "funilaria",
+          "label": "Funilaria",
+          "hours": 10
+        }
+      ],
+      "materials": [
+        {
+          "id": "mat_1",
+          "name": "Material sintético",
+          "qty": 1,
+          "unit": 100,
+          "unid": ""
+        }
+      ],
+      "serviceItems": [
+        {
+          "id": "svc_1",
+          "desc": "Ajuste complementar",
+          "qty": 1,
+          "value": 200
+        }
+      ],
+      "serviceItemsDiscount": 0,
+      "parts": [
+        {
+          "id": "part_1",
+          "name": "Peça recuperada sintética",
+          "category": "",
+          "condition": "Boa",
+          "application": "",
+          "qty": 1,
+          "value": 300
+        }
+      ],
+      "thirdParties": [
+        {
+          "id": "third_1",
+          "desc": "Terceiro sintético",
+          "value": 150
+        }
+      ],
+      "freight": {
+        "displacement": 50,
+        "parts": 0,
+        "tow": 0
+      },
+      "marginPercent": 20,
+      "discountPercent": 0,
+      "calculation": {
+        "hours": 10,
+        "rate": 100,
+        "labor": 1000,
+        "materials": 100,
+        "serviceItems": 200,
+        "serviceItemsDiscount": 0,
+        "serviceItemsNet": 200,
+        "recoveredParts": 300,
+        "thirdParties": 150,
+        "freight": 50,
+        "extras": 200,
+        "manualBase": 1800,
+        "legacyTotal": 0,
+        "usesLegacyTotalFallback": false,
+        "complexity": {
+          "key": "basico",
+          "label": "Básico",
+          "multiplier": 1
+        },
+        "base": 1800,
+        "marginRate": 0.2,
+        "withMargin": 2250,
+        "discountRate": 0,
+        "discountAmount": 0,
+        "final": 2250,
+        "effectiveMarginPercent": 20,
+        "scenarios": {
+          "margin20": 2250,
+          "margin30": 2571.4285714285716,
+          "margin50": 3600
+        }
+      },
+      "total": 2250,
+      "totalFmt": "R$ 2.250,00",
+      "status": "Agendado",
+      "paginaOrcamento": {
+        "values": {
+          "dataEntrada": "2026-09-18",
+          "dataEntrega": "2026-09-25",
+          "clientName": "Cliente Sintético Homologação",
+          "clientPhone": "11999990000",
+          "vehicle": "Veículo Sintético",
+          "vehicleCor": "Prata",
+          "vehiclePlaca": "TST1A23",
+          "vehicleAno": "2024",
+          "vehicleKm": "",
+          "serviceType": "Funilaria e pintura — cenário sintético de homologação",
+          "notes": "Documento sintético para CI.",
+          "orcObsInterna": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+          "orcGarantia": "90",
+          "orcPagamento": "À vista",
+          "svcsDesconto": 0,
+          "freteDeslocamento": 50,
+          "fretePecas": 0,
+          "freteReboque": 0,
+          "thirdParty": 150,
+          "transport": 50,
+          "hourRate": 100,
+          "rateSlider": 100,
+          "marginSlider": 20,
+          "discSlider": 0,
+          "hours": 10,
+          "orc-h-total": "10"
+        },
+        "complexity": "Básico",
+        "laborProcesses": [
+          {
+            "key": "funilaria",
+            "label": "Funilaria",
+            "hours": 10
+          }
+        ],
+        "services": [
+          {
+            "id": "svc_1",
+            "desc": "Ajuste complementar",
+            "qty": 1,
+            "value": 200
+          }
+        ],
+        "thirdParties": [
+          {
+            "id": "third_1",
+            "desc": "Terceiro sintético",
+            "value": 150
+          }
+        ],
+        "materials": [
+          {
+            "id": "mat_1",
+            "name": "Material sintético",
+            "qty": 1,
+            "unit": 100,
+            "unid": ""
+          }
+        ],
+        "parts": [
+          {
+            "id": "part_1",
+            "name": "Peça recuperada sintética",
+            "category": "",
+            "condition": "Boa",
+            "application": "",
+            "qty": 1,
+            "value": 300
+          }
+        ],
+        "checklist": null,
+        "savedAt": "2026-10-06T13:06:28.894Z"
+      },
+      "createdAt": "2026-10-06T13:06:28.883Z",
+      "updatedAt": "2026-10-06T13:06:28.896Z",
+      "source": "modular-v0.6",
+      "osId": "os_muwp00io_6zho9"
+    }
+  ],
+  "fp_fin_categories": [],
+  "fp_fin_category_groups": {},
+  "fp_fin_categories_hidden": [],
+  "oficina_event_history": [
+    {
+      "id": "evt_muwp00ia_35mq3q",
+      "at": "2026-10-06T13:06:28.882Z",
+      "module": "Clientes",
+      "action": "create",
+      "entity": "Cliente",
+      "entityId": "100",
+      "summary": "Cadastro de cliente: create",
+      "details": "{\"action\":\"create\",\"id\":100}"
+    },
+    {
+      "id": "evt_muwp00in_p5at4i",
+      "at": "2026-10-06T13:06:28.895Z",
+      "module": "Orçamento",
+      "action": "create",
+      "entity": "Orçamento",
+      "entityId": "orc_muwp00ib_pzu17",
+      "summary": "Orçamento: create",
+      "details": "{\"action\":\"create\",\"id\":\"orc_muwp00ib_pzu17\"}"
+    },
+    {
+      "id": "evt_1791291988896_36c3n",
+      "at": "2026-10-06T13:06:28.896Z",
+      "module": "OS",
+      "action": "CREATE",
+      "entity": "workOrder",
+      "entityId": "os_muwp00io_6zho9",
+      "detail": "OS criada e espelhada em jobs para compatibilidade.",
+      "clientId": 100,
+      "budgetId": "orc_muwp00ib_pzu17"
+    },
+    {
+      "id": "evt_muwp00ip_k5frxb",
+      "at": "2026-10-06T13:06:28.897Z",
+      "module": "OS",
+      "action": "create",
+      "entity": "OS",
+      "entityId": "os_muwp00io_6zho9",
+      "summary": "OS: create",
+      "details": "{\"action\":\"create\",\"id\":\"os_muwp00io_6zho9\"}"
+    },
+    {
+      "id": "evt_1791291988897_ui33p",
+      "at": "2026-10-06T13:06:28.897Z",
+      "module": "OS",
+      "action": "UPDATE",
+      "entity": "workOrder",
+      "entityId": "os_muwp00io_6zho9",
+      "detail": "OS atualizada.",
+      "clientId": 100,
+      "budgetId": "orc_muwp00ib_pzu17"
+    },
+    {
+      "id": "evt_muwp00ip_em0npm",
+      "at": "2026-10-06T13:06:28.897Z",
+      "module": "OS",
+      "action": "update",
+      "entity": "OS",
+      "entityId": "os_muwp00io_6zho9",
+      "summary": "OS: update",
+      "details": "{\"action\":\"update\",\"id\":\"os_muwp00io_6zho9\"}"
+    },
+    {
+      "id": "evt_muwp00iq_l39497",
+      "at": "2026-10-06T13:06:28.897Z",
+      "module": "Agenda",
+      "action": "create",
+      "entity": "Agendamento",
+      "entityId": "ag_muwp00ip_o2hmm",
+      "summary": "Agenda: create",
+      "details": "{\"action\":\"create\",\"id\":\"ag_muwp00ip_o2hmm\"}"
+    },
+    {
+      "id": "evt_muwp00iq_3u28si",
+      "at": "2026-10-06T13:06:28.898Z",
+      "module": "Checklist",
+      "action": "item",
+      "entity": "Checklist",
+      "entityId": "os:os_muwp00io_6zho9",
+      "summary": "Checklist: item",
+      "details": "{\"action\":\"item\",\"id\":\"os:os_muwp00io_6zho9\"}"
+    },
+    {
+      "id": "evt_muwp00iq_0gsnnu",
+      "at": "2026-10-06T13:06:28.898Z",
+      "module": "Checklist",
+      "action": "stage",
+      "entity": "Checklist",
+      "entityId": "os:os_muwp00io_6zho9",
+      "summary": "Checklist: stage",
+      "details": "{\"action\":\"stage\",\"id\":\"os:os_muwp00io_6zho9\"}"
+    },
+    {
+      "id": "evt_1791291988898_tj5y7",
+      "at": "2026-10-06T13:06:28.898Z",
+      "module": "OS",
+      "action": "UPDATE",
+      "entity": "workOrder",
+      "entityId": "os_muwp00io_6zho9",
+      "detail": "OS atualizada.",
+      "clientId": 100,
+      "budgetId": "orc_muwp00ib_pzu17"
+    },
+    {
+      "id": "evt_muwp00iq_bz7802",
+      "at": "2026-10-06T13:06:28.898Z",
+      "module": "OS",
+      "action": "update",
+      "entity": "OS",
+      "entityId": "os_muwp00io_6zho9",
+      "summary": "OS: update",
+      "details": "{\"action\":\"update\",\"id\":\"os_muwp00io_6zho9\"}"
+    },
+    {
+      "id": "evt_muwp00ir_ei6l2b",
+      "at": "2026-10-06T13:06:28.899Z",
+      "module": "Agenda",
+      "action": "complete",
+      "entity": "Agendamento",
+      "entityId": "ag_muwp00ip_o2hmm",
+      "summary": "Agenda: complete",
+      "details": "{\"action\":\"complete\",\"id\":\"ag_muwp00ip_o2hmm\"}"
+    },
+    {
+      "id": "evt_muwp00ir_l6svqk",
+      "at": "2026-10-06T13:06:28.899Z",
+      "module": "Financeiro",
+      "action": "Sincronizar OS",
+      "entity": "OS",
+      "entityId": "",
+      "summary": "1 receita(s) de OS criada(s)",
+      "details": ""
+    },
+    {
+      "id": "evt_muwp00is_i3l52p",
+      "at": "2026-10-06T13:06:28.900Z",
+      "module": "Financeiro",
+      "action": "Adicionar",
+      "entity": "Lançamento",
+      "entityId": "tx_muwp00is_0x22wx",
+      "summary": "Lançamento de despesa criado",
+      "details": ""
+    },
+    {
+      "id": "evt_muwp00is_ucwlbp",
+      "at": "2026-10-06T13:06:28.900Z",
+      "module": "homologacao",
+      "action": "FIXTURE",
+      "entity": "",
+      "entityId": "",
+      "summary": "",
+      "details": ""
+    }
+  ],
+  "oficinaos_orc_arquivados_v1": [],
+  "oficinaos_orc_lixeira_v1": [],
+  "oficinaos_orc_exclusoes_backup_v1": [],
+  "oficinaos_orc_exclusoes_log_v1": [],
+  "oficinaos_recurring_templates_v1": [],
+  "oficinaos_provisorio_integrado_v1": {
+    "schemaVersion": 1,
+    "updatedAt": "2026-10-06T13:06:28.901Z",
+    "clientes": [
+      {
+        "id": 100,
+        "nome": "Cliente Sintético Homologação",
+        "telefone": "11999990000",
+        "email": "homologacao@example.invalid"
+      }
+    ],
+    "veiculos": [
+      {
+        "marca": "Veículo Sintético",
+        "placa": "TST1A23",
+        "cor": "Prata",
+        "ano": "2024",
+        "id": 1000,
+        "obs": "",
+        "clienteId": 100
+      }
+    ],
+    "orcamentos": [
+      {
+        "id": "orc_muwp00ib_pzu17",
+        "clientId": 100,
+        "clienteId": 100,
+        "clientName": "Cliente Sintético Homologação",
+        "cliente": "Cliente Sintético Homologação",
+        "clientPhone": "11999990000",
+        "vehicle": "Veículo Sintético",
+        "veiculo": "Veículo Sintético",
+        "vehicleColor": "Prata",
+        "vehiclePlate": "TST1A23",
+        "vehicleYear": "2024",
+        "vehicleKm": "",
+        "service": "Funilaria e pintura — cenário sintético de homologação",
+        "servico": "Funilaria e pintura — cenário sintético de homologação",
+        "descricao": "Funilaria e pintura — cenário sintético de homologação",
+        "entryDate": "2026-09-18",
+        "data": "2026-09-18",
+        "dueDate": "2026-09-25",
+        "priority": "normal",
+        "prioridade": "normal",
+        "payment": "À vista",
+        "pagto": "À vista",
+        "warrantyDays": "90",
+        "notes": "Documento sintético para CI.",
+        "obs": "Documento sintético para CI.",
+        "internalNotes": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+        "obsInterna": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+        "complexity": "basico",
+        "complexidade": "Básico",
+        "complexityMultiplier": 1,
+        "hourRate": 100,
+        "laborProcesses": [
+          {
+            "key": "funilaria",
+            "label": "Funilaria",
+            "hours": 10
+          }
+        ],
+        "materials": [
+          {
+            "id": "mat_1",
+            "name": "Material sintético",
+            "qty": 1,
+            "unit": 100,
+            "unid": ""
+          }
+        ],
+        "serviceItems": [
+          {
+            "id": "svc_1",
+            "desc": "Ajuste complementar",
+            "qty": 1,
+            "value": 200
+          }
+        ],
+        "serviceItemsDiscount": 0,
+        "parts": [
+          {
+            "id": "part_1",
+            "name": "Peça recuperada sintética",
+            "category": "",
+            "condition": "Boa",
+            "application": "",
+            "qty": 1,
+            "value": 300
+          }
+        ],
+        "thirdParties": [
+          {
+            "id": "third_1",
+            "desc": "Terceiro sintético",
+            "value": 150
+          }
+        ],
+        "freight": {
+          "displacement": 50,
+          "parts": 0,
+          "tow": 0
+        },
+        "marginPercent": 20,
+        "discountPercent": 0,
+        "calculation": {
+          "hours": 10,
+          "rate": 100,
+          "labor": 1000,
+          "materials": 100,
+          "serviceItems": 200,
+          "serviceItemsDiscount": 0,
+          "serviceItemsNet": 200,
+          "recoveredParts": 300,
+          "thirdParties": 150,
+          "freight": 50,
+          "extras": 200,
+          "manualBase": 1800,
+          "legacyTotal": 0,
+          "usesLegacyTotalFallback": false,
+          "complexity": {
+            "key": "basico",
+            "label": "Básico",
+            "multiplier": 1
+          },
+          "base": 1800,
+          "marginRate": 0.2,
+          "withMargin": 2250,
+          "discountRate": 0,
+          "discountAmount": 0,
+          "final": 2250,
+          "effectiveMarginPercent": 20,
+          "scenarios": {
+            "margin20": 2250,
+            "margin30": 2571.4285714285716,
+            "margin50": 3600
+          }
+        },
+        "total": 2250,
+        "totalFmt": "R$ 2.250,00",
+        "status": "Agendado",
+        "paginaOrcamento": {
+          "values": {
+            "dataEntrada": "2026-09-18",
+            "dataEntrega": "2026-09-25",
+            "clientName": "Cliente Sintético Homologação",
+            "clientPhone": "11999990000",
+            "vehicle": "Veículo Sintético",
+            "vehicleCor": "Prata",
+            "vehiclePlaca": "TST1A23",
+            "vehicleAno": "2024",
+            "vehicleKm": "",
+            "serviceType": "Funilaria e pintura — cenário sintético de homologação",
+            "notes": "Documento sintético para CI.",
+            "orcObsInterna": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+            "orcGarantia": "90",
+            "orcPagamento": "À vista",
+            "svcsDesconto": 0,
+            "freteDeslocamento": 50,
+            "fretePecas": 0,
+            "freteReboque": 0,
+            "thirdParty": 150,
+            "transport": 50,
+            "hourRate": 100,
+            "rateSlider": 100,
+            "marginSlider": 20,
+            "discSlider": 0,
+            "hours": 10,
+            "orc-h-total": "10"
+          },
+          "complexity": "Básico",
+          "laborProcesses": [
+            {
+              "key": "funilaria",
+              "label": "Funilaria",
+              "hours": 10
+            }
+          ],
+          "services": [
+            {
+              "id": "svc_1",
+              "desc": "Ajuste complementar",
+              "qty": 1,
+              "value": 200
+            }
+          ],
+          "thirdParties": [
+            {
+              "id": "third_1",
+              "desc": "Terceiro sintético",
+              "value": 150
+            }
+          ],
+          "materials": [
+            {
+              "id": "mat_1",
+              "name": "Material sintético",
+              "qty": 1,
+              "unit": 100,
+              "unid": ""
+            }
+          ],
+          "parts": [
+            {
+              "id": "part_1",
+              "name": "Peça recuperada sintética",
+              "category": "",
+              "condition": "Boa",
+              "application": "",
+              "qty": 1,
+              "value": 300
+            }
+          ],
+          "checklist": null,
+          "savedAt": "2026-10-06T13:06:28.894Z"
+        },
+        "createdAt": "2026-10-06T13:06:28.883Z",
+        "updatedAt": "2026-10-06T13:06:28.896Z",
+        "source": "modular-v0.6",
+        "osId": "os_muwp00io_6zho9"
+      }
+    ],
+    "ordensServico": [
+      {
+        "budgetId": "orc_muwp00ib_pzu17",
+        "clientId": 100,
+        "clientName": "Cliente Sintético Homologação",
+        "vehicle": "Veículo Sintético",
+        "service": "Funilaria e pintura — cenário sintético de homologação",
+        "entryDate": "2026-09-18",
+        "dueDate": "2026-09-25",
+        "value": 2250,
+        "notes": "",
+        "priority": "normal",
+        "id": "os_muwp00io_6zho9",
+        "number": "OS-2026-0001",
+        "legacyJobId": 1,
+        "vehicleId": null,
+        "stage": "entregue",
+        "status": "Entregue",
+        "financialSyncPending": false,
+        "createdAt": "2026-10-06T13:06:28.896Z",
+        "updatedAt": "2026-10-06T13:06:28.899Z",
+        "deliveredAt": "2026-10-06T13:06:28.898Z",
+        "financialTransactionId": "osrec_1",
+        "numero": "OS-2026-0001",
+        "orcamentoId": "orc_muwp00ib_pzu17",
+        "clienteId": 100,
+        "veiculoId": null,
+        "etapa": "entregue",
+        "entrada": "2026-09-18",
+        "entregaPrevista": "2026-09-25",
+        "valor": 2250
+      }
+    ],
+    "agendamentos": [
+      {
+        "date": "2026-09-18",
+        "dueDate": "2026-09-25",
+        "time": "08:00",
+        "budgetId": "orc_muwp00ib_pzu17",
+        "id": "ag_muwp00ip_o2hmm",
+        "workOrderId": "os_muwp00io_6zho9",
+        "clientId": 100,
+        "type": "Entrada",
+        "status": "Concluído",
+        "clientName": "Cliente Sintético Homologação",
+        "vehicle": "Veículo Sintético",
+        "service": "Funilaria e pintura — cenário sintético de homologação",
+        "value": 2250,
+        "notes": "",
+        "createdAt": "2026-10-06T13:06:28.897Z",
+        "updatedAt": "2026-10-06T13:06:28.898Z",
+        "osId": "os_muwp00io_6zho9",
+        "clienteId": 100,
+        "data": "2026-09-18",
+        "hora": "08:00",
+        "tipo": "Entrada"
+      }
+    ],
+    "lancamentos": [
+      {
+        "id": "osrec_1",
+        "legacyId": "osrec_1",
+        "tipo": "receita",
+        "descricao": "Receita OS — Cliente Sintético Homologação — Veículo Sintético",
+        "categoria": "Serviços",
+        "valor": 2250,
+        "vencimento": "2026-10-06",
+        "status": "Pendente",
+        "clienteId": null,
+        "orcamentoId": "orc_muwp00ib_pzu17",
+        "osId": "os_muwp00io_6zho9",
+        "contaId": "",
+        "source": "os",
+        "fromAccount": "",
+        "toAccount": "",
+        "transferId": "",
+        "createdAt": "2026-10-06T13:06:28.901Z"
+      },
+      {
+        "id": "tx_muwp00is_0x22wx",
+        "legacyId": "tx_muwp00is_0x22wx",
+        "tipo": "despesa",
+        "descricao": "Energia sintética CI",
+        "categoria": "Energia Elétrica",
+        "valor": 250,
+        "vencimento": "2026-09-18",
+        "status": "Pendente",
+        "clienteId": null,
+        "orcamentoId": null,
+        "osId": null,
+        "contaId": "ct_muwp00is_ohxak",
+        "source": "manual",
+        "fromAccount": "",
+        "toAccount": "",
+        "transferId": "",
+        "createdAt": "2026-10-06T13:06:28.901Z"
+      }
+    ],
+    "checklists": {
+      "os:os_muwp00io_6zho9": {
+        "etapas": {
+          "entrada": [
+            {
+              "label": "Registrar fotos de entrada",
+              "done": true
+            },
+            {
+              "label": "Conferir avarias visíveis",
+              "done": false
+            },
+            {
+              "label": "Confirmar veículo e cliente",
+              "done": false
+            },
+            {
+              "label": "Registrar quilometragem/observações",
+              "done": false
+            }
+          ],
+          "desmontagem": [
+            {
+              "label": "Para-choque removido",
+              "done": false
+            },
+            {
+              "label": "Faróis removidos",
+              "done": false
+            },
+            {
+              "label": "Lanternas removidas",
+              "done": false
+            },
+            {
+              "label": "Acabamentos identificados e armazenados",
+              "done": false
+            }
+          ],
+          "funilaria": [
+            {
+              "label": "Danos mapeados",
+              "done": false
+            },
+            {
+              "label": "Alinhamento conferido",
+              "done": false
+            },
+            {
+              "label": "Reparo estrutural concluído",
+              "done": false
+            },
+            {
+              "label": "Superfície pronta para preparação",
+              "done": false
+            }
+          ],
+          "solda": [
+            {
+              "label": "Área limpa e preparada",
+              "done": false
+            },
+            {
+              "label": "Processo de solda definido",
+              "done": false
+            },
+            {
+              "label": "Solda executada",
+              "done": false
+            },
+            {
+              "label": "Acabamento e inspeção da solda concluídos",
+              "done": false
+            }
+          ],
+          "preparacao": [
+            {
+              "label": "Lixamento concluído",
+              "done": false
+            },
+            {
+              "label": "Correções de massa concluídas",
+              "done": false
+            },
+            {
+              "label": "Primer aplicado",
+              "done": false
+            },
+            {
+              "label": "Mascaramento conferido",
+              "done": false
+            }
+          ],
+          "pintura": [
+            {
+              "label": "Cor conferida",
+              "done": false
+            },
+            {
+              "label": "Base aplicada",
+              "done": false
+            },
+            {
+              "label": "Cobertura uniforme",
+              "done": false
+            },
+            {
+              "label": "Verniz aplicado",
+              "done": false
+            }
+          ],
+          "cura": [
+            {
+              "label": "Tempo de cura respeitado",
+              "done": false
+            },
+            {
+              "label": "Superfície seca",
+              "done": false
+            },
+            {
+              "label": "Sem contaminação aparente",
+              "done": false
+            }
+          ],
+          "polimento": [
+            {
+              "label": "Correção de textura concluída",
+              "done": false
+            },
+            {
+              "label": "Refino concluído",
+              "done": false
+            },
+            {
+              "label": "Lustro final concluído",
+              "done": false
+            }
+          ],
+          "montagem": [
+            {
+              "label": "Peças reinstaladas",
+              "done": false
+            },
+            {
+              "label": "Folgas e alinhamentos conferidos",
+              "done": false
+            },
+            {
+              "label": "Elétrica/iluminação testada",
+              "done": false
+            }
+          ],
+          "controle": [
+            {
+              "label": "Inspeção visual final",
+              "done": false
+            },
+            {
+              "label": "Limpeza final",
+              "done": false
+            },
+            {
+              "label": "Checklist de segurança concluído",
+              "done": false
+            },
+            {
+              "label": "Fotos finais registradas",
+              "done": false
+            }
+          ],
+          "entregue": [
+            {
+              "label": "Cliente comunicado",
+              "done": false
+            },
+            {
+              "label": "Documentação/recibo conferido",
+              "done": false
+            },
+            {
+              "label": "Veículo entregue",
+              "done": false
+            }
+          ]
+        },
+        "stage": "desmontagem",
+        "updatedAt": "2026-10-06T13:06:28.898Z"
+      }
+    },
+    "eventos": [
+      {
+        "id": "evt_muwp00ia_35mq3q",
+        "at": "2026-10-06T13:06:28.882Z",
+        "module": "Clientes",
+        "action": "create",
+        "entity": "Cliente",
+        "entityId": "100",
+        "summary": "Cadastro de cliente: create",
+        "details": "{\"action\":\"create\",\"id\":100}"
+      },
+      {
+        "id": "evt_muwp00in_p5at4i",
+        "at": "2026-10-06T13:06:28.895Z",
+        "module": "Orçamento",
+        "action": "create",
+        "entity": "Orçamento",
+        "entityId": "orc_muwp00ib_pzu17",
+        "summary": "Orçamento: create",
+        "details": "{\"action\":\"create\",\"id\":\"orc_muwp00ib_pzu17\"}"
+      },
+      {
+        "id": "evt_1791291988896_36c3n",
+        "at": "2026-10-06T13:06:28.896Z",
+        "module": "OS",
+        "action": "CREATE",
+        "entity": "workOrder",
+        "entityId": "os_muwp00io_6zho9",
+        "detail": "OS criada e espelhada em jobs para compatibilidade.",
+        "clientId": 100,
+        "budgetId": "orc_muwp00ib_pzu17"
+      },
+      {
+        "id": "evt_muwp00ip_k5frxb",
+        "at": "2026-10-06T13:06:28.897Z",
+        "module": "OS",
+        "action": "create",
+        "entity": "OS",
+        "entityId": "os_muwp00io_6zho9",
+        "summary": "OS: create",
+        "details": "{\"action\":\"create\",\"id\":\"os_muwp00io_6zho9\"}"
+      },
+      {
+        "id": "evt_1791291988897_ui33p",
+        "at": "2026-10-06T13:06:28.897Z",
+        "module": "OS",
+        "action": "UPDATE",
+        "entity": "workOrder",
+        "entityId": "os_muwp00io_6zho9",
+        "detail": "OS atualizada.",
+        "clientId": 100,
+        "budgetId": "orc_muwp00ib_pzu17"
+      },
+      {
+        "id": "evt_muwp00ip_em0npm",
+        "at": "2026-10-06T13:06:28.897Z",
+        "module": "OS",
+        "action": "update",
+        "entity": "OS",
+        "entityId": "os_muwp00io_6zho9",
+        "summary": "OS: update",
+        "details": "{\"action\":\"update\",\"id\":\"os_muwp00io_6zho9\"}"
+      },
+      {
+        "id": "evt_muwp00iq_l39497",
+        "at": "2026-10-06T13:06:28.897Z",
+        "module": "Agenda",
+        "action": "create",
+        "entity": "Agendamento",
+        "entityId": "ag_muwp00ip_o2hmm",
+        "summary": "Agenda: create",
+        "details": "{\"action\":\"create\",\"id\":\"ag_muwp00ip_o2hmm\"}"
+      },
+      {
+        "id": "evt_muwp00iq_3u28si",
+        "at": "2026-10-06T13:06:28.898Z",
+        "module": "Checklist",
+        "action": "item",
+        "entity": "Checklist",
+        "entityId": "os:os_muwp00io_6zho9",
+        "summary": "Checklist: item",
+        "details": "{\"action\":\"item\",\"id\":\"os:os_muwp00io_6zho9\"}"
+      },
+      {
+        "id": "evt_muwp00iq_0gsnnu",
+        "at": "2026-10-06T13:06:28.898Z",
+        "module": "Checklist",
+        "action": "stage",
+        "entity": "Checklist",
+        "entityId": "os:os_muwp00io_6zho9",
+        "summary": "Checklist: stage",
+        "details": "{\"action\":\"stage\",\"id\":\"os:os_muwp00io_6zho9\"}"
+      },
+      {
+        "id": "evt_1791291988898_tj5y7",
+        "at": "2026-10-06T13:06:28.898Z",
+        "module": "OS",
+        "action": "UPDATE",
+        "entity": "workOrder",
+        "entityId": "os_muwp00io_6zho9",
+        "detail": "OS atualizada.",
+        "clientId": 100,
+        "budgetId": "orc_muwp00ib_pzu17"
+      },
+      {
+        "id": "evt_muwp00iq_bz7802",
+        "at": "2026-10-06T13:06:28.898Z",
+        "module": "OS",
+        "action": "update",
+        "entity": "OS",
+        "entityId": "os_muwp00io_6zho9",
+        "summary": "OS: update",
+        "details": "{\"action\":\"update\",\"id\":\"os_muwp00io_6zho9\"}"
+      },
+      {
+        "id": "evt_muwp00ir_ei6l2b",
+        "at": "2026-10-06T13:06:28.899Z",
+        "module": "Agenda",
+        "action": "complete",
+        "entity": "Agendamento",
+        "entityId": "ag_muwp00ip_o2hmm",
+        "summary": "Agenda: complete",
+        "details": "{\"action\":\"complete\",\"id\":\"ag_muwp00ip_o2hmm\"}"
+      },
+      {
+        "id": "evt_muwp00ir_l6svqk",
+        "at": "2026-10-06T13:06:28.899Z",
+        "module": "Financeiro",
+        "action": "Sincronizar OS",
+        "entity": "OS",
+        "entityId": "",
+        "summary": "1 receita(s) de OS criada(s)",
+        "details": ""
+      },
+      {
+        "id": "evt_muwp00is_i3l52p",
+        "at": "2026-10-06T13:06:28.900Z",
+        "module": "Financeiro",
+        "action": "Adicionar",
+        "entity": "Lançamento",
+        "entityId": "tx_muwp00is_0x22wx",
+        "summary": "Lançamento de despesa criado",
+        "details": ""
+      },
+      {
+        "id": "evt_muwp00is_ucwlbp",
+        "at": "2026-10-06T13:06:28.900Z",
+        "module": "homologacao",
+        "action": "FIXTURE",
+        "entity": "",
+        "entityId": "",
+        "summary": "",
+        "details": ""
+      }
+    ],
+    "ui": {
+      "currentBudgetId": null,
+      "currentOsId": null,
+      "currentStage": "entrada"
+    }
+  },
+  "modular": {
+    "schema": "oficinaos-modular-v5",
+    "exportedAt": "2026-10-06T13:06:28.901Z",
+    "stores": {
+      "transactions": [
+        {
+          "id": "osrec_1",
+          "date": "2026-10-06",
+          "desc": "Receita OS — Cliente Sintético Homologação — Veículo Sintético",
+          "cat": "Serviços",
+          "val": 2250,
+          "type": "rec",
+          "paid": "Não pago",
+          "workOrderId": "os_muwp00io_6zho9",
+          "osId": "os_muwp00io_6zho9",
+          "jobId": 1,
+          "budgetId": "orc_muwp00ib_pzu17",
+          "source": "os",
+          "contaId": "",
+          "fromAccount": "",
+          "toAccount": "",
+          "transferId": "",
+          "clientId": null,
+          "updatedAt": null
+        },
+        {
+          "type": "dep",
+          "desc": "Energia sintética CI",
+          "cat": "Energia Elétrica",
+          "val": 250,
+          "date": "2026-09-18",
+          "id": "tx_muwp00is_0x22wx",
+          "paid": "Não pago",
+          "source": "manual",
+          "contaId": "ct_muwp00is_ohxak",
+          "fromAccount": "",
+          "toAccount": "",
+          "transferId": "",
+          "clientId": null,
+          "budgetId": null,
+          "workOrderId": null,
+          "updatedAt": null
+        }
+      ],
+      "accounts": [
+        {
+          "id": "ct_muwp00is_ohxak",
+          "name": "Energia sintética CI",
+          "cat": "Energia Elétrica",
+          "val": 250,
+          "due": "2026-09-18",
+          "paid": false,
+          "paidAt": "",
+          "recur": false,
+          "fromTx": "tx_muwp00is_0x22wx",
+          "paidTxId": "tx_muwp00is_0x22wx",
+          "category": "Energia Elétrica",
+          "recorrente": false,
+          "recurKey": "",
+          "competencia": "",
+          "recurTemplateId": "",
+          "recurOccurrenceId": "",
+          "updatedAt": null
+        }
+      ],
+      "clients": [
+        {
+          "nome": "Cliente Sintético Homologação",
+          "fone": "11999990000",
+          "email": "homologacao@example.invalid",
+          "doc": "SINTETICO",
+          "veiculos": [
+            {
+              "marca": "Veículo Sintético",
+              "placa": "TST1A23",
+              "cor": "Prata",
+              "ano": "2024",
+              "id": 1000,
+              "obs": ""
+            }
+          ],
+          "id": 100,
+          "name": "Cliente Sintético Homologação",
+          "obs": "",
+          "criado": "2026-10-06",
+          "servicos": [],
+          "createdAt": "2026-10-06T13:06:28.882Z",
+          "updatedAt": "2026-10-06T13:06:28.882Z"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 1,
+          "cliente": "Cliente Sintético Homologação",
+          "veiculo": "Veículo Sintético",
+          "tipo": "Funilaria e pintura — cenário sintético de homologação",
+          "entrada": "2026-09-18",
+          "entrega": "2026-09-25",
+          "val": 2250,
+          "done": true,
+          "obs": "",
+          "orcamentoId": "orc_muwp00ib_pzu17",
+          "orcId": "orc_muwp00ib_pzu17",
+          "etapa": "entregue",
+          "status": "Entregue",
+          "osId": "os_muwp00io_6zho9",
+          "updatedAt": "2026-10-06T13:06:28.898Z"
+        }
+      ],
+      "workOrders": [
+        {
+          "budgetId": "orc_muwp00ib_pzu17",
+          "clientId": 100,
+          "clientName": "Cliente Sintético Homologação",
+          "vehicle": "Veículo Sintético",
+          "service": "Funilaria e pintura — cenário sintético de homologação",
+          "entryDate": "2026-09-18",
+          "dueDate": "2026-09-25",
+          "value": 2250,
+          "notes": "",
+          "priority": "normal",
+          "id": "os_muwp00io_6zho9",
+          "number": "OS-2026-0001",
+          "legacyJobId": 1,
+          "vehicleId": null,
+          "stage": "entregue",
+          "status": "Entregue",
+          "financialSyncPending": false,
+          "createdAt": "2026-10-06T13:06:28.896Z",
+          "updatedAt": "2026-10-06T13:06:28.899Z",
+          "deliveredAt": "2026-10-06T13:06:28.898Z",
+          "financialTransactionId": "osrec_1"
+        }
+      ],
+      "appointments": [
+        {
+          "date": "2026-09-18",
+          "dueDate": "2026-09-25",
+          "time": "08:00",
+          "budgetId": "orc_muwp00ib_pzu17",
+          "id": "ag_muwp00ip_o2hmm",
+          "workOrderId": "os_muwp00io_6zho9",
+          "clientId": 100,
+          "type": "Entrada",
+          "status": "Concluído",
+          "clientName": "Cliente Sintético Homologação",
+          "vehicle": "Veículo Sintético",
+          "service": "Funilaria e pintura — cenário sintético de homologação",
+          "value": 2250,
+          "notes": "",
+          "createdAt": "2026-10-06T13:06:28.897Z",
+          "updatedAt": "2026-10-06T13:06:28.898Z"
+        }
+      ],
+      "checklists": [
+        {
+          "id": "os:os_muwp00io_6zho9",
+          "contextType": "workOrder",
+          "contextId": "os_muwp00io_6zho9",
+          "currentStage": "desmontagem",
+          "stages": {
+            "entrada": [
+              {
+                "label": "Registrar fotos de entrada",
+                "done": true
+              },
+              {
+                "label": "Conferir avarias visíveis",
+                "done": false
+              },
+              {
+                "label": "Confirmar veículo e cliente",
+                "done": false
+              },
+              {
+                "label": "Registrar quilometragem/observações",
+                "done": false
+              }
+            ],
+            "desmontagem": [
+              {
+                "label": "Para-choque removido",
+                "done": false
+              },
+              {
+                "label": "Faróis removidos",
+                "done": false
+              },
+              {
+                "label": "Lanternas removidas",
+                "done": false
+              },
+              {
+                "label": "Acabamentos identificados e armazenados",
+                "done": false
+              }
+            ],
+            "funilaria": [
+              {
+                "label": "Danos mapeados",
+                "done": false
+              },
+              {
+                "label": "Alinhamento conferido",
+                "done": false
+              },
+              {
+                "label": "Reparo estrutural concluído",
+                "done": false
+              },
+              {
+                "label": "Superfície pronta para preparação",
+                "done": false
+              }
+            ],
+            "solda": [
+              {
+                "label": "Área limpa e preparada",
+                "done": false
+              },
+              {
+                "label": "Processo de solda definido",
+                "done": false
+              },
+              {
+                "label": "Solda executada",
+                "done": false
+              },
+              {
+                "label": "Acabamento e inspeção da solda concluídos",
+                "done": false
+              }
+            ],
+            "preparacao": [
+              {
+                "label": "Lixamento concluído",
+                "done": false
+              },
+              {
+                "label": "Correções de massa concluídas",
+                "done": false
+              },
+              {
+                "label": "Primer aplicado",
+                "done": false
+              },
+              {
+                "label": "Mascaramento conferido",
+                "done": false
+              }
+            ],
+            "pintura": [
+              {
+                "label": "Cor conferida",
+                "done": false
+              },
+              {
+                "label": "Base aplicada",
+                "done": false
+              },
+              {
+                "label": "Cobertura uniforme",
+                "done": false
+              },
+              {
+                "label": "Verniz aplicado",
+                "done": false
+              }
+            ],
+            "cura": [
+              {
+                "label": "Tempo de cura respeitado",
+                "done": false
+              },
+              {
+                "label": "Superfície seca",
+                "done": false
+              },
+              {
+                "label": "Sem contaminação aparente",
+                "done": false
+              }
+            ],
+            "polimento": [
+              {
+                "label": "Correção de textura concluída",
+                "done": false
+              },
+              {
+                "label": "Refino concluído",
+                "done": false
+              },
+              {
+                "label": "Lustro final concluído",
+                "done": false
+              }
+            ],
+            "montagem": [
+              {
+                "label": "Peças reinstaladas",
+                "done": false
+              },
+              {
+                "label": "Folgas e alinhamentos conferidos",
+                "done": false
+              },
+              {
+                "label": "Elétrica/iluminação testada",
+                "done": false
+              }
+            ],
+            "controle": [
+              {
+                "label": "Inspeção visual final",
+                "done": false
+              },
+              {
+                "label": "Limpeza final",
+                "done": false
+              },
+              {
+                "label": "Checklist de segurança concluído",
+                "done": false
+              },
+              {
+                "label": "Fotos finais registradas",
+                "done": false
+              }
+            ],
+            "entregue": [
+              {
+                "label": "Cliente comunicado",
+                "done": false
+              },
+              {
+                "label": "Documentação/recibo conferido",
+                "done": false
+              },
+              {
+                "label": "Veículo entregue",
+                "done": false
+              }
+            ]
+          },
+          "updatedAt": "2026-10-06T13:06:28.898Z"
+        }
+      ],
+      "budgets": [
+        {
+          "id": "orc_muwp00ib_pzu17",
+          "clientId": 100,
+          "clienteId": 100,
+          "clientName": "Cliente Sintético Homologação",
+          "cliente": "Cliente Sintético Homologação",
+          "clientPhone": "11999990000",
+          "vehicle": "Veículo Sintético",
+          "veiculo": "Veículo Sintético",
+          "vehicleColor": "Prata",
+          "vehiclePlate": "TST1A23",
+          "vehicleYear": "2024",
+          "vehicleKm": "",
+          "service": "Funilaria e pintura — cenário sintético de homologação",
+          "servico": "Funilaria e pintura — cenário sintético de homologação",
+          "descricao": "Funilaria e pintura — cenário sintético de homologação",
+          "entryDate": "2026-09-18",
+          "data": "2026-09-18",
+          "dueDate": "2026-09-25",
+          "priority": "normal",
+          "prioridade": "normal",
+          "payment": "À vista",
+          "pagto": "À vista",
+          "warrantyDays": "90",
+          "notes": "Documento sintético para CI.",
+          "obs": "Documento sintético para CI.",
+          "internalNotes": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+          "obsInterna": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+          "complexity": "basico",
+          "complexidade": "Básico",
+          "complexityMultiplier": 1,
+          "hourRate": 100,
+          "laborProcesses": [
+            {
+              "key": "funilaria",
+              "label": "Funilaria",
+              "hours": 10
+            }
+          ],
+          "materials": [
+            {
+              "id": "mat_1",
+              "name": "Material sintético",
+              "qty": 1,
+              "unit": 100,
+              "unid": ""
+            }
+          ],
+          "serviceItems": [
+            {
+              "id": "svc_1",
+              "desc": "Ajuste complementar",
+              "qty": 1,
+              "value": 200
+            }
+          ],
+          "serviceItemsDiscount": 0,
+          "parts": [
+            {
+              "id": "part_1",
+              "name": "Peça recuperada sintética",
+              "category": "",
+              "condition": "Boa",
+              "application": "",
+              "qty": 1,
+              "value": 300
+            }
+          ],
+          "thirdParties": [
+            {
+              "id": "third_1",
+              "desc": "Terceiro sintético",
+              "value": 150
+            }
+          ],
+          "freight": {
+            "displacement": 50,
+            "parts": 0,
+            "tow": 0
+          },
+          "marginPercent": 20,
+          "discountPercent": 0,
+          "calculation": {
+            "hours": 10,
+            "rate": 100,
+            "labor": 1000,
+            "materials": 100,
+            "serviceItems": 200,
+            "serviceItemsDiscount": 0,
+            "serviceItemsNet": 200,
+            "recoveredParts": 300,
+            "thirdParties": 150,
+            "freight": 50,
+            "extras": 200,
+            "manualBase": 1800,
+            "legacyTotal": 0,
+            "usesLegacyTotalFallback": false,
+            "complexity": {
+              "key": "basico",
+              "label": "Básico",
+              "multiplier": 1
+            },
+            "base": 1800,
+            "marginRate": 0.2,
+            "withMargin": 2250,
+            "discountRate": 0,
+            "discountAmount": 0,
+            "final": 2250,
+            "effectiveMarginPercent": 20,
+            "scenarios": {
+              "margin20": 2250,
+              "margin30": 2571.4285714285716,
+              "margin50": 3600
+            }
+          },
+          "total": 2250,
+          "totalFmt": "R$ 2.250,00",
+          "status": "Agendado",
+          "paginaOrcamento": {
+            "values": {
+              "dataEntrada": "2026-09-18",
+              "dataEntrega": "2026-09-25",
+              "clientName": "Cliente Sintético Homologação",
+              "clientPhone": "11999990000",
+              "vehicle": "Veículo Sintético",
+              "vehicleCor": "Prata",
+              "vehiclePlaca": "TST1A23",
+              "vehicleAno": "2024",
+              "vehicleKm": "",
+              "serviceType": "Funilaria e pintura — cenário sintético de homologação",
+              "notes": "Documento sintético para CI.",
+              "orcObsInterna": "SEGREDO INTERNO DE TESTE NÃO PODE IR AO PDF",
+              "orcGarantia": "90",
+              "orcPagamento": "À vista",
+              "svcsDesconto": 0,
+              "freteDeslocamento": 50,
+              "fretePecas": 0,
+              "freteReboque": 0,
+              "thirdParty": 150,
+              "transport": 50,
+              "hourRate": 100,
+              "rateSlider": 100,
+              "marginSlider": 20,
+              "discSlider": 0,
+              "hours": 10,
+              "orc-h-total": "10"
+            },
+            "complexity": "Básico",
+            "laborProcesses": [
+              {
+                "key": "funilaria",
+                "label": "Funilaria",
+                "hours": 10
+              }
+            ],
+            "services": [
+              {
+                "id": "svc_1",
+                "desc": "Ajuste complementar",
+                "qty": 1,
+                "value": 200
+              }
+            ],
+            "thirdParties": [
+              {
+                "id": "third_1",
+                "desc": "Terceiro sintético",
+                "value": 150
+              }
+            ],
+            "materials": [
+              {
+                "id": "mat_1",
+                "name": "Material sintético",
+                "qty": 1,
+                "unit": 100,
+                "unid": ""
+              }
+            ],
+            "parts": [
+              {
+                "id": "part_1",
+                "name": "Peça recuperada sintética",
+                "category": "",
+                "condition": "Boa",
+                "application": "",
+                "qty": 1,
+                "value": 300
+              }
+            ],
+            "checklist": null,
+            "savedAt": "2026-10-06T13:06:28.894Z"
+          },
+          "createdAt": "2026-10-06T13:06:28.883Z",
+          "updatedAt": "2026-10-06T13:06:28.896Z",
+          "source": "modular-v0.6",
+          "osId": "os_muwp00io_6zho9"
+        }
+      ],
+      "categories": [],
+      "goals": [],
+      "stock": [],
+      "operationalHistory": [
+        {
+          "id": "evt_muwp00ia_35mq3q",
+          "at": "2026-10-06T13:06:28.882Z",
+          "module": "Clientes",
+          "action": "create",
+          "entity": "Cliente",
+          "entityId": "100",
+          "summary": "Cadastro de cliente: create",
+          "details": "{\"action\":\"create\",\"id\":100}"
+        },
+        {
+          "id": "evt_muwp00in_p5at4i",
+          "at": "2026-10-06T13:06:28.895Z",
+          "module": "Orçamento",
+          "action": "create",
+          "entity": "Orçamento",
+          "entityId": "orc_muwp00ib_pzu17",
+          "summary": "Orçamento: create",
+          "details": "{\"action\":\"create\",\"id\":\"orc_muwp00ib_pzu17\"}"
+        },
+        {
+          "id": "evt_1791291988896_36c3n",
+          "at": "2026-10-06T13:06:28.896Z",
+          "module": "OS",
+          "action": "CREATE",
+          "entity": "workOrder",
+          "entityId": "os_muwp00io_6zho9",
+          "detail": "OS criada e espelhada em jobs para compatibilidade.",
+          "clientId": 100,
+          "budgetId": "orc_muwp00ib_pzu17"
+        },
+        {
+          "id": "evt_muwp00ip_k5frxb",
+          "at": "2026-10-06T13:06:28.897Z",
+          "module": "OS",
+          "action": "create",
+          "entity": "OS",
+          "entityId": "os_muwp00io_6zho9",
+          "summary": "OS: create",
+          "details": "{\"action\":\"create\",\"id\":\"os_muwp00io_6zho9\"}"
+        },
+        {
+          "id": "evt_1791291988897_ui33p",
+          "at": "2026-10-06T13:06:28.897Z",
+          "module": "OS",
+          "action": "UPDATE",
+          "entity": "workOrder",
+          "entityId": "os_muwp00io_6zho9",
+          "detail": "OS atualizada.",
+          "clientId": 100,
+          "budgetId": "orc_muwp00ib_pzu17"
+        },
+        {
+          "id": "evt_muwp00ip_em0npm",
+          "at": "2026-10-06T13:06:28.897Z",
+          "module": "OS",
+          "action": "update",
+          "entity": "OS",
+          "entityId": "os_muwp00io_6zho9",
+          "summary": "OS: update",
+          "details": "{\"action\":\"update\",\"id\":\"os_muwp00io_6zho9\"}"
+        },
+        {
+          "id": "evt_muwp00iq_l39497",
+          "at": "2026-10-06T13:06:28.897Z",
+          "module": "Agenda",
+          "action": "create",
+          "entity": "Agendamento",
+          "entityId": "ag_muwp00ip_o2hmm",
+          "summary": "Agenda: create",
+          "details": "{\"action\":\"create\",\"id\":\"ag_muwp00ip_o2hmm\"}"
+        },
+        {
+          "id": "evt_muwp00iq_3u28si",
+          "at": "2026-10-06T13:06:28.898Z",
+          "module": "Checklist",
+          "action": "item",
+          "entity": "Checklist",
+          "entityId": "os:os_muwp00io_6zho9",
+          "summary": "Checklist: item",
+          "details": "{\"action\":\"item\",\"id\":\"os:os_muwp00io_6zho9\"}"
+        },
+        {
+          "id": "evt_muwp00iq_0gsnnu",
+          "at": "2026-10-06T13:06:28.898Z",
+          "module": "Checklist",
+          "action": "stage",
+          "entity": "Checklist",
+          "entityId": "os:os_muwp00io_6zho9",
+          "summary": "Checklist: stage",
+          "details": "{\"action\":\"stage\",\"id\":\"os:os_muwp00io_6zho9\"}"
+        },
+        {
+          "id": "evt_1791291988898_tj5y7",
+          "at": "2026-10-06T13:06:28.898Z",
+          "module": "OS",
+          "action": "UPDATE",
+          "entity": "workOrder",
+          "entityId": "os_muwp00io_6zho9",
+          "detail": "OS atualizada.",
+          "clientId": 100,
+          "budgetId": "orc_muwp00ib_pzu17"
+        },
+        {
+          "id": "evt_muwp00iq_bz7802",
+          "at": "2026-10-06T13:06:28.898Z",
+          "module": "OS",
+          "action": "update",
+          "entity": "OS",
+          "entityId": "os_muwp00io_6zho9",
+          "summary": "OS: update",
+          "details": "{\"action\":\"update\",\"id\":\"os_muwp00io_6zho9\"}"
+        },
+        {
+          "id": "evt_muwp00ir_ei6l2b",
+          "at": "2026-10-06T13:06:28.899Z",
+          "module": "Agenda",
+          "action": "complete",
+          "entity": "Agendamento",
+          "entityId": "ag_muwp00ip_o2hmm",
+          "summary": "Agenda: complete",
+          "details": "{\"action\":\"complete\",\"id\":\"ag_muwp00ip_o2hmm\"}"
+        },
+        {
+          "id": "evt_muwp00ir_l6svqk",
+          "at": "2026-10-06T13:06:28.899Z",
+          "module": "Financeiro",
+          "action": "Sincronizar OS",
+          "entity": "OS",
+          "entityId": "",
+          "summary": "1 receita(s) de OS criada(s)",
+          "details": ""
+        },
+        {
+          "id": "evt_muwp00is_i3l52p",
+          "at": "2026-10-06T13:06:28.900Z",
+          "module": "Financeiro",
+          "action": "Adicionar",
+          "entity": "Lançamento",
+          "entityId": "tx_muwp00is_0x22wx",
+          "summary": "Lançamento de despesa criado",
+          "details": ""
+        },
+        {
+          "id": "evt_muwp00is_ucwlbp",
+          "at": "2026-10-06T13:06:28.900Z",
+          "module": "homologacao",
+          "action": "FIXTURE",
+          "entity": "",
+          "entityId": "",
+          "summary": "",
+          "details": ""
+        }
+      ],
+      "budgetHistory": [],
+      "archivedBudgets": [],
+      "trash": [],
+      "deletionBackups": [],
+      "deletionLog": [],
+      "recurringTemplates": [],
+      "settings": [
+        {
+          "id": "os_config",
+          "value": {
+            "nome": "Oficina Homologação Externa",
+            "dono": "Responsável de Teste",
+            "cidade": "Ambiente CI"
+          }
+        }
+      ],
+      "meta": []
+    }
+  },
+  "homologationFixture": {
+    "synthetic": true,
+    "clean": true,
+    "purpose": "external-ci-smoke",
+    "containsRealCustomerData": false
+  }
+}
