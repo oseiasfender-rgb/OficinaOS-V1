@@ -1,10 +1,29 @@
-const CACHE_NAME = 'oficinaos-v0.9.1-rc1-pwa-1';
-const APP_SHELL = ['./', './manifest.json'];
+const CACHE_NAME = 'oficinaos-v0.9.1-rc1-pwa-2';
+const STATIC_ASSETS = ['./manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
+
+async function precacheAppShell() {
+  const cache = await caches.open(CACHE_NAME);
+  const rootResponse = await fetch('./', { cache: 'no-store' });
+  if (!rootResponse.ok) throw new Error(`Falha ao pré-cachear app shell: HTTP ${rootResponse.status}`);
+
+  await cache.put('./', rootResponse.clone());
+  const html = await rootResponse.text();
+  const discovered = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)]
+    .map((match) => match[1])
+    .filter((value) => value && !value.startsWith('data:') && !value.startsWith('blob:'));
+
+  const urls = [...new Set([...STATIC_ASSETS, ...discovered])]
+    .map((value) => new URL(value, self.registration.scope))
+    .filter((url) => url.origin === self.location.origin);
+
+  await Promise.all(urls.map(async (url) => {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (response.ok) await cache.put(url, response);
+  }));
+}
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
-  );
+  event.waitUntil(precacheAppShell().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -26,8 +45,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('./', copy));
+          if (response.ok) {
+            const copy = response.clone();
+            event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put('./', copy)));
+          }
           return response;
         })
         .catch(() => caches.match('./'))
@@ -41,7 +62,7 @@ self.addEventListener('fetch', (event) => {
       return fetch(request).then((response) => {
         if (response.ok) {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)));
         }
         return response;
       });
