@@ -10,3 +10,7 @@ Release limpa derivada da Homologação Externa Final.
 - O Actions público usa somente fixture sintética CLEAN.
 - O backup real criptografado permanece exclusivamente na branch de homologação e não integra esta release.
 - Esta branch não representa implantação em produção e não altera `main`.
+
+## Escopo do manifesto de release
+
+`RELEASE_SHA256SUMS.txt` cobre o código, testes, configuração, fixture CLEAN e documentação pública da release. Arquivos em `.github/` são deliberadamente excluídos para permitir evolução independente do CI sem alterar o hash do código homologado. Evidências de execução (screenshots, PDF e export temporário) permanecem nos logs/artefatos do Actions e não são versionadas na release.
