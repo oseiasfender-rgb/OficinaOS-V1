@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oficinaos-pwa-prep-1';
+const CACHE_NAME = 'oficinaos-pwa-1';
 const APP_SHELL = [
   './',
   './index.html',
