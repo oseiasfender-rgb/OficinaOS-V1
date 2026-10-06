@@ -1,0 +1,67 @@
+name: OficinaOS PWA Production Readiness CI
+
+on:
+  push:
+    branches:
+      - producao/pwa-github-pages-rc1
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CI: 'true'
+      OFICINAOS_BASE_URL: http://127.0.0.1:4173/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Unit tests
+        run: npm test
+      - name: Functional homologation
+        run: npm run homologate:functional -- homologation/pwa-functional.json homologation/pwa-functional.md
+      - name: Vite build
+        run: npm run build
+      - name: Generate CLEAN fixture
+        run: npm run homologate:fixture
+      - name: Start Vite preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 --strictPort > /tmp/vite-preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/vite-preview.log
+          exit 1
+      - name: Chromium IndexedDB reload PDF export reimport
+        run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/pwa-browser.json homologation/pwa-browser.md
+      - name: PWA installability and offline reload
+        run: npm run homologate:pwa -- homologation/PWA_READINESS.json homologation/PWA_READINESS.md
+      - name: Upload PWA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oficinaos-pwa-readiness
+          path: |
+            homologation/PWA_READINESS.json
+            homologation/PWA_READINESS.md
+            homologation/pwa-functional.json
+            homologation/pwa-functional.md
+            homologation/pwa-browser.json
+            homologation/pwa-browser.md
+          if-no-files-found: warn

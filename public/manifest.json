@@ -1,9 +1,24 @@
 {
   "name": "OficinaOS",
   "short_name": "OficinaOS",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f8f6f3",
-  "theme_color": "#b8621a"
+  "theme_color": "#b8621a",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
