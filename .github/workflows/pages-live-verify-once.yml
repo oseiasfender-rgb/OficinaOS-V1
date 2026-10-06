@@ -1,0 +1,45 @@
+name: Verify deployed OficinaOS PWA once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/pages-live-verify-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-live-pwa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify live PWA
+        env:
+          OFICINAOS_BASE_URL: https://oseiasfender-rgb.github.io/OficinaOS-V1/
+        run: node scripts/homologate-pwa.mjs /tmp/PWA_LIVE.json /tmp/PWA_LIVE.md
+
+      - name: Upload live PWA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oficinaos-live-pwa-evidence
+          path: |
+            /tmp/PWA_LIVE.json
+            /tmp/PWA_LIVE.md
+          if-no-files-found: warn
