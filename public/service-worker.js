@@ -1,20 +1,21 @@
-const CACHE_NAME = 'oficinaos-v0.9.1-rc1-pwa-2';
+const CACHE_NAME = 'oficinaos-v0.9.1-rc1-pwa-3';
+const APP_ROOT = new URL('./', self.registration.scope).href;
 const STATIC_ASSETS = ['./manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
 
 async function precacheAppShell() {
   const cache = await caches.open(CACHE_NAME);
-  const rootResponse = await fetch('./', { cache: 'no-store' });
+  const rootResponse = await fetch(APP_ROOT, { cache: 'no-store' });
   if (!rootResponse.ok) throw new Error(`Falha ao pré-cachear app shell: HTTP ${rootResponse.status}`);
 
-  await cache.put('./', rootResponse.clone());
+  await cache.put(APP_ROOT, rootResponse.clone());
   const html = await rootResponse.text();
   const discovered = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)]
     .map((match) => match[1])
     .filter((value) => value && !value.startsWith('data:') && !value.startsWith('blob:'));
 
   const urls = [...new Set([...STATIC_ASSETS, ...discovered])]
-    .map((value) => new URL(value, self.registration.scope))
-    .filter((url) => url.origin === self.location.origin);
+    .map((value) => new URL(value, self.registration.scope).href)
+    .filter((url) => new URL(url).origin === self.location.origin);
 
   await Promise.all(urls.map(async (url) => {
     const response = await fetch(url, { cache: 'no-store' });
@@ -47,25 +48,27 @@ self.addEventListener('fetch', (event) => {
         .then((response) => {
           if (response.ok) {
             const copy = response.clone();
-            event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put('./', copy)));
+            event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(APP_ROOT, copy)));
           }
           return response;
         })
-        .catch(() => caches.match('./'))
+        .catch(() => caches.match(APP_ROOT, { ignoreVary: true }))
     );
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)));
-        }
-        return response;
-      });
-    })
-  );
+  event.respondWith((async () => {
+    const cached = await caches.match(request, { ignoreVary: true });
+    if (cached) return cached;
+
+    const normalized = await caches.match(request.url, { ignoreVary: true });
+    if (normalized) return normalized;
+
+    const response = await fetch(request);
+    if (response.ok) {
+      const copy = response.clone();
+      event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request.url, copy)));
+    }
+    return response;
+  })());
 });
