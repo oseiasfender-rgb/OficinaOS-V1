@@ -1,0 +1,71 @@
+name: OficinaOS Release Candidate CI
+
+on:
+  push:
+    branches:
+      - release/oficinaos-v0.9.1-rc1-go
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: 'true'
+      OFICINAOS_BASE_URL: http://127.0.0.1:4173/
+    steps:
+      - name: Checkout release
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Verify frozen release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum -c RELEASE_SHA256SUMS.txt
+          test ! -e .ci
+          test ! -e .ci5
+          test ! -e homologation/official-backups
+
+      - name: Install pinned dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Functional homologation
+        run: npm run homologate:functional -- /tmp/rc-functional.json /tmp/rc-functional.md
+
+      - name: Vite build
+        run: npm run build
+
+      - name: Generate CLEAN fixture
+        run: npm run homologate:fixture
+
+      - name: Start Vite preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 --strictPort > /tmp/vite-preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/vite-preview.log
+          exit 1
+
+      - name: Chromium IndexedDB reload PDF export reimport
+        run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json /tmp/rc-browser.json /tmp/rc-browser.md
