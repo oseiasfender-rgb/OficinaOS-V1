@@ -9,12 +9,20 @@ const result = {
   baseURL,
   timestamp: new Date().toISOString(),
   checks: {},
+  diagnostics: { requestFailures: [], pageErrors: [], consoleErrors: [] },
   pass: false
 };
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext();
 const page = await context.newPage();
+page.on('requestfailed', (request) => {
+  result.diagnostics.requestFailures.push({ url: request.url(), error: request.failure()?.errorText || 'unknown' });
+});
+page.on('pageerror', (error) => result.diagnostics.pageErrors.push(String(error?.message || error)));
+page.on('console', (message) => {
+  if (message.type() === 'error') result.diagnostics.consoleErrors.push(message.text());
+});
 
 try {
   const response = await page.goto(baseURL, { waitUntil: 'networkidle' });
@@ -72,14 +80,33 @@ try {
   }
   result.checks.serviceWorkerControlsPage = controlled;
 
-  await page.waitForTimeout(500);
+  result.checks.cachedUrlsBeforeOffline = await page.evaluate(async () => {
+    const keys = await caches.keys();
+    const urls = [];
+    for (const key of keys) {
+      const cache = await caches.open(key);
+      const requests = await cache.keys();
+      urls.push(...requests.map((request) => request.url));
+    }
+    return [...new Set(urls)].sort();
+  });
+
   await context.setOffline(true);
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
-  result.checks.offlineReload = await page.locator('#app').evaluate((el) => el.textContent.trim().length > 0);
+  try {
+    await page.waitForFunction(() => {
+      const app = document.querySelector('#app');
+      return Boolean(app && app.textContent && app.textContent.trim().length > 0);
+    }, null, { timeout: 15000 });
+    result.checks.offlineReload = true;
+  } catch {
+    result.checks.offlineReload = false;
+  }
+  result.checks.offlineAppTextLength = await page.locator('#app').evaluate((el) => el.textContent.trim().length).catch(() => -1);
   await context.setOffline(false);
 
   result.pass = Object.entries(result.checks)
-    .filter(([key]) => !['iconResponses', 'serviceWorkerScope'].includes(key))
+    .filter(([key]) => !['iconResponses', 'serviceWorkerScope', 'cachedUrlsBeforeOffline', 'offlineAppTextLength'].includes(key))
     .every(([, value]) => value === true);
 } catch (error) {
   result.error = String(error?.stack || error);
@@ -99,10 +126,13 @@ const lines = [
   ''
 ];
 for (const [key, value] of Object.entries(result.checks)) {
-  if (key === 'iconResponses') continue;
+  if (key === 'iconResponses' || key === 'cachedUrlsBeforeOffline') continue;
   lines.push(`- ${key}: ${typeof value === 'boolean' ? (value ? 'PASS' : 'FAIL') : String(value)}`);
 }
 if (result.error) lines.push('', '## Erro', '', '```', result.error, '```');
+if (result.diagnostics.requestFailures.length || result.diagnostics.pageErrors.length || result.diagnostics.consoleErrors.length) {
+  lines.push('', '## Diagnóstico', '', '```json', JSON.stringify(result.diagnostics, null, 2), '```');
+}
 await writeFile(mdPath, lines.join('\n') + '\n');
 console.log(JSON.stringify(result, null, 2));
 
