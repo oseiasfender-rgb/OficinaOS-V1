@@ -1,0 +1,2 @@
+:root{--bg:#f8f6f3;--card:#fff;--text:#2c1a08;--muted:#7a5030;--brand:#b8621a;--border:rgba(100,60,20,.14)}
+*{box-sizing:border-box} html,body,#app{min-height:100%;margin:0} body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
