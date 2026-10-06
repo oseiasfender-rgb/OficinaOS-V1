@@ -46,7 +46,10 @@ try {
   });
   result.checks.iconsFetchOk = result.checks.iconResponses.every((icon) => icon.ok && icon.type.includes('image/png'));
 
-  await page.waitForFunction(() => 'serviceWorker' in navigator && navigator.serviceWorker.ready, null, { timeout: 15000 });
+  await page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) throw new Error('Service Worker não suportado pelo navegador de teste.');
+    await navigator.serviceWorker.ready;
+  });
   const sw = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.ready;
     return {
@@ -89,5 +92,6 @@ for (const [key, value] of Object.entries(result.checks)) {
 }
 if (result.error) lines.push('', '## Erro', '', '```', result.error, '```');
 await writeFile(mdPath, lines.join('\n') + '\n');
+console.log(JSON.stringify(result, null, 2));
 
 if (!result.pass) process.exit(1);
