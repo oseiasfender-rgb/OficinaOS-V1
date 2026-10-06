@@ -1,0 +1,168 @@
+name: Promote Clean OficinaOS Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - homologacao/oficinaos-v0.9.1-rc1
+    paths:
+      - '.github/workflows/promote-clean-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CI: 'true'
+      RELEASE_BRANCH: release/oficinaos-v0.9.1-rc1-go
+      GO_COMMIT: 0e62dbd4e21e5347f996af0a8806b041992d2666
+      OFICINAOS_BASE_URL: http://127.0.0.1:4173/
+    steps:
+      - name: Checkout homologated branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify GO provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$GO_COMMIT" HEAD
+          git fetch origin main "$RELEASE_BRANCH"
+          test "$(git rev-parse origin/$RELEASE_BRANCH)" = "$(git rev-parse origin/main)"
+
+      - name: Reconstruct exact homologated source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .ci5/core83.part-00.b64 .ci5/core83.part-01.b64 .ci5/core83.part-02.b64 .ci5/core83.part-03.b64 | tr -d '\r\n' | base64 --decode > /tmp/core83.tar.xz
+          echo '3098dc255631212bf4a8adf78b2c36cad90b36872ed9d426d648ebb370a9511e  /tmp/core83.tar.xz' | sha256sum -c -
+          xz -t /tmp/core83.tar.xz
+          rm -rf /tmp/oficinaos
+          mkdir -p /tmp/oficinaos
+          tar -xJf /tmp/core83.tar.xz -C /tmp/oficinaos
+          cp -a "$GITHUB_WORKSPACE/.ci5/overrides/." /tmp/oficinaos/
+          (cd /tmp/oficinaos && sha256sum -c "$GITHUB_WORKSPACE/.ci5/overrides.sha256")
+          test ! -e /tmp/oficinaos/homologation/official-backups
+          test ! -e /tmp/oficinaos/.ci
+          test ! -e /tmp/oficinaos/.ci5
+
+      - name: Add release provenance and CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/oficinaos/.github/workflows
+          cat > /tmp/oficinaos/RELEASE_PROVENANCE.md <<'EOF'
+          # OficinaOS — Release Candidate homologada
+
+          Release limpa derivada da Homologação Externa Final.
+
+          - Commit GO de origem: `0e62dbd4e21e5347f996af0a8806b041992d2666`
+          - GitHub Actions de homologação: `37465897760`
+          - Snapshot saneado homologado SHA-256: `e9df0c002e4e5efb4e99f7e790939068886896711ff1699d0d4ee3f923c96945`
+          - Saneamento autorizado: 11 referências `fromTx` sem destino removidas; campos financeiros preservados.
+          - Resultado privado integral: GO.
+          - O Actions público usa somente fixture sintética CLEAN.
+          - O backup real criptografado permanece exclusivamente na branch de homologação e não integra esta release.
+          - Esta branch não representa implantação em produção e não altera `main`.
+          EOF
+
+          cat > /tmp/oficinaos/.github/workflows/release-ci.yml <<'EOF'
+          name: OficinaOS Release Candidate CI
+
+          on:
+            push:
+              branches:
+                - release/oficinaos-v0.9.1-rc1-go
+            pull_request:
+              branches:
+                - main
+
+          permissions:
+            contents: read
+
+          jobs:
+            validate:
+              runs-on: ubuntu-latest
+              timeout-minutes: 35
+              env:
+                CI: 'true'
+                OFICINAOS_BASE_URL: http://127.0.0.1:4173/
+              steps:
+                - uses: actions/checkout@v4
+                - uses: actions/setup-node@v4
+                  with:
+                    node-version: '22'
+                    cache: npm
+                - name: Install pinned dependencies
+                  run: npm ci --no-audit --no-fund
+                - name: Install Chromium
+                  run: npx playwright install --with-deps chromium
+                - name: Unit tests
+                  run: npm test
+                - name: Functional homologation
+                  run: npm run homologate:functional -- homologation/rc-functional.json homologation/rc-functional.md
+                - name: Vite build
+                  run: npm run build
+                - name: Generate CLEAN fixture
+                  run: npm run homologate:fixture
+                - name: Start Vite preview
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    nohup npm run preview -- --host 127.0.0.1 --port 4173 --strictPort > /tmp/vite-preview.log 2>&1 &
+                    for i in $(seq 1 60); do
+                      if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+                      sleep 1
+                    done
+                    cat /tmp/vite-preview.log
+                    exit 1
+                - name: Chromium IndexedDB reload PDF export reimport
+                  run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/rc-browser.json homologation/rc-browser.md
+          EOF
+
+      - name: Validate clean release before publication
+        working-directory: /tmp/oficinaos
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          npm test
+          npm run homologate:functional -- homologation/release-functional.json homologation/release-functional.md
+          npm run build
+          npm run homologate:fixture
+          nohup npm run preview -- --host 127.0.0.1 --port 4173 --strictPort > /tmp/release-preview.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4173/ >/dev/null
+          npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/release-browser.json homologation/release-browser.md
+
+      - name: Freeze release manifest
+        working-directory: /tmp/oficinaos
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf node_modules dist homologation/external-results
+          rm -f homologation/fixtures/zero-budget-smoke.json
+          find . -type f ! -name RELEASE_SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > RELEASE_SHA256SUMS.txt
+          test -s RELEASE_SHA256SUMS.txt
+
+      - name: Publish clean release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -B "$RELEASE_BRANCH" "origin/$RELEASE_BRANCH"
+          git rm -rf . >/dev/null 2>&1 || true
+          rsync -a --delete --exclude '.git' /tmp/oficinaos/ "$GITHUB_WORKSPACE/"
+          git add -A
+          test -z "$(git ls-files | grep -E '^(\.ci|homologation/official-backups/)' || true)"
+          git commit -m 'release: freeze OficinaOS v0.9.1 RC1 homologated GO'
+          git push origin "HEAD:refs/heads/$RELEASE_BRANCH"
