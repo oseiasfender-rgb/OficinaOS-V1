@@ -43,7 +43,7 @@ if(buildPass){
  server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--host','127.0.0.1','--port',String(port),'--strictPort'],{cwd:root,stdio:['ignore',serverLog.fd,serverLog.fd]});
  try{
   let ready=false;for(let i=0;i<60;i++){if(server.exitCode!==null)break;try{ready=(await fetch(baseUrl)).ok;}catch{}if(ready)break;await new Promise(r=>setTimeout(r,500));}
-  if(ready)await run('scripts/homologate-browser.mjs',[inputPath,officialBrowser,path.join(outputDir,'browser-official.md')],'browser-official.log',{OFICINAOS_BASE_URL:baseUrl});
+  if(ready)await run('scripts/homologate-browser.mjs',[inputPath,officialBrowser,path.join(outputDir,'browser-official.md')],'browser-official.log',{OFICINAOS_BASE_URL:baseUrl,ACCEPTANCE_METRICS:'1'});
  }finally{server.kill();await serverLog.close();}
 }
 const code=await run('scripts/finalize-external-homologation.mjs',[],'final.log',{UNIT_PASS:unitPass?'1':'0',BUILD_PASS:buildPass?'1':'0',FUNCTIONAL_PASS:functionalPass?'1':'0',BROWSER_RESULT:officialBrowser,OFFICIAL_RESULT:officialResult,OFFICIAL_BROWSER_RESULT:officialBrowser,ACCEPTANCE_RESULT:path.join(outputDir,'acceptance-metrics.json'),FINAL_OUTPUT_DIR:outputDir});
