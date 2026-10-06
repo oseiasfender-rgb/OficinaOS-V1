@@ -1,0 +1,28 @@
+{
+  "status": "USER_AUTHORIZED_BASELINE_REPLACEMENT",
+  "source": "OficinaOS-backup-2026-10-05.json",
+  "sha256": "8edaf955eccd9f56aa373825a379a667fcd719e46e768a4928b4fe4a1857a239",
+  "exportedAt": "2026-10-05T22:17:37.856Z",
+  "previousCounts": {
+    "transactions": 2095,
+    "accounts": 302,
+    "jobs": 34,
+    "clients": 5,
+    "goals": 7,
+    "budgets": 1
+  },
+  "counts": {
+    "transactions": 2180,
+    "accounts": 388,
+    "jobs": 37,
+    "clients": 5,
+    "goals": 7,
+    "budgets": 0
+  },
+  "authorization": "Usuário declarou: esse arquivo atualizado é destinado a substituir a referência histórica.",
+  "limitations": [
+    "orcHistorico ausente no arquivo; zero não comprova preservação de históricos anteriores",
+    "derivedCount e missingExpectedCount continuam sem definição auditável"
+  ],
+  "rawDataPublic": false
+}

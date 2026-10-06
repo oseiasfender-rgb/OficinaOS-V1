@@ -70,13 +70,14 @@ try{
   await page.getByRole('button',{name:'Orçamento',exact:true}).click();
   const beforePdf=await dbSnapshot();const beforePdfHashes=hashes(beforePdf);
   const firstBudget=page.locator('.budget-history-open').first();
-  if(await firstBudget.count()){await firstBudget.click();await page.getByRole('button',{name:'PDF comercial',exact:true}).click();await page.locator('.commercial-print-sheet').waitFor({state:'visible'});const quoteText=(await page.locator('.commercial-print-sheet').innerText()).toLowerCase();const forbidden=['segredo interno','r$ / hora','margem','custo interno','observações internas'];const leaked=forbidden.filter(k=>quoteText.includes(k));const pdfBytes=await page.pdf({path:path.resolve(path.dirname(outputJson),'commercial-quote.pdf'),format:'A4',printBackground:true});gate('chromiumPdfFile',pdfBytes.subarray(0,5).toString()==='%PDF-','PDF real gerado pelo Chromium');const printCalls=await page.evaluate(()=>window.__OFIX_PRINT_CALLS__||0);gate('commercialPdfBrowserPrivacy',leaked.length===0&&printCalls===1,leaked.length?`vazamentos: ${leaked.join(', ')}`:`print chamado ${printCalls}x e sem campos internos`);}else gate('commercialPdfBrowserPrivacy',false,'nenhum orçamento encontrado após importação');
+  if(await firstBudget.count()){await firstBudget.click();}else{await page.getByRole('button',{name:'Novo',exact:true}).click();}
+  {await page.getByRole('button',{name:'PDF comercial',exact:true}).click();await page.locator('.commercial-print-sheet').waitFor({state:'visible'});const quoteText=(await page.locator('.commercial-print-sheet').innerText()).toLowerCase();const forbidden=['segredo interno','r$ / hora','margem','custo interno','observações internas'];const leaked=forbidden.filter(k=>quoteText.includes(k));const pdfBytes=await page.pdf({path:path.resolve(path.dirname(outputJson),'commercial-quote.pdf'),format:'A4',printBackground:true});gate('chromiumPdfFile',pdfBytes.subarray(0,5).toString()==='%PDF-','PDF real gerado pelo Chromium');const printCalls=await page.evaluate(()=>window.__OFIX_PRINT_CALLS__||0);gate('commercialPdfBrowserPrivacy',leaked.length===0&&printCalls===1,leaked.length?`vazamentos: ${leaked.join(', ')}`:`print chamado ${printCalls}x e sem campos internos`);}
 
   const afterPdfHashes=hashes(await dbSnapshot());
   const pdfDiff=Object.keys(beforePdfHashes).filter(k=>beforePdfHashes[k]!==afterPdfHashes[k]);
   gate('pdfDoesNotPersist',pdfDiff.length===0,pdfDiff.length?`stores alterados: ${pdfDiff.join(', ')}`:'PDF preserva todos os stores, incluindo IDs, tipos e timestamps');
   await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
-  if(await firstBudget.count()){
+  {
     const notes=page.getByLabel('Observações para o cliente',{exact:true});
     await notes.fill('ALTERAÇÃO NÃO SALVA PARA TESTE DO PDF');
     await page.getByRole('button',{name:'PDF comercial',exact:true}).click();
