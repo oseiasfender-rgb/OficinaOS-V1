@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-10-06T12:46:31.008Z",
+  "status": "GO",
+  "gates": {
+    "unitTests": true,
+    "buildVite": true,
+    "functionalServices": true,
+    "browserIndexedDb": true,
+    "officialSnapshotPresent": true,
+    "officialCounts": true,
+    "officialStructural": true,
+    "officialBrowserIndexedDb": true,
+    "acceptanceMetricsDefined": true,
+    "acceptanceMetricsVerified": true,
+    "sourceIdentityLinks": true
+  },
+  "reasons": [],
+  "contractSha256": "1e776f90ad9299a3b3773ba4f2ca25238c32e239b5db3e20038ce462ad075d35",
+  "technicalPass": true,
+  "note": "GO exige todos os gates, snapshot oficial identificado e métricas ligadas ao mesmo SHA-256. Variável de ambiente não substitui a definição documental nem seu cálculo.",
+  "snapshotSha256": "e9df0c002e4e5efb4e99f7e790939068886896711ff1699d0d4ee3f923c96945",
+  "stages": {
+    "import": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "reload": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "navigation": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "beforePdf": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "pdf": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "pdfUnsavedEdit": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "pdfNewDraft": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "export": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "reimport": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    },
+    "reimportReload": {
+      "derivedCount": 0,
+      "missingExpectedCount": 0,
+      "sourceLinksValid": true
+    }
+  },
+  "scope": "Execução privada integral; não é resultado sintético do GitHub Actions.",
+  "financialFieldsUnchanged": true,
+  "sanitizedLinks": 11,
+  "originalSnapshotSha256": "8edaf955eccd9f56aa373825a379a667fcd719e46e768a4928b4fe4a1857a239"
+}

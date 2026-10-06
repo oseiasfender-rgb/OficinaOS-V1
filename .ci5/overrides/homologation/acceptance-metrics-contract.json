@@ -24,8 +24,17 @@
     "derivedCount=0 e missingExpectedCount=0 calculados"
   ],
   "sourceDocumentPath": "homologation/ACCEPTANCE_SPEC_V1_2026-10-06.md",
-  "snapshotSha256": "8edaf955eccd9f56aa373825a379a667fcd719e46e768a4928b4fe4a1857a239",
+  "snapshotSha256": "e9df0c002e4e5efb4e99f7e790939068886896711ff1699d0d4ee3f923c96945",
   "auditorSha256": "ba72495edbf84a99b1e2b63fb15dab42588e5d77392c535689651096761d7a94",
   "historicalDefinitionRecovered": false,
-  "authorization": "Usuário autorizou concluir regra auditável, integrar auditor e calcular métricas em todas as etapas."
+  "authorization": "Usuário autorizou concluir regra auditável, integrar auditor e calcular métricas em todas as etapas.",
+  "baselineSanitization": {
+    "originalSnapshotSha256": "8edaf955eccd9f56aa373825a379a667fcd719e46e768a4928b4fe4a1857a239",
+    "changedFields": [
+      "contas[11].fromTx"
+    ],
+    "changeCount": 11,
+    "financialFieldsUnchanged": true,
+    "authorization": "Usuário autorizou atualização/reorganização em 06/10/2026."
+  }
 }

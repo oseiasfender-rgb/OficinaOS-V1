@@ -1,7 +1,7 @@
 {
-  "status": "USER_AUTHORIZED_BASELINE_REPLACEMENT",
-  "source": "OficinaOS-backup-2026-10-05.json",
-  "sha256": "8edaf955eccd9f56aa373825a379a667fcd719e46e768a4928b4fe4a1857a239",
+  "status": "USER_AUTHORIZED_SANITIZED_BASELINE",
+  "source": "OficinaOS-backup-2026-10-06-saneado.json",
+  "sha256": "e9df0c002e4e5efb4e99f7e790939068886896711ff1699d0d4ee3f923c96945",
   "exportedAt": "2026-10-05T22:17:37.856Z",
   "previousCounts": {
     "transactions": 2095,
@@ -19,10 +19,10 @@
     "goals": 7,
     "budgets": 0
   },
-  "authorization": "Usuário declarou: esse arquivo atualizado é destinado a substituir a referência histórica.",
+  "authorization": "Usuário autorizou atualização/reorganização: desvinculação de 11 fromTx sem destino, sem mudança financeira.",
   "limitations": [
-    "orcHistorico ausente no arquivo; zero não comprova preservação de históricos anteriores",
-    "derivedCount e missingExpectedCount continuam sem definição auditável"
+    "Backup não contém orcHistorico; homologação cobre o snapshot fornecido."
   ],
-  "rawDataPublic": false
+  "rawDataPublic": false,
+  "previousSnapshotSha256": "8edaf955eccd9f56aa373825a379a667fcd719e46e768a4928b4fe4a1857a239"
 }
