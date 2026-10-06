@@ -50,11 +50,10 @@ jobs:
           test ! -e /tmp/oficinaos/.ci
           test ! -e /tmp/oficinaos/.ci5
 
-      - name: Add release provenance and CI
+      - name: Add release provenance
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/oficinaos/.github/workflows
           cat > /tmp/oficinaos/RELEASE_PROVENANCE.md <<'EOF'
           # OficinaOS — Release Candidate homologada
 
@@ -68,60 +67,6 @@ jobs:
           - O Actions público usa somente fixture sintética CLEAN.
           - O backup real criptografado permanece exclusivamente na branch de homologação e não integra esta release.
           - Esta branch não representa implantação em produção e não altera `main`.
-          EOF
-
-          cat > /tmp/oficinaos/.github/workflows/release-ci.yml <<'EOF'
-          name: OficinaOS Release Candidate CI
-
-          on:
-            push:
-              branches:
-                - release/oficinaos-v0.9.1-rc1-go
-            pull_request:
-              branches:
-                - main
-
-          permissions:
-            contents: read
-
-          jobs:
-            validate:
-              runs-on: ubuntu-latest
-              timeout-minutes: 35
-              env:
-                CI: 'true'
-                OFICINAOS_BASE_URL: http://127.0.0.1:4173/
-              steps:
-                - uses: actions/checkout@v4
-                - uses: actions/setup-node@v4
-                  with:
-                    node-version: '22'
-                    cache: npm
-                - name: Install pinned dependencies
-                  run: npm ci --no-audit --no-fund
-                - name: Install Chromium
-                  run: npx playwright install --with-deps chromium
-                - name: Unit tests
-                  run: npm test
-                - name: Functional homologation
-                  run: npm run homologate:functional -- homologation/rc-functional.json homologation/rc-functional.md
-                - name: Vite build
-                  run: npm run build
-                - name: Generate CLEAN fixture
-                  run: npm run homologate:fixture
-                - name: Start Vite preview
-                  shell: bash
-                  run: |
-                    set -euo pipefail
-                    nohup npm run preview -- --host 127.0.0.1 --port 4173 --strictPort > /tmp/vite-preview.log 2>&1 &
-                    for i in $(seq 1 60); do
-                      if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
-                      sleep 1
-                    done
-                    cat /tmp/vite-preview.log
-                    exit 1
-                - name: Chromium IndexedDB reload PDF export reimport
-                  run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/rc-browser.json homologation/rc-browser.md
           EOF
 
       - name: Validate clean release before publication
@@ -163,6 +108,6 @@ jobs:
           git rm -rf . >/dev/null 2>&1 || true
           rsync -a --delete --exclude '.git' /tmp/oficinaos/ "$GITHUB_WORKSPACE/"
           git add -A
-          test -z "$(git ls-files | grep -E '^(\.ci|homologation/official-backups/)' || true)"
+          test -z "$(git ls-files | grep -E '^(\.ci|\.github/|homologation/official-backups/)' || true)"
           git commit -m 'release: freeze OficinaOS v0.9.1 RC1 homologated GO'
           git push origin "HEAD:refs/heads/$RELEASE_BRANCH"
