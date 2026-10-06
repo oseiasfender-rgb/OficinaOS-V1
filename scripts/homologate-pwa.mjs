@@ -50,18 +50,29 @@ try {
     if (!('serviceWorker' in navigator)) throw new Error('Service Worker não suportado pelo navegador de teste.');
     await navigator.serviceWorker.ready;
   });
+
   const sw = await page.evaluate(async () => {
     const registration = await navigator.serviceWorker.ready;
     return {
       scope: registration.scope,
-      active: Boolean(registration.active)
+      active: Boolean(registration.active),
+      controlled: Boolean(navigator.serviceWorker.controller)
     };
   });
+
   result.checks.serviceWorkerActive = sw.active;
   result.checks.serviceWorkerScope = sw.scope;
   result.checks.scopeMatchesBase = sw.scope === new URL('./', baseURL).href;
 
-  await page.waitForTimeout(1000);
+  let controlled = sw.controlled;
+  if (!controlled) {
+    await page.reload({ waitUntil: 'networkidle', timeout: 15000 });
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller), null, { timeout: 15000 });
+    controlled = true;
+  }
+  result.checks.serviceWorkerControlsPage = controlled;
+
+  await page.waitForTimeout(500);
   await context.setOffline(true);
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
   result.checks.offlineReload = await page.locator('#app').evaluate((el) => el.textContent.trim().length > 0);
@@ -73,6 +84,7 @@ try {
 } catch (error) {
   result.error = String(error?.stack || error);
 } finally {
+  try { await context.setOffline(false); } catch {}
   await browser.close();
 }
 
