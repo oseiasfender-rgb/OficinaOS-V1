@@ -103,6 +103,13 @@ jobs:
         working-directory: /tmp/oficinaos
         run: npm run homologate:browser -- homologation/fixtures/external-smoke-backup.json homologation/external-results/browser.json homologation/external-results/browser.md
 
+      - name: PDF and round-trip with zero saved budgets
+        working-directory: /tmp/oficinaos
+        shell: bash
+        run: |
+          node --input-type=module -e "import fs from 'node:fs'; const p=JSON.parse(fs.readFileSync('homologation/fixtures/external-smoke-backup.json','utf8')); if(p.modular?.stores){p.modular.stores.budgets=[];p.modular.stores.budgetHistory=[];p.modular.stores.archivedBudgets=[];} p.orcHistorico=[]; fs.writeFileSync('homologation/fixtures/zero-budget-smoke.json',JSON.stringify(p));"
+          node scripts/homologate-browser.mjs homologation/fixtures/zero-budget-smoke.json homologation/external-results/zero-budget/browser.json homologation/external-results/zero-budget/browser.md
+
       - name: Final decision from actual evidence
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         continue-on-error: true
