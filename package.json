@@ -13,6 +13,7 @@
     "homologate:functional": "node scripts/homologate-functional.mjs",
     "homologate:fixture": "node scripts/generate-external-smoke-fixture.mjs homologation/fixtures/external-smoke-backup.json",
     "homologate:browser": "node scripts/homologate-browser.mjs",
+    "homologate:pwa": "node scripts/homologate-pwa.mjs",
     "homologate:external:final": "node scripts/finalize-external-homologation.mjs"
   },
   "devDependencies": {

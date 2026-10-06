@@ -7,10 +7,13 @@ cf9305d15e2fec330c6101875c2f21f82002db52aa88608681bf1064297f943a  ./RELEASE_PROV
 1e776f90ad9299a3b3773ba4f2ca25238c32e239b5db3e20038ce462ad075d35  ./homologation/acceptance-metrics-contract.json
 de22cf4293b4d643cf2f4b7c4eb46c4c7e89c279f489bf7fb396c17994633a01  ./homologation/fixtures/external-smoke-backup.json
 08bb8562ccef8a418cd6407f0b507b52e8df87197e644329c1e54e1d9f6560fa  ./homologation/official-baseline-reference.json
-907f013cb16b65543c6dfe9c97237f7e146bb02582e2bab72ab6c99bebd2d51c  ./index.html
+afc530f1a1b04b480ef1e62826c4f82aea6fea3793bbd912748b17b702c68758  ./index.html
 d9ce070fa78b4c53c1d4bbc4f48f36db7aca4bc2835e1d2cbae0920e0e3f67de  ./package-lock.json
-8fe4c36c79517102b391a60ab2aacb35b20c5ea2342ddbbd426e0a3607fecdda  ./package.json
-1a0c508425b0aafe045ae49a41074b03c76bb00b1d01bb522a14d72ed5565e89  ./public/manifest.json
+2352d4ad02c58e9799472e378c7253ae30814bcbf65b2215a11ad1361abd6997  ./package.json
+0ddc24717902aad7a3d220721a42fc711118fe48f275b10806082a301467ca99  ./public/icons/icon-192.png
+f5308e5ad4819489821db09237c5e2e7e3c6f0a584bf0b3cbab497e8ad8afb21  ./public/icons/icon-512.png
+7cfac3f875502fb5926f982960e8a240c8b60ce12383b7baf1dcdf4f4dab1126  ./public/manifest.json
+09967c96ab18c7fb60424ba9b9bd2804deeb2e4619125798e333b6c33cd09364  ./public/service-worker.js
 ba72495edbf84a99b1e2b63fb15dab42588e5d77392c535689651096761d7a94  ./scripts/acceptance-auditor.mjs
 e805d327c7ba12962b67b0bcb9ed1432435b231852453de5b46d9f1dc0821b1b  ./scripts/check-backup.mjs
 73851c7affe69df837d5dcff2d412d879d95c57737bf91d8c80f0a22e1123948  ./scripts/finalize-external-homologation.mjs
@@ -19,9 +22,11 @@ a38365ee1b848410850477442e821ee4b9c37138200aff476e77c80499ee1cda  ./scripts/homo
 18381a814ae5a036d2eba090acc648921600142419fc1e09227e0b4bb539b0a6  ./scripts/homologate-browser.mjs
 4151a732c78f0ce4979181ba48e55d9901be6ca90b1058fca6bf942cc6082745  ./scripts/homologate-functional.mjs
 6ec0517c105074c209120f79035376eba00311064fbd429754cccd4f6bf7480b  ./scripts/homologate-official-private.mjs
+9e84e5f972c496669c0e402744c484845c58ceb5f810976e8d14ecd67edc1660  ./scripts/homologate-pwa.mjs
 a6f94fc7e8f1cfbb8f7e61398d56abf40a05a40dc6cf0fb8eae1cf305ed70437  ./src/app/app-shell.js
 816ab221a5cdfd5f7b7dc6d2e1e45ed687083817ae7950bd7eb98803b5f7e2bc  ./src/app/boot.js
 29bdd8babedf2c17920c85acd056a427919eeb3b3bb742ef3b7799a8dcb021fe  ./src/app/legacy-adapter.js
+1cc0836c7de07ab8a27e9053633023bb411d90e1625ee9b6db803b939a6c1016  ./src/app/pwa.js
 12c23ea5d64dfeb91c1c83a42d38e6785d441051761066856d8eb1abdafe304a  ./src/core/app-store.js
 204643f5d65a7dc57b32da0d15a8252352d36c0985fe4286f7496650f1f2aaee  ./src/core/event-bus.js
 1f3cbf628e8f36cf6978ce66423b3b010faa817f6706a5fcbc90c0ad96084ed7  ./src/core/ids.js
@@ -37,7 +42,7 @@ a141a0cb3b7c5f9cab075b1b48b1149b6bd143f97c967a1a02e0beae96f83bb3  ./src/data/loa
 b99ad12ec8775a94e9545a1883b1f02770e966f079b227ca538b4896d9aa10e5  ./src/data/repositories/base-repository.js
 c0ec5b121f18340d5db8b1cb3a66b8e58f7a6531e95e80348151b1a25c4fe639  ./src/data/repositories/index.js
 fe05b3eadf63b5e879319c22140ee52a7cd52d99b5ccf7281d69324483bcc2c6  ./src/data/schema.js
-cf8a7afff0f26ed8158893d7f25c41da951e443b3332305b11a1f058208014f2  ./src/main.js
+7adc62ea5876de8ecc5aba05ad8ff24e08984a9694f09863d07ee4e42855ad7e  ./src/main.js
 844314fe300e7c10e3244f8b8c5cc8ad3ae6f89aeff2ce5a3b6667a3d7f75bc4  ./src/modules/agenda/agenda-service.js
 6cc17ba613c609331b045bd3bfd60aea0149bfc73d5ce15725b69ee8363be73e  ./src/modules/agenda/agenda-view.js
 7b96aa8b609f3e3cda18dfbe7b5f4fd031e01d5f21dd359a05d38431d550f244  ./src/modules/analytics-services.js
