@@ -5,6 +5,8 @@ const CONFIG_KEY = 'os_config';
 function sanitizeOfficeConfig(value = {}) {
   return {
     nome: safeText(value.nome, 120),
+    subtitulo:safeText(value.subtitulo,120),
+    endereco:safeText(value.endereco,180),
     dono: safeText(value.dono, 120),
     cnpj: safeText(value.cnpj, 24),
     cidade: safeText(value.cidade, 120),
