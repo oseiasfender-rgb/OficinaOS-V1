@@ -9,8 +9,7 @@ export function projectReference(raw){
  const top=['version','exportedAt','ALL_TX','jobs','clientes','estoque','contas','metaPrincipal','metasCat','nextTxId','dasStatus'];
  if(Object.keys(raw).some(k=>!top.includes(k))||raw.version!=='1.0')throw new Error('Fonte fora do escopo da matriz v1; não calcular.');
  for(const k of ['ALL_TX','jobs','clientes','estoque','contas','metasCat'])if(!Array.isArray(raw[k]))throw new Error('Coleção ausente: '+k);
- if(raw.estoque.length)throw new Error('Estoque não vazio fora do escopo v1.');
- const fields={ALL_TX:['id','paid','val','type','cat','date','desc','pagto','orcId','hist','dasKey','ref'],jobs:['id','entrega','entrada','val','updatedAt','veiculo','cliente','tipo','done','obs'],clientes:['nome','obs','doc','criado','servicos','email','id','veiculos','fone'],contas:['id','val','recur','paidTxId','paid','paidAt','fromTx','cat','due','name','recurKey','competencia'],metasCat:['meta','cat','real']};
+ const fields={ALL_TX:['id','paid','val','type','cat','date','desc','pagto','orcId','hist','dasKey','ref'],jobs:['id','entrega','entrada','val','updatedAt','veiculo','cliente','tipo','done','obs'],clientes:['nome','obs','doc','criado','servicos','email','id','veiculos','fone'],contas:['id','val','recur','paidTxId','paid','paidAt','fromTx','cat','due','name','recurKey','competencia'],metasCat:['meta','cat','real'],estoque:['id','nome','name','cat','unid','qty','custo','unit','minimo','minQty','forn']};
  for(const [k,list]of Object.entries(fields)){
   const ids=new Set();for(const row of raw[k]){
    if(!row||typeof row!=='object'||Array.isArray(row)||Object.keys(row).some(f=>!list.includes(f)))throw new Error('Campo sem cobertura: '+k);
@@ -26,6 +25,8 @@ export function projectReference(raw){
  const sourceLinksValid=linkManifest.every(r=>!['UNRESOLVED','AMBIGUOUS'].includes(r.status));
 e.accounts=raw.contas.map(r=>({...clone(r),category:r.cat??''}));e.clients=raw.clientes.map(r=>({...clone(r),name:r.nome??''}));e.jobs=raw.jobs.map(r=>({...clone(r),budgetId:null}));
  e.goals=raw.metasCat.map((r,i)=>({...clone(r),id:`goal_${i+1}`,category:r.cat}));
+ // Revision v2: deep-copy every inventoried stock field; add only official aliases.
+ e.stock=raw.estoque.map(r=>({...clone(r),name:r.name??r.nome??'',category:r.cat??''}));
  e.workOrders=raw.jobs.map((r,i)=>({id:`os_${r.id}`,legacyJobId:r.id,number:`OS-${String(i+1).padStart(4,'0')}`,budgetId:null,clientId:e.clients.find(c=>text(c.name).toLocaleLowerCase('pt-BR')===text(r.cliente).toLocaleLowerCase('pt-BR')&&text(r.cliente))?.id??null,vehicleId:null,stage:r.done===true?'entregue':'entrada',status:r.done===true?'Entregue':'Agendada',priority:'Normal',entryDate:date(r.entrada),dueDate:date(r.entrega),value:Number(r.val??0),clientName:text(r.cliente),vehicle:text(r.veiculo),service:text(r.tipo),notes:text(r.obs),createdAt:null,updatedAt:r.updatedAt??null}));
  e.appointments=raw.jobs.map((r,i)=>({...clone(r),budgetId:null,id:`ag_${r.id}`,legacyJobId:r.id,workOrderId:e.workOrders[i].id,clientId:e.workOrders[i].clientId,date:date(r.entrada),dueDate:date(r.entrega),time:'08:00',type:text(r.tipo??'Entrada'),status:r.done===true?'Concluído':'Agendado',clientName:text(r.cliente),vehicle:text(r.veiculo),service:text(r.tipo),value:Number(r.val??0),notes:text(r.obs)}));
  e.settings=['metaPrincipal','nextTxId','dasStatus'].flatMap(k=>[{id:k,value:clone(raw[k])},{id:{metaPrincipal:'fp_meta_principal',nextTxId:'fp_next_tx_id',dasStatus:'fp_das_status'}[k],value:clone(raw[k])}]);

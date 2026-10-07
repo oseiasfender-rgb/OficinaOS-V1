@@ -6,6 +6,7 @@ import { canonicalFromLegacy, validateLegacyPayload } from '../src/data/legacy-c
 import { auditCanonical, financialSignatures, compareFinancialSignatures } from '../src/data/integrity.js';
 import {projectReference,compareExpected,fingerprint,AUDIT_STORES} from './acceptance-auditor.mjs';
 import { STATE_STORES } from '../src/data/schema.js';
+import { loadAcceptanceContract } from './acceptance-contract.mjs';
 
 const [snapshotPath='homologation/fixtures/external-smoke-backup.json', outputJson='homologation/external-results/browser.json', outputMd='homologation/external-results/browser.md'] = process.argv.slice(2);
 const baseUrl=process.env.OFICINAOS_BASE_URL || 'http://127.0.0.1:4173/';
@@ -23,14 +24,30 @@ const gate=(name,pass,detail)=>{evidence.gates[name]={pass:!!pass,detail};if(!pa
 const metricsEnabled=process.env.ACCEPTANCE_METRICS==='1';
 const metricStages={};let projection,metricContract,metricContractSha;
 if(metricsEnabled){
- const cb=await fs.readFile('homologation/acceptance-metrics-contract.json');metricContract=JSON.parse(cb);metricContractSha=crypto.createHash('sha256').update(cb).digest('hex');
- if(metricContract.status!=='APPROVED'||metricContract.snapshotSha256!==evidence.snapshot.sha256||evidence.snapshot.synthetic)throw new Error('Contrato/fonte não autorizado para cálculo.');
- const spec=await fs.readFile(metricContract.sourceDocumentPath),auditor=await fs.readFile('scripts/acceptance-auditor.mjs');
- if(crypto.createHash('sha256').update(spec).digest('hex')!==metricContract.sourceDocumentSha256||crypto.createHash('sha256').update(auditor).digest('hex')!==metricContract.auditorSha256)throw new Error('Identidade da especificação/auditor diverge.');
+ const loaded=await loadAcceptanceContract(process.env.ACCEPTANCE_CONTRACT||'homologation/acceptance-metrics-contract.json',evidence.snapshot.sha256);
+ metricContract=loaded.contract;metricContractSha=loaded.contractSha256;
+ if(evidence.snapshot.synthetic)throw new Error('Fixture sintética não autoriza métricas de snapshot real.');
  projection=projectReference(raw);
 }
-function auditStage(name,actual){if(metricsEnabled)metricStages[name]=compareExpected(projection,actual);}
-const browser=await chromium.launch({headless:true});
+let importedMetadataHash;
+function auditStage(name,actual){
+ if(metricsEnabled){
+  if(name==='import')importedMetadataHash=digest(sorted(actual.meta||[]));
+  const result=compareExpected(projection,actual);
+  result.metadataPreserved=importedMetadataHash===digest(sorted(actual.meta||[]));
+  result.pass=result.pass&&result.metadataPreserved;
+  metricStages[name]=result;
+ }
+}
+const launchOptions={headless:true};
+if(process.env.OFICINAOS_CHROMIUM_EXECUTABLE)launchOptions.executablePath=process.env.OFICINAOS_CHROMIUM_EXECUTABLE;
+if(process.env.OFICINAOS_CHROMIUM_ARGS){
+ const args=JSON.parse(process.env.OFICINAOS_CHROMIUM_ARGS);
+ if(!Array.isArray(args)||!args.every(v=>typeof v==='string'))throw new Error('Argumentos Chromium inválidos.');
+ launchOptions.args=args;
+}
+const browser=await chromium.launch(launchOptions);
+evidence.browser={engine:'chromium',version:browser.version(),customExecutable:!!launchOptions.executablePath};
 const context=await browser.newContext({acceptDownloads:true});
 const page=await context.newPage();
 page.on('console',msg=>{if(msg.type()==='error')evidence.consoleErrors.push(msg.text());});

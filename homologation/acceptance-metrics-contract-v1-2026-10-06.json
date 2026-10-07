@@ -1,8 +1,8 @@
 {
-  "schema": "oficinaos-acceptance-metrics-contract-v2",
+  "schema": "oficinaos-acceptance-metrics-contract-v1",
   "status": "APPROVED",
-  "definitionRevision": "acceptance-v2-2026-10-07-stock",
-  "sourceDocumentSha256": "dafd143ac15efb476b5db992f0239e86b42c62292c40ae0f65924c6868ff1fe9",
+  "definitionRevision": "acceptance-v1-2026-10-06",
+  "sourceDocumentSha256": "7e6bbe6c64599024acdff207403d5afcd6d5404b00169aeee4e592798d235953",
   "sourceReferences": [
     "GATE_ACCEPTANCE_METRICS_2026-09-18.md",
     "HOMOLOGATION_STATUS.md"
@@ -23,9 +23,9 @@
     "resultado vinculado ao SHA-256 do snapshot oficial",
     "derivedCount=0 e missingExpectedCount=0 calculados"
   ],
-  "sourceDocumentPath": "homologation/ACCEPTANCE_SPEC_V2_2026-10-07.md",
+  "sourceDocumentPath": "homologation/ACCEPTANCE_SPEC_V1_2026-10-06.md",
   "snapshotSha256": "e9df0c002e4e5efb4e99f7e790939068886896711ff1699d0d4ee3f923c96945",
-  "auditorSha256": "8e11c17f4521fd6a563d4d489f63ce99bb63e1464d021ec8038d973ac29c78c4",
+  "auditorSha256": "ba72495edbf84a99b1e2b63fb15dab42588e5d77392c535689651096761d7a94",
   "historicalDefinitionRecovered": false,
   "authorization": "Usuário autorizou concluir regra auditável, integrar auditor e calcular métricas em todas as etapas.",
   "baselineSanitization": {
@@ -36,28 +36,5 @@
     "changeCount": 11,
     "financialFieldsUnchanged": true,
     "authorization": "Usuário autorizou atualização/reorganização em 06/10/2026."
-  },
-  "previousContractPath": "homologation/acceptance-metrics-contract-v1-2026-10-06.json",
-  "previousContractSha256": "1e776f90ad9299a3b3773ba4f2ca25238c32e239b5db3e20038ce462ad075d35",
-  "note": "Este contrato público continua vinculado ao snapshot histórico; novos snapshots usam contrato privado externo.",
-  "expectedCounts": {
-    "transactions": 2180,
-    "accounts": 388,
-    "clients": 5,
-    "jobs": 37,
-    "workOrders": 37,
-    "appointments": 37,
-    "checklists": 0,
-    "budgets": 0,
-    "categories": 0,
-    "goals": 7,
-    "stock": 0,
-    "operationalHistory": 0,
-    "budgetHistory": 0,
-    "archivedBudgets": 0,
-    "trash": 0,
-    "deletionBackups": 0,
-    "deletionLog": 0,
-    "recurringTemplates": 0
   }
 }

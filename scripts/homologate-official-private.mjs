@@ -5,6 +5,8 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { canonicalFromLegacy,validateLegacyPayload } from '../src/data/legacy-compat.js';
 import { auditCanonical } from '../src/data/integrity.js';
+import { loadAcceptanceContract } from './acceptance-contract.mjs';
+import { projectReference } from './acceptance-auditor.mjs';
 const [input,expectedSha256,destination,mode]=process.argv.slice(2);
 if(!input||!/^[a-f0-9]{64}$/.test(expectedSha256||'')||!destination){console.error('Uso: node scripts/homologate-official-private.mjs snapshot.json SHA256 /pasta/privada [--preflight-only]');process.exit(2);}
 const root=await fs.realpath(fileURLToPath(new URL('../',import.meta.url)));
@@ -19,7 +21,15 @@ if(sha256!==expectedSha256){console.error('SHA-256 do snapshot não corresponde 
 const raw=JSON.parse(bytes.toString('utf8'));
 if(raw.homologationFixture?.synthetic===true){console.error('Fixture sintética não pode ser apresentada como snapshot oficial.');process.exit(2);}
 if(!validateLegacyPayload(raw).valid){console.error('Formato do snapshot não reconhecido.');process.exit(2);}
-const targets=JSON.parse(await fs.readFile(path.join(root,'tests/acceptance/official-counts.json'),'utf8'));
+let targets=JSON.parse(await fs.readFile(path.join(root,'tests/acceptance/official-counts.json'),'utf8'));
+if(process.env.ACCEPTANCE_CONTRACT){
+ const {contract}=await loadAcceptanceContract(process.env.ACCEPTANCE_CONTRACT,sha256);
+ const projection=projectReference(raw);
+ targets=Object.fromEntries(Object.entries(projection.expected).filter(([k])=>k!=='settings').map(([k,v])=>[k,v.length]));
+ const keys=Object.keys(targets);
+ if(!contract.expectedCounts||Object.keys(contract.expectedCounts).length!==keys.length||keys.some(k=>contract.expectedCounts[k]!==targets[k]))throw new Error('Contagens do contrato divergem da projeção independente.');
+ if(!projection.sourceLinksValid)throw new Error('Vínculos de origem inválidos; não iniciar homologação privada.');
+}
 const counts=auditCanonical(canonicalFromLegacy(raw)).counts;
 const officialCountsMatch=Object.entries(targets).every(([k,v])=>counts[k]===v);
 await fs.writeFile(path.join(outputDir,'snapshot-preflight.json'),JSON.stringify({sha256,officialCountsMatch,counts,targets},null,2),{mode:0o600});
