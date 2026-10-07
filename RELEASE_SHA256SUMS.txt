@@ -26,6 +26,7 @@ a0d8a4e9216c4210ce80671d9a04f4b385c71937b37d35eeae762de1f191ec45  ./scripts/homo
 4151a732c78f0ce4979181ba48e55d9901be6ca90b1058fca6bf942cc6082745  ./scripts/homologate-functional.mjs
 24794f1d670ce40d3443b23662f6bab569b87aff049f81320d71cdc9fc521d00  ./scripts/homologate-official-private.mjs
 9e84e5f972c496669c0e402744c484845c58ceb5f810976e8d14ecd67edc1660  ./scripts/homologate-pwa.mjs
+1dd1ea99ba205db6917d4adb9f056c9d1af3a4b26255ad2c85a8e72a40312e5f  ./scripts/test-financial-preservation.mjs
 a6f94fc7e8f1cfbb8f7e61398d56abf40a05a40dc6cf0fb8eae1cf305ed70437  ./src/app/app-shell.js
 816ab221a5cdfd5f7b7dc6d2e1e45ed687083817ae7950bd7eb98803b5f7e2bc  ./src/app/boot.js
 29bdd8babedf2c17920c85acd056a427919eeb3b3bb742ef3b7799a8dcb021fe  ./src/app/legacy-adapter.js
@@ -61,9 +62,9 @@ a3d72870115ecd0976af452cee3125b64d7b446488c9af3ad01e81528e306b62  ./src/modules/
 5fa683fe69a439f595e19304c575f3219aaafab2fd2f2662582359b0cca2e8ca  ./src/modules/estoque/estoque-default.js
 d4bb9df3aa502b0af13530a9e7e3a40b1d463bd3ab580dd911de1d5fb49cc009  ./src/modules/estoque/estoque-service.js
 6d45639071ceebfc6efd2d1c75c541a17dfaf1a269e9f0bcec137a9ceac1e514  ./src/modules/estoque/estoque-view.js
-da3eb5f3fd031a035e800a32cf423d8365d8baaa0ff6c6c29f3b6ed828d9c0ed  ./src/modules/financeiro/financeiro-service.js
+6fe51c612e33916e7223814dbf2a4ae3ce891360a1bcdddfb8a640179b8585da  ./src/modules/financeiro/financeiro-service.js
 3e69155569550e3ea870fc06590840061434df5d91cb3e287fa677121a36e953  ./src/modules/financeiro/financeiro-view.js
-20c4cea41bcf3864b1756dbbdf02b4e16821f86c6df4b65adda978621eb1a452  ./src/modules/financeiro/financial-model.js
+c8cff87fe44cb7ea603e350259083e0040f95ce43ec5b2a1145ee40f39dbecc6  ./src/modules/financeiro/financial-model.js
 ea7ea363f6f7cbd78a799a7c29859ffe594c26d883840fd6107c3e82cbd03a73  ./src/modules/historico-operacional/historico-operacional-service.js
 84595479b41daada723a3282f10a53d944630724852736b9665bc396708f4c3c  ./src/modules/historico-orcamentos/historico-orcamentos-service.js
 0a14dd614ae05df3709ff3ff8068b062ae5d887ab9d94d07f10bbc64314fb91f  ./src/modules/historico-orcamentos/historicos-view.js
@@ -93,7 +94,7 @@ b16ee8041586b383379abd83d13ce2d5e3a3ba99e91692907474acfb13414c1d  ./tests/unit/a
 a08a1bc6bae9141230e050088e68f4be84cbecd7b0449624576e32e5c9f3f67d  ./tests/unit/backup-service.test.js
 f7f317a8221b219100808c3aab7b2cc72802a90931d8fe99945a4ebaee5c327a  ./tests/unit/budget.test.js
 5b1b3472f7cc18bcfa27438f8767e7765814d515d1aef7f6f89eaf1c249c7479  ./tests/unit/final-gate.test.js
-1362e3718ce77050b3d1754717b2101606929cdeb48e6c57dcc88169cd36e8b7  ./tests/unit/financeiro-contas.test.js
+175b46ade089fc5ec39ca1498634281209a379d62e83efc90ab82d5a3d5d9a72  ./tests/unit/financeiro-contas.test.js
 d99b301cb7fd72996821ba93c07551c004c957b0d431df4e258e88c6beec626e  ./tests/unit/history.test.js
 e0c7672cd38619b94a81959a9c3ad9b8101b4fa8a039268ba61f35103ce9491f  ./tests/unit/integrity.test.js
 f40e1fc43a5710e7d367a4d86cc927322ac1c445aaca82eab49d115954dd02f9  ./tests/unit/legacy-compat.test.js

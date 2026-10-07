@@ -102,55 +102,45 @@ function accountBusinessKey(account) {
   return `UNI|${text(account.name).toLocaleLowerCase('pt-BR')}|${text(account.cat).toLocaleLowerCase('pt-BR')}|${account.due}|${account.val.toFixed(2)}`;
 }
 
-export function reconcileFinancialData(rawTransactions = [], rawAccounts = []) {
-  const usedTxIds = new Set();
-  const transactions = (Array.isArray(rawTransactions) ? rawTransactions : []).map((row, index) => {
-    const normalized = normalizeTransaction(row, `tx_${index + 1}`);
-    const original = String(normalized.id);
-    if (!usedTxIds.has(original)) { usedTxIds.add(original); return normalized; }
-    return { ...normalized, legacyId: normalized.legacyId ?? normalized.id, id: uniqueId(`${original}__dup`, usedTxIds) };
-  });
+// A conciliação diagnostica o estado. Somente comandos explícitos podem criar
+// projeções para as contas selecionadas; o histórico nunca é normalizado aqui.
+export function reconcileFinancialData(rawTransactions = [], rawAccounts = [], { createAccountIds = [] } = {}) {
+  const transactions = structuredClone(Array.isArray(rawTransactions) ? rawTransactions : []);
+  const accounts = structuredClone(Array.isArray(rawAccounts) ? rawAccounts : []);
+  const selected = new Set(createAccountIds.map(String));
+  const used = new Set(transactions.map(t => String(t.id)));
   const txById = new Map(transactions.map(t => [String(t.id), t]));
-  const accountMap = new Map(); const accountDuplicates = [];
-  for (const [index, row] of (Array.isArray(rawAccounts) ? rawAccounts : []).entries()) {
-    const c = normalizeAccount(row, `account_${index + 1}`); const key = accountBusinessKey(c);
-    if (!accountMap.has(key)) accountMap.set(key, c);
-    else {
-      const old = accountMap.get(key); accountDuplicates.push({ keptId: old.id, duplicateId: c.id, key });
-      old.paid = old.paid || c.paid; old.paidAt = old.paidAt || c.paidAt; old.paidTxId = old.paidTxId || c.paidTxId; old.fromTx = old.fromTx || c.fromTx;
-      old.recurTemplateId = old.recurTemplateId || c.recurTemplateId; old.recurOccurrenceId = old.recurOccurrenceId || c.recurOccurrenceId;
-    }
-  }
-  const accounts = [...accountMap.values()];
-  const conflicts = []; const brokenLinks = []; const linkedTxIds = new Set();
+  const conflicts = [], brokenLinks = [], accountDuplicates = [], unlinkedAccounts = [];
+  const linked = new Set(), businessKeys = new Map();
   for (const c of accounts) {
-    let tx = null;
-    if (c.paidTxId) tx = txById.get(String(c.paidTxId)) || null;
-    if (!tx && c.fromTx) tx = txById.get(String(c.fromTx)) || null;
-    if (!tx) tx = transactions.find(t => String(t.contaId || '') === String(c.id)) || null;
-    if (!tx) tx = txById.get(`conta_${String(c.id)}`) || null;
-    if (!tx) {
-      const id = uniqueId(`conta_${String(c.id)}`, usedTxIds);
-      tx = normalizeTransaction({ id, date: c.due, desc: `Conta: ${c.name}`, cat: c.cat, val: c.val, type: 'dep', paid: c.paid ? 'Pago' : 'Não pago', contaId: String(c.id), source: 'contas' });
-      if (c.paid && c.paidAt) tx.date = c.paidAt;
-      transactions.push(tx); txById.set(String(tx.id), tx);
+    const normalized = normalizeAccount(c);
+    const key = accountBusinessKey(normalized);
+    if (businessKeys.has(key)) accountDuplicates.push({ keptId: businessKeys.get(key), duplicateId: c.id, key });
+    else businessKeys.set(key, c.id);
+    for (const field of ['fromTx', 'paidTxId']) {
+      if (c[field] != null && c[field] !== '' && !txById.has(String(c[field])))
+        brokenLinks.push({ type: field, accountId: String(c.id), targetId: String(c[field]) });
     }
-    if (Math.abs(amount(tx.val) - c.val) >= 0.01) conflicts.push({ type: 'amount', accountId: String(c.id), transactionId: String(tx.id), accountValue: c.val, transactionValue: amount(tx.val) });
-    const resolvedPaid = c.paid || isPaid(tx.paid);
-    c.paid = resolvedPaid;
-    c.paidAt = resolvedPaid ? (c.paidAt || isoDate(tx.date, c.due)) : '';
-    c.paidTxId = String(tx.id);
-    tx.contaId = String(c.id); tx.type = 'dep'; tx.paid = resolvedPaid ? 'Pago' : 'Não pago'; tx.source = tx.source || 'contas';
-    if (!conflicts.some(x => x.type === 'amount' && x.accountId === String(c.id) && x.transactionId === String(tx.id))) tx.val = c.val;
-    if (tx.source === 'contas' || !tx.desc) tx.desc = tx.desc && !/^Conta:/i.test(tx.desc) ? tx.desc : `Conta: ${c.name}`;
-    if (!tx.cat) tx.cat = c.cat;
-    tx.date = resolvedPaid ? (c.paidAt || tx.date || c.due) : c.due;
-    linkedTxIds.add(String(tx.id));
-    if (c.fromTx && !txById.has(String(c.fromTx))) brokenLinks.push({ type: 'fromTx', accountId: String(c.id), targetId: String(c.fromTx) });
+    let tx = txById.get(String(c.paidTxId || '')) || txById.get(String(c.fromTx || '')) ||
+      transactions.find(t => String(t.contaId || '') === String(c.id)) || txById.get(`conta_${String(c.id)}`);
+    if (!tx && selected.has(String(c.id))) {
+      const id = uniqueId(`conta_${String(c.id)}`, used);
+      tx = normalizeTransaction({ id, date: normalized.paid ? normalized.paidAt : normalized.due,
+        desc: `Conta: ${normalized.name}`, cat: normalized.cat, val: normalized.val, type: 'dep',
+        paid: normalized.paid ? 'Pago' : 'Não pago', contaId: String(c.id), source: 'contas' });
+      transactions.push(tx); txById.set(String(tx.id), tx); c.paidTxId = String(tx.id);
+    }
+    if (!tx) { unlinkedAccounts.push({ accountId: String(c.id) }); continue; }
+    if (Math.round(amount(tx.val) * 100) !== Math.round(normalized.val * 100))
+      conflicts.push({ type: 'amount', accountId: String(c.id), transactionId: String(tx.id), accountValue: normalized.val, transactionValue: amount(tx.val) });
+    if (isPaid(tx.paid) !== normalized.paid)
+      conflicts.push({ type: 'paid', accountId: String(c.id), transactionId: String(tx.id) });
+    linked.add(String(tx.id));
   }
   const accountIds = new Set(accounts.map(c => String(c.id)));
-  const orphans = transactions.filter(t => t.contaId && !accountIds.has(String(t.contaId))).map(t => ({ transactionId: String(t.id), contaId: String(t.contaId) }));
-  return { transactions, accounts, report: { conflicts, brokenLinks, orphans, accountDuplicates, linkedTransactions: linkedTxIds.size } };
+  const orphans = transactions.filter(t => t.contaId && !accountIds.has(String(t.contaId)))
+    .map(t => ({ transactionId: String(t.id), contaId: String(t.contaId) }));
+  return { transactions, accounts, report: { conflicts, brokenLinks, orphans, accountDuplicates, unlinkedAccounts, linkedTransactions: linked.size } };
 }
 
 export function monthSummary(transactions = [], year, monthIndex) {
