@@ -85,3 +85,43 @@ test('Navegar competências não gera recorrentes sem comando explícito',async(
  await contas.list({year:2026,month:8});await contas.summary(2026,9);assert.equal((await ctx.repositories.accounts.list()).length,0);assert.equal((await ctx.repositories.transactions.list()).length,0);
  const r=await contas.generateRecurring(2026,8);assert.equal(r.added,1);assert.equal((await ctx.repositories.accounts.list()).length,1);
 });
+
+const historicalSeed={
+ transactions:[{id:'history',desc:'Descrição extensa\n'+ 'Á'.repeat(300),date:'2026-01-02',type:'dep',val:54.04,paid:'Pago'},
+ {id:'target',desc:'Selecionado\noriginal',date:'2026-02-03',type:'dep',val:80,paid:'Não pago',contaId:'linked'}],
+ accounts:[{id:'orphan',name:'Sem vínculo',val:54.05,due:'2026-01-01',paid:true,fromTx:'ausente'},
+ {id:'linked',name:'Selecionado',val:80,due:'2026-02-01',paid:false,fromTx:'target'},
+ {id:'same-business',name:'Sem vínculo',val:54.05,due:'2026-01-01',paid:false}],
+};
+test('Conciliação é diagnóstica: preserva descrições, datas, centavos, duplicidades e contas sem vínculo',async()=>{
+ const ctx=context(historicalSeed),services=createFinancialServices(ctx);
+ for(let i=0;i<2;i++){
+  const r=await services.financeiro.reconcile();assert.deepEqual(r.transactions,historicalSeed.transactions);assert.deepEqual(r.accounts,historicalSeed.accounts);
+  assert.equal(r.report.unlinkedAccounts.length,2);assert.equal(r.report.brokenLinks.length,1);assert.equal(r.report.accountDuplicates.length,1);
+ }
+ assert.deepEqual(await ctx.repositories.transactions.list(),historicalSeed.transactions);assert.deepEqual(await ctx.repositories.accounts.list(),historicalSeed.accounts);assert.equal(ctx.patches.length,0);
+});
+for(const [label,operation] of [
+ ['editar lançamento',s=>s.financeiro.update('target',{cat:'Outra'})],
+ ['editar conta',s=>s.contas.update('linked',{val:90})],
+ ['pagar lançamento',s=>s.financeiro.setPaid('target',true)],
+ ['pagar conta',s=>s.contas.setPaid('linked',true)],
+ ['pagar conta sem vínculo',s=>s.contas.setPaid('same-business',true)],
+ ['criar despesa',s=>s.financeiro.create({desc:'Nova',val:10,date:'2026-10-07'})],
+ ['criar conta',s=>s.contas.create({name:'Nova',val:10,due:'2026-10-07'})],
+ ['gerar recorrências',s=>s.contas.generateRecurring(2026,9)],
+ ['pagar DAS',s=>s.contas.setDasPaid(2026,9,true)],
+ ['desfazer DAS',s=>s.contas.setDasPaid(2026,9,false)],
+])test(`${label}: preserva integralmente registros não selecionados`,async()=>{
+ const ctx=context(historicalSeed),services=createFinancialServices(ctx);await operation(services);
+ assert.deepEqual(await ctx.repositories.transactions.get('history'),historicalSeed.transactions[0]);
+ assert.deepEqual(await ctx.repositories.accounts.get('orphan'),historicalSeed.accounts[0]);
+ const txs=await ctx.repositories.transactions.list();assert.equal(txs.some(t=>t.id==='conta_orphan'),false);
+ if(label==='editar lançamento'||label==='editar conta')assert.equal((await ctx.repositories.transactions.get('target')).desc,historicalSeed.transactions[1].desc);
+});
+test('Pagamento explícito sem vínculo cria apenas a transação selecionada e é idempotente',async()=>{
+ const ctx=context(historicalSeed),{contas}=createFinancialServices(ctx);
+ await contas.setPaid('same-business',true);const txs=await ctx.repositories.transactions.list(),accounts=await ctx.repositories.accounts.list();
+ assert.equal(txs.length,3);assert.equal(txs[2].id,'conta_same-business');await contas.setPaid('same-business',true);
+ assert.deepEqual(await ctx.repositories.transactions.list(),txs);assert.deepEqual(await ctx.repositories.accounts.list(),accounts);
+});
