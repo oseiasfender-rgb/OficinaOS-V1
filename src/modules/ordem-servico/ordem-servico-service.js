@@ -1,5 +1,6 @@
 import { safeText } from '../../core/validators.js';
-import { normalizeStage } from '../workflow.js';
+import { normalizeStage, findRecordById, validateWorkflowDates } from '../workflow.js';
+import { createChecklistService } from './checklist-service.js';
 
 function arr(v){ return Array.isArray(v) ? v : []; }
 function clone(v){ return structuredClone(v); }
@@ -30,13 +31,14 @@ export function createOrdemServicoService({ repositories, eventBus, store }){
   const budgetsRepo=repositories.budgets;
   const appointmentsRepo=repositories.appointments;
   const deletionBackupRepo=repositories.deletionBackups;
+  const checklistService=createChecklistService({repositories,eventBus,store});
 
   async function syncStore(){
-    store?.patch?.({ workOrders: await repo.list(), jobs: await jobsRepo.list(), appointments: await appointmentsRepo.list(), budgets: await budgetsRepo.list() });
+    store?.patch?.({ workOrders: await repo.list(), jobs: await jobsRepo.list(), appointments: await appointmentsRepo.list(), budgets: await budgetsRepo.list(), checklists: await repositories.checklists.list() });
   }
 
-  async function clientFor(id){ return id==null ? null : clientsRepo.get(id); }
-  async function budgetFor(id){ return id==null ? null : budgetsRepo.get(id); }
+  async function clientFor(id){ return findRecordById(clientsRepo,id); }
+  async function budgetFor(id){ return findRecordById(budgetsRepo,id); }
 
   async function resolveVehicle(client, input={}){
     const vehicleId=input.vehicleId??input.veiculoId;
@@ -85,9 +87,15 @@ export function createOrdemServicoService({ repositories, eventBus, store }){
 
   async function create(input={}){
     const rows=await repo.list();
-    const budget=await budgetFor(input.budgetId??input.orcamentoId);
-    const clientId=input.clientId??input.clienteId??budget?.clientId??budget?.clienteId??null;
+    const requestedBudget=input.budgetId??input.orcamentoId;
+    const budget=await budgetFor(requestedBudget);
+    if(requestedBudget!=null && requestedBudget!=='' && !budget)throw new Error('Orçamento vinculado não encontrado.');
+    let clientId=input.clientId??input.clienteId??budget?.clientId??budget?.clienteId??null;
+    const budgetClientId=budget?.clientId??budget?.clienteId;
+    if(budgetClientId!=null && clientId!=null && String(budgetClientId)!==String(clientId))throw new Error('O cliente selecionado não corresponde ao cliente do orçamento.');
     const client=await clientFor(clientId);
+    if(clientId!=null && clientId!=='' && !client)throw new Error('Cliente vinculado não encontrado.');
+    clientId=client?.id??null;
     const clientName=safeText(input.clientName??input.cliente??client?.name??client?.nome??budget?.cliente,120);
     if(!clientName) throw new Error('Cliente é obrigatório para criar a OS.');
     const vehicleInfo=await resolveVehicle(client,{...input, vehicle:input.vehicle??input.veiculo??budget?.veiculo, vehicleId:input.vehicleId??budget?.vehicleId??budget?.veiculoId});
@@ -110,6 +118,7 @@ export function createOrdemServicoService({ repositories, eventBus, store }){
       financialSyncPending:stage==='entregue',
       createdAt:input.createdAt??now(), updatedAt:now()
     };
+    validateWorkflowDates(record.entryDate,record.dueDate);
     await repo.put(record);
     await mirrorLegacyJob(record);
     if(budget){ await budgetsRepo.put({...budget, osId:record.id, status:record.status==='Entregue'?'Convertido em OS':'Agendado', updatedAt:now()}); }
@@ -141,17 +150,32 @@ export function createOrdemServicoService({ repositories, eventBus, store }){
       const current=await getRequired(id);
       const stage=normalizeStage(changes.stage??changes.etapa??current.stage,changes.done===true);
       const next={...current,...clone(changes),id:current.id,stage,status:stage==='entregue'?'Entregue':safeText(changes.status??current.status,40),updatedAt:now()};
+      validateWorkflowDates(next.entryDate,next.dueDate);
       next.financialSyncPending=next.status==='Entregue';
-      await repo.put(next); await mirrorLegacyJob(next); await log('UPDATE',next,'OS atualizada.'); await changed('update',next); return next;
+      await repo.put(next); await mirrorLegacyJob(next);
+      if(stage!==current.stage)await checklistService.setCurrentStage('workOrder',next.id,stage);
+      const appointments=await appointmentsRepo.list();
+      for(const appointment of appointments.filter(a=>String(a.workOrderId)===String(next.id))){
+        await appointmentsRepo.put({...appointment,clientId:next.clientId,budgetId:next.budgetId,clientName:next.clientName,vehicle:next.vehicle,service:next.service,value:next.value,notes:next.notes,dueDate:next.dueDate,status:next.status==='Entregue'?'Concluído':appointment.status==='Concluído'?'Agendado':appointment.status,updatedAt:now()});
+      }
+      const budget=await budgetFor(next.budgetId);
+      if(budget)await budgetsRepo.put({...budget,osId:next.id,status:next.status==='Entregue'?'Convertido em OS':'Agendado',updatedAt:now()});
+      await log('UPDATE',next,'OS atualizada.'); await changed('update',next); return next;
     },
     async setStage(id,stage){ return this.update(id,{stage,status:normalizeStage(stage)==='entregue'?'Entregue':'Em andamento'}); },
     async markDelivered(id){ return this.update(id,{stage:'entregue',status:'Entregue',financialSyncPending:true,deliveredAt:now()}); },
     async reopen(id){ return this.update(id,{stage:'controle',status:'Em andamento',financialSyncPending:false,deliveredAt:null}); },
     async remove(id){
       const current=await getRequired(id);
-      await deletionBackupRepo?.put({id:`os_${id}_${Date.now()}`,at:now(),entityType:'workOrder',reason:'work-order-delete',payload:clone(current)});
       const appointments=await appointmentsRepo.list();
-      for(const a of appointments.filter(x=>String(x.workOrderId)===String(id))) await appointmentsRepo.delete(a.id);
+      const linked=appointments.filter(x=>String(x.workOrderId)===String(id));
+      const checklist=await repositories.checklists.get(`os:${id}`);
+      const job=current.legacyJobId!=null?await jobsRepo.get(current.legacyJobId):null;
+      const budget=await budgetFor(current.budgetId);
+      await deletionBackupRepo?.put({id:`os_${id}_${Date.now()}`,at:now(),entityType:'workOrder',reason:'work-order-delete',payload:clone(current),related:{appointments:clone(linked),checklist:clone(checklist),job:clone(job),budget:clone(budget)}});
+      for(const a of linked) await appointmentsRepo.delete(a.id);
+      if(checklist)await repositories.checklists.delete(checklist.id);
+      if(budget && String(budget.osId)===String(id))await budgetsRepo.put({...budget,osId:null,status:'Salvo',updatedAt:now()});
       if(current.legacyJobId!=null) await jobsRepo.delete(current.legacyJobId);
       await repo.delete(id); await log('DELETE',current,'OS removida com backup preventivo.'); await changed('delete',current); return current;
     },

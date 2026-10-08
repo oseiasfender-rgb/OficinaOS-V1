@@ -14,6 +14,22 @@ export const WORKFLOW_STAGES = Object.freeze([
 
 export const STAGE_IDS = Object.freeze(WORKFLOW_STAGES.map(stage => stage.id));
 
+export async function findRecordById(repository, id) {
+  if (id == null || String(id).trim() === '') return null;
+  const exact = await repository.get(id);
+  return exact ?? (await repository.list()).find(row => String(row.id) === String(id)) ?? null;
+}
+
+export function validateWorkflowDates(entry, due) {
+  for (const value of [entry, due]) {
+    if (!value) continue;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new Error('Informe uma data válida no formato AAAA-MM-DD.');
+    const date = new Date(`${value}T00:00:00Z`);
+    if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) throw new Error('Informe uma data válida.');
+  }
+  if (entry && due && due < entry) throw new Error('A entrega prevista não pode ser anterior à entrada.');
+}
+
 export function normalizeStage(value, delivered = false) {
   if (delivered) return 'entregue';
   const s = String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();

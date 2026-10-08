@@ -94,3 +94,65 @@ test('Consultar checklist e estatísticas não grava rascunho; edição explíci
  const ctx=context(),service=createChecklistService(ctx);const row=await service.get('budget','orc_sem_salvar');assert.equal(row.updatedAt,null);const stats=await service.stats('budget','orc_sem_salvar');assert.ok(stats.total>0);assert.equal((await ctx.repositories.checklists.list()).length,0);assert.equal(ctx.patches.length,0);
  await service.setItem('budget','orc_sem_salvar','entrada',0,true);const stored=await ctx.repositories.checklists.get('orc:orc_sem_salvar');assert.equal(stored.stages.entrada[0].done,true);assert.ok(stored.updatedAt);
 });
+
+test('Agenda aceita IDs numéricos do cadastro vindos dos selects e preserva a identidade',async()=>{
+ const ctx=context({clients:[{id:100,name:'Cliente numérico'}],budgets:[{id:7,clientId:100,cliente:'Cliente numérico',total:500}]});
+ const checklists=createChecklistService(ctx),workOrders=createOrdemServicoService(ctx),agenda=createAgendaService({...ctx,workOrders,checklists});
+ const ag=await agenda.create({clientId:'100',budgetId:'7',date:'2026-10-08'});
+ assert.equal(ag.clientId,100);assert.equal(ag.budgetId,7);assert.equal((await workOrders.get(ag.workOrderId)).clientId,100);
+ assert.equal((await agenda.budgetContext('7')).client.id,100);
+});
+
+test('Agendar novamente o mesmo orçamento reutiliza OS e preserva checklist já preenchido',async()=>{
+ const ctx=context({clients:[{id:1,name:'Cliente'}],budgets:[{id:'b1',clientId:1,cliente:'Cliente',total:500}]});
+ const checklists=createChecklistService(ctx),workOrders=createOrdemServicoService(ctx),agenda=createAgendaService({...ctx,workOrders,checklists});
+ await checklists.setItem('budget','b1','entrada',0,true);
+ const first=await agenda.createFromBudget('b1',{date:'2026-10-08'});
+ await checklists.setItem('workOrder',first.workOrderId,'entrada',1,true);
+ const second=await agenda.createFromBudget('b1',{date:'2026-10-08'});
+ assert.equal(second.id,first.id);assert.equal((await ctx.repositories.workOrders.list()).length,1);
+ assert.equal((await ctx.repositories.jobs.list()).length,1);assert.equal((await ctx.repositories.appointments.list()).length,1);
+ assert.equal((await checklists.get('workOrder',first.workOrderId)).stages.entrada[1].done,true);
+});
+
+test('Entregar e reabrir pela OS sincroniza Agenda e etapa do checklist sem criar receita',async()=>{
+ const tx=[{id:'real',type:'rec',val:123,paid:'Pago'}];const ctx=context({clients:[{id:1,name:'Cliente'}],transactions:tx});
+ const checklists=createChecklistService(ctx),workOrders=createOrdemServicoService(ctx),agenda=createAgendaService({...ctx,workOrders,checklists});
+ const ag=await agenda.create({clientId:1,date:'2026-10-08',dueDate:'2026-10-10'});
+ await checklists.setItem('workOrder',ag.workOrderId,'entrada',0,true);
+ await workOrders.markDelivered(ag.workOrderId);
+ assert.equal((await agenda.get(ag.id)).status,'Concluído');assert.equal((await checklists.get('workOrder',ag.workOrderId)).currentStage,'entregue');
+ await workOrders.reopen(ag.workOrderId);
+ assert.equal((await agenda.get(ag.id)).status,'Agendado');assert.equal((await checklists.get('workOrder',ag.workOrderId)).currentStage,'controle');
+ assert.equal((await checklists.get('workOrder',ag.workOrderId)).stages.entrada[0].done,true);
+ assert.deepEqual(await ctx.repositories.transactions.list(),tx);
+});
+
+test('Excluir OS preserva cópia dos vínculos e remove referências órfãs do orçamento e checklist',async()=>{
+ const ctx=context({clients:[{id:1,name:'Cliente'}],budgets:[{id:'b1',clientId:1,cliente:'Cliente',total:500}]});
+ const checklists=createChecklistService(ctx),workOrders=createOrdemServicoService(ctx),agenda=createAgendaService({...ctx,workOrders,checklists});
+ const ag=await agenda.createFromBudget('b1',{date:'2026-10-08'});await checklists.setItem('workOrder',ag.workOrderId,'entrada',0,true);
+ await workOrders.remove(ag.workOrderId);
+ assert.equal((await ctx.repositories.appointments.list()).length,0);assert.equal((await ctx.repositories.jobs.list()).length,0);
+ assert.equal(await ctx.repositories.checklists.get('os:'+ag.workOrderId),null);
+ assert.ok(!ctx.patches.at(-1).checklists.some(row=>row.id==='os:'+ag.workOrderId));
+ assert.equal((await ctx.repositories.budgets.get('b1')).osId,null);
+ const backup=(await ctx.repositories.deletionBackups.list())[0];assert.equal(backup.payload.id,ag.workOrderId);assert.equal(backup.related.appointments[0].id,ag.id);assert.equal(backup.related.checklist.stages.entrada[0].done,true);assert.equal(backup.related.budget.osId,ag.workOrderId);
+});
+
+test('Agenda e OS rejeitam cliente diferente do orçamento sem gravar vínculos incorretos',async()=>{
+ const ctx=context({clients:[{id:1,name:'Cliente A'},{id:2,name:'Cliente B'}],budgets:[{id:'b1',clientId:1,cliente:'Cliente A'}]});
+ const checklists=createChecklistService(ctx),workOrders=createOrdemServicoService(ctx),agenda=createAgendaService({...ctx,workOrders,checklists});
+ await assert.rejects(()=>agenda.create({budgetId:'b1',clientId:2,date:'2026-10-08'}),/não corresponde/);
+ await assert.rejects(()=>workOrders.create({budgetId:'b1',clientId:'2'}),/não corresponde/);
+ assert.equal((await ctx.repositories.workOrders.list()).length,0);assert.equal((await ctx.repositories.appointments.list()).length,0);
+ assert.equal((await ctx.repositories.budgets.get('b1')).osId,undefined);
+});
+
+test('Agenda rejeita vínculo inexistente e data inválida antes de criar qualquer registro',async()=>{
+ const ctx=context({clients:[{id:1,name:'Cliente'}]});const checklists=createChecklistService(ctx),workOrders=createOrdemServicoService(ctx),agenda=createAgendaService({...ctx,workOrders,checklists});
+ await assert.rejects(()=>agenda.create({clientId:'inexistente',clientName:'Nome livre',date:'2026-10-08'}),/Cliente.*não encontrado/);
+ await assert.rejects(()=>agenda.create({clientId:1,budgetId:'inexistente',date:'2026-10-08'}),/Orçamento.*não encontrado/);
+ await assert.rejects(()=>agenda.create({clientId:1,date:'2026-02-30'}),/data/i);
+ assert.equal((await ctx.repositories.workOrders.list()).length,0);assert.equal((await ctx.repositories.jobs.list()).length,0);assert.equal((await ctx.repositories.appointments.list()).length,0);
+});

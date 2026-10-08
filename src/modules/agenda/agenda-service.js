@@ -1,4 +1,5 @@
 import { safeText } from '../../core/validators.js';
+import { findRecordById, validateWorkflowDates } from '../workflow.js';
 
 function clone(v){return structuredClone(v);}
 function num(v){const n=Number(v??0);return Number.isFinite(n)?n:0;}
@@ -17,10 +18,14 @@ export function createAgendaService({repositories,eventBus,store,workOrders,chec
 
   async function resolve(input={}){
     const budgetId=input.budgetId??input.orcamentoId??null;
-    const budget=budgetId!=null?await budgetsRepo.get(budgetId):null;
+    const budget=await findRecordById(budgetsRepo,budgetId);
+    if(budgetId!=null && budgetId!=='' && !budget)throw new Error('Orçamento vinculado não encontrado.');
     const clientId=input.clientId??input.clienteId??budget?.clientId??budget?.clienteId??null;
-    const client=clientId!=null?await clientsRepo.get(clientId):null;
-    return {budget,client,clientId,clientName:safeText(input.clientName??input.cliente??client?.name??client?.nome??budget?.cliente,120)};
+    const budgetClientId=budget?.clientId??budget?.clienteId;
+    if(budgetClientId!=null && clientId!=null && String(budgetClientId)!==String(clientId))throw new Error('O cliente selecionado não corresponde ao cliente do orçamento.');
+    const client=await findRecordById(clientsRepo,clientId);
+    if(clientId!=null && clientId!=='' && !client)throw new Error('Cliente vinculado não encontrado.');
+    return {budget,client,clientId:client?.id??null,clientName:safeText(input.clientName??input.cliente??client?.name??client?.nome??budget?.cliente,120)};
   }
 
   async function create(input={}){
@@ -29,10 +34,13 @@ export function createAgendaService({repositories,eventBus,store,workOrders,chec
     const date=safeText(input.date??input.data??input.entrada??today(),10);
     const dueDate=safeText(input.dueDate??input.entrega??input.dataEntrega,10);
     if(!date&&!dueDate)throw new Error('Informe ao menos uma data para a Agenda.');
+    validateWorkflowDates(date,dueDate);
     let workOrderId=input.workOrderId??input.osId??null;
     let os=workOrderId?await workOrders.get(workOrderId):null;
+    if(workOrderId!=null && !os)throw new Error('OS vinculada não encontrada.');
     if(!os){
-      os=await workOrders.create({
+      const existing=resolved.budget ? (await workOrders.list()).find(row=>String(row.budgetId)===String(resolved.budget.id)) : null;
+      os=existing??await workOrders.create({
         budgetId:resolved.budget?.id??input.budgetId??input.orcamentoId??null,
         clientId:resolved.clientId,clientName:resolved.clientName,
         vehicle:input.vehicle??input.veiculo??resolved.budget?.veiculo,
@@ -41,7 +49,7 @@ export function createAgendaService({repositories,eventBus,store,workOrders,chec
         notes:input.notes??input.obs,priority:input.priority??input.prioridade
       });
       workOrderId=os.id;
-      if(resolved.budget?.id && checklists) await checklists.copyBudgetToWorkOrder(resolved.budget.id, os.id);
+      if(!existing && resolved.budget?.id!=null && checklists) await checklists.copyBudgetToWorkOrder(resolved.budget.id, os.id);
     }
     const duplicate=(await repo.list()).find(row=>String(row.workOrderId)===String(workOrderId)&&String(row.date)===String(date)&&row.status!=='Cancelado');
     if(duplicate)return duplicate;
@@ -74,11 +82,12 @@ export function createAgendaService({repositories,eventBus,store,workOrders,chec
     get:id=>repo.get(id),
     async clients(){return clientsRepo.list();},
     async budgets(){return budgetsRepo.list();},
-    async budgetContext(id){const budget=await budgetsRepo.get(id);if(!budget)return null;const client=budget.clientId!=null?await clientsRepo.get(budget.clientId):null;return {budget,client};},
+    async budgetContext(id){const budget=await findRecordById(budgetsRepo,id);if(!budget)return null;const client=await findRecordById(clientsRepo,budget.clientId??budget.clienteId);return {budget,client};},
     create,
     async createFromBudget(budgetId,input={}){return create({...input,budgetId});},
     async update(id,changes={}){
       const current=await getRequired(id);const next={...current,...clone(changes),id:current.id,updatedAt:now()};
+      validateWorkflowDates(next.date,next.dueDate);
       await repo.put(next);if(next.workOrderId)await workOrders.update(next.workOrderId,{entryDate:next.date,dueDate:next.dueDate,clientName:next.clientName,vehicle:next.vehicle,service:next.service,value:next.value,notes:next.notes});
       await changed('update',next);return next;
     },
