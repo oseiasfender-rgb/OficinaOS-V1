@@ -91,7 +91,7 @@ export function recordFromDraft(input, previous = null){
     priority:draft.priority, prioridade:draft.priority, payment:draft.payment, pagto:draft.payment, warrantyDays:draft.warrantyDays, notes:draft.notes, obs:draft.notes, internalNotes:draft.internalNotes, obsInterna:draft.internalNotes,
     complexity:complexity.key, complexidade:complexity.label, complexityMultiplier:complexity.multiplier,
     hourRate:draft.hourRate, laborProcesses:clone(draft.laborProcesses), materials:clone(draft.materials), serviceItems:clone(draft.serviceItems), serviceItemsDiscount:draft.serviceItemsDiscount, parts:clone(draft.parts), thirdParties:clone(draft.thirdParties), freight:clone(draft.freight), marginPercent:draft.marginPercent, discountPercent:draft.discountPercent,
-    calculation:clone(calc), total:calc.final, totalFmt:calc.final.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}), status:draft.status==='Rascunho'?'Salvo':draft.status,
+    calculation:clone(calc), total:Math.round(calc.final*100)/100, totalFmt:(Math.round(calc.final*100)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}), status:draft.status==='Rascunho'?'Salvo':draft.status,
     paginaOrcamento:legacyPageFromDraft(draft), createdAt:previous?.createdAt ?? now, updatedAt:now, source:previous?.source ?? 'modular-v0.6'
   };
 }

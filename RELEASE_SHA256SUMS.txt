@@ -72,10 +72,10 @@ a4582faf5b32163e59dcbc2bbea20ba37f8de8debfa8daadee2de40c3ab9a054  ./src/modules/
 598e4483e7c1654c19673b7c47e42ffdb1e4f822c05affe7c56c07c376dc5e15  ./src/modules/metas/metas-service.js
 5e064e40764a9b453cd78e08be43541de5c575fd12a45c9acfbadada418f54f7  ./src/modules/metas/metas-view.js
 641b84f91a670f48381902428b56962a64c9c49d176664ff511d55912589c55b  ./src/modules/orcamento/orcamento-calculator.js
-79616a21bf30d975fd18dfba2ca36247e3c64559cb1bfe200c41847f9ae88955  ./src/modules/orcamento/orcamento-model.js
-e64df3b9e3392f81f51154828b8461f244f8d75f92f1ce82971686b25062a6bb  ./src/modules/orcamento/orcamento-service.js
+0aa09204389211493d807d98c91f35580ab3934989641584010a3ac96738c50d  ./src/modules/orcamento/orcamento-model.js
+8bc58100ff68e37f0cb7510c5426534cab4ef4ff4275e001d1c7dbb43918d402  ./src/modules/orcamento/orcamento-service.js
 6cda381c6dcddb3ddbe75b8fca5f74d99de39bb5ca9e54374d12d7e2cb120b73  ./src/modules/orcamento/orcamento-view.js
-6d2b2f04d6764796f294a7da560c216670073f4ddd0d1f91407f91d08a008d26  ./src/modules/orcamento/pdf-service.js
+2298dfd11220a7e4a37e7598f60f8923639d0f4eaac694c6644298e5f775dad5  ./src/modules/orcamento/pdf-service.js
 aa1f1791cccb14b92379cddfffe408bd356d369222cf95b98c7166d6b51f3ccd  ./src/modules/orcamento/quote-template.js
 acdae018c09f1de01560833cb1240d5458c4dcbf7c24ce0f0ee9795e05302057  ./src/modules/ordem-servico/checklist-service.js
 1a6d1db230e0742000d50c391f5996ddfb311b8df15087b5e2cf52a979127cf6  ./src/modules/ordem-servico/ordem-servico-service.js
@@ -93,7 +93,7 @@ dc0e6de9ddaaecf240d1690cbb6dfa1dda6373fb2bd638a076f1b7af341ee8e6  ./tests/accept
 95711c46898a1df4d0af823ec7657fc041151b96ddfd232c56ba68e54c2b56d3  ./tests/unit/acceptance-contract.test.js
 b16ee8041586b383379abd83d13ce2d5e3a3ba99e91692907474acfb13414c1d  ./tests/unit/analytics-consultor.test.js
 a08a1bc6bae9141230e050088e68f4be84cbecd7b0449624576e32e5c9f3f67d  ./tests/unit/backup-service.test.js
-f7f317a8221b219100808c3aab7b2cc72802a90931d8fe99945a4ebaee5c327a  ./tests/unit/budget.test.js
+dea94b92e34c5f7fb21ff7f8f02194b14c3023f0437d7d442ec1d700e38c0c15  ./tests/unit/budget.test.js
 5b1b3472f7cc18bcfa27438f8767e7765814d515d1aef7f6f89eaf1c249c7479  ./tests/unit/final-gate.test.js
 175b46ade089fc5ec39ca1498634281209a379d62e83efc90ab82d5a3d5d9a72  ./tests/unit/financeiro-contas.test.js
 d99b301cb7fd72996821ba93c07551c004c957b0d431df4e258e88c6beec626e  ./tests/unit/history.test.js
