@@ -1,5 +1,7 @@
 import { safeText } from '../../core/validators.js';
 import { parseBRL } from '../../core/money.js';
+import { isPaid } from '../financeiro/financial-model.js';
+import { categoryKey } from '../../data/category-model.js';
 
 function dateParts(dateLike = new Date()) {
   const date = dateLike instanceof Date ? dateLike : new Date(dateLike);
@@ -43,7 +45,7 @@ export function createMetasService({ repositories, eventBus, store }) {
     const rows = await txRepo.list();
     return rows.filter(row => {
       const date = txDate(row.date);
-      return row.type === 'rec' && date && date.getFullYear() === year && date.getMonth() === month;
+      return row.type === 'rec' && isPaid(row.paid ?? row.status ?? row.pago) && date && date.getFullYear() === year && date.getMonth() === month;
     });
   }
 
@@ -77,6 +79,9 @@ export function createMetasService({ repositories, eventBus, store }) {
     const clean = safeText(category, 100);
     const meta = Math.max(0, parseBRL(value));
     if (!clean || meta <= 0) throw new Error('Categoria e valor da meta são obrigatórios.');
+    const collision = (await repo.list()).some(row => String(row.id) !== String(id) &&
+      (String(row.id) === clean || categoryKey(row.category ?? row.cat ?? row.id) === categoryKey(clean)));
+    if (collision) throw new Error('Já existe uma meta para essa categoria. Edite a meta existente.');
     if (String(id) !== clean) await repo.delete(id);
     const record = { ...current, id: clean, category: clean, cat: clean, meta, updatedAt: new Date().toISOString() };
     await repo.put(record);

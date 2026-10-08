@@ -6,7 +6,7 @@ function metric(label){const card=el('article','module-metric');const value=el('
 
 export function renderMetasView(root,{service,categoriesService,onChanged=()=>{}}){
   root.replaceChildren(); let editingId=null;
-  const page=el('section','simple-module');const head=el('div','module-toolbar');const title=el('div');title.append(el('h1','module-title','Metas'),el('p','module-subtitle','O realizado é recalculado a partir das receitas reais do mês corrente.'));head.append(title);const feedback=el('div','module-feedback');feedback.hidden=true;const body=el('div','module-body');
+  const page=el('section','simple-module');const head=el('div','module-toolbar');const title=el('div');title.append(el('h1','module-title','Metas'),el('p','module-subtitle','O realizado considera somente receitas recebidas no mês corrente; receitas pendentes não entram na meta.'));head.append(title);const feedback=el('div','module-feedback');feedback.hidden=true;const body=el('div','module-body');
   const principal=el('section','module-card');principal.append(el('h2','','Meta mensal de faturamento'));const principalForm=el('form','module-form-row');const principalInput=input('number');principalInput.min='0';principalInput.step='100';const principalSave=button('Salvar meta','btn btn-primary','submit');principalForm.append(labeledField('Valor mensal',principalInput),principalSave);principal.append(principalForm);
   const metrics=el('div','module-metrics');const mMeta=metric('Meta');const mReal=metric('Realizado');const mMissing=metric('Falta');const mProjection=metric('Projeção');metrics.append(mMeta.card,mReal.card,mMissing.card,mProjection.card);
   const pace=el('section','module-card');const paceText=el('p','status-line');pace.append(el('h2','','Ritmo do mês'),paceText);
