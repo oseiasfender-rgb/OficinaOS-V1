@@ -70,7 +70,7 @@ ea7ea363f6f7cbd78a799a7c29859ffe594c26d883840fd6107c3e82cbd03a73  ./src/modules/
 0a14dd614ae05df3709ff3ff8068b062ae5d887ab9d94d07f10bbc64314fb91f  ./src/modules/historico-orcamentos/historicos-view.js
 a4582faf5b32163e59dcbc2bbea20ba37f8de8debfa8daadee2de40c3ab9a054  ./src/modules/history-services.js
 598e4483e7c1654c19673b7c47e42ffdb1e4f822c05affe7c56c07c376dc5e15  ./src/modules/metas/metas-service.js
-a18af3b74ccd6c573121b6baf1f33c0f08706c5cbd66476aca24d6908dc5aadf  ./src/modules/metas/metas-view.js
+5e064e40764a9b453cd78e08be43541de5c575fd12a45c9acfbadada418f54f7  ./src/modules/metas/metas-view.js
 641b84f91a670f48381902428b56962a64c9c49d176664ff511d55912589c55b  ./src/modules/orcamento/orcamento-calculator.js
 79616a21bf30d975fd18dfba2ca36247e3c64559cb1bfe200c41847f9ae88955  ./src/modules/orcamento/orcamento-model.js
 e64df3b9e3392f81f51154828b8461f244f8d75f92f1ce82971686b25062a6bb  ./src/modules/orcamento/orcamento-service.js
