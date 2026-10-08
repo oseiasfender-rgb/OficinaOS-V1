@@ -65,3 +65,25 @@ test('service salva, edita e copia orçamento sem criar transação financeira',
 test('remoção direta do orçamento é redirecionada à Lixeira com backup preventivo',async()=>{
   const ctx=context({budgets:[{id:'orc_1',cliente:'A',servico:'Serviço'}]});const service=createOrcamentoService(ctx);await service.remove('orc_1');assert.equal((await ctx.repositories.budgets.list()).length,0);assert.equal((await ctx.repositories.trash.list()).length,1);const backup=(await ctx.repositories.deletionBackups.list())[0];assert.equal(backup.entityType,'budget');assert.equal(backup.payload.id,'orc_1');
 });
+
+test('seleção numérica preserva identidade do cliente e rejeita vínculos inconsistentes sem gravar',async()=>{
+ const ctx=context({clients:[{id:100,name:'Ana'}]});const service=createOrcamentoService(ctx);
+ const row=await service.save({clientId:'100',clientName:'Ana',service:'Reparo'});assert.equal(row.clientId,100);
+ await assert.rejects(service.save({clientId:'100',clientName:'Outra',service:'Reparo'}),/Nome do cliente/);
+ await assert.rejects(service.save({clientId:'999',clientName:'Ana',service:'Reparo'}),/não encontrado/);
+ assert.equal(await ctx.repositories.budgets.count(),1);
+});
+test('orçamento rejeita datas inválidas e edição de ID inexistente antes de gravar',async()=>{
+ const ctx=context();const service=createOrcamentoService(ctx);
+ for(const input of [{entryDate:'2026-02-30'},{entryDate:'2026-10-10',dueDate:'2026-10-09'},{id:'ausente'}])await assert.rejects(service.save({clientName:'Ana',service:'Reparo',...input}));
+ assert.equal(await ctx.repositories.budgets.count(),0);
+});
+test('saída comercial fecha tabela e total em centavos e aceita ID numérico legado',async()=>{
+ const row=recordFromDraft({clientName:'Ana',service:'Reparo',serviceItems:[{qty:1,value:100}],marginPercent:30});row.id=123;
+ const ctx=context({budgets:[row]});const service=createOrcamentoService(ctx);const model=await service.commercialModel(123);
+ assert.equal(model.total,142.86);assert.equal([...model.items,...model.parts].reduce((s,r)=>s+Math.round(r.value*100),0),Math.round(model.total*100));
+});
+
+test('total salvo em centavos pode preencher o campo monetário da Agenda',()=>{
+ const record=recordFromDraft({clientName:'Ana',service:'Reparo',hourRate:55,laborProcesses:[{hours:10}],marginPercent:5});assert.equal(record.total,578.95);assert.equal(record.total,Math.round(record.total*100)/100);assert.equal(buildCommercialQuoteModel(record).total,record.total);
+});

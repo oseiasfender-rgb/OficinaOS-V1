@@ -28,7 +28,7 @@ export function buildCommercialQuoteModel(record, settings = {}){
     clientName:draft.clientName, clientPhone:draft.clientPhone, vehicle:draft.vehicle, vehiclePlate:draft.vehiclePlate, vehicleYear:draft.vehicleYear, vehicleColor:draft.vehicleColor,
     service:draft.service, entryDate:draft.entryDate, dueDate:draft.dueDate, notes:draft.notes, payment:draft.payment, warrantyDays:draft.warrantyDays,
     validityDays:draft.validityDays,deadlineText:draft.deadlineText,commercialComplexity:draft.commercialComplexity||calc.complexity.label,photo:draft.quotePhoto,issueDate:(draft.entryDate||new Date().toISOString().slice(0,10)).split('-').reverse().join('/'),
-    items:Object.freeze(items), parts:Object.freeze(parts), total:calc.final,
+    items:Object.freeze(items), parts:Object.freeze(parts), total:Math.round(calc.final*100)/100,
     generatedAt:new Date().toISOString()
   });
 }
