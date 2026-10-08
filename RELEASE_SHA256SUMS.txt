@@ -47,7 +47,7 @@ b99ad12ec8775a94e9545a1883b1f02770e966f079b227ca538b4896d9aa10e5  ./src/data/rep
 c0ec5b121f18340d5db8b1cb3a66b8e58f7a6531e95e80348151b1a25c4fe639  ./src/data/repositories/index.js
 fe05b3eadf63b5e879319c22140ee52a7cd52d99b5ccf7281d69324483bcc2c6  ./src/data/schema.js
 7adc62ea5876de8ecc5aba05ad8ff24e08984a9694f09863d07ee4e42855ad7e  ./src/main.js
-844314fe300e7c10e3244f8b8c5cc8ad3ae6f89aeff2ce5a3b6667a3d7f75bc4  ./src/modules/agenda/agenda-service.js
+196626831af53807e293ab884ddf0af1798ee28a509eee4422d852cd49732577  ./src/modules/agenda/agenda-service.js
 6cc17ba613c609331b045bd3bfd60aea0149bfc73d5ce15725b69ee8363be73e  ./src/modules/agenda/agenda-view.js
 7b96aa8b609f3e3cda18dfbe7b5f4fd031e01d5f21dd359a05d38431d550f244  ./src/modules/analytics-services.js
 2dac18fd9ac74b0dcc7b363779e97b716d14409608ed8767a5a0394f28b2843a  ./src/modules/categorias/categorias-service.js
@@ -78,13 +78,13 @@ e64df3b9e3392f81f51154828b8461f244f8d75f92f1ce82971686b25062a6bb  ./src/modules/
 6d2b2f04d6764796f294a7da560c216670073f4ddd0d1f91407f91d08a008d26  ./src/modules/orcamento/pdf-service.js
 aa1f1791cccb14b92379cddfffe408bd356d369222cf95b98c7166d6b51f3ccd  ./src/modules/orcamento/quote-template.js
 acdae018c09f1de01560833cb1240d5458c4dcbf7c24ce0f0ee9795e05302057  ./src/modules/ordem-servico/checklist-service.js
-5fcc0ea94f4d6c8d298676564857b11a14a0b538e297d7171fd5a0dfa74d1131  ./src/modules/ordem-servico/ordem-servico-service.js
-9538d7a96bafc4937500f6a85e2738a3848e304390d80ada8d562505800fa552  ./src/modules/ordem-servico/ordem-servico-view.js
+1a6d1db230e0742000d50c391f5996ddfb311b8df15087b5e2cf52a979127cf6  ./src/modules/ordem-servico/ordem-servico-service.js
+004522ea773cf1fcdaf574b501b856496330733a6057c97f5145b4f9d399c524  ./src/modules/ordem-servico/ordem-servico-view.js
 e4130130d011dc348d44e412b00ba71f738b78a10e1dbf9e707af84b52e514ea  ./src/modules/relatorios/relatorios-service.js
 1beea7605ef533db994a5eeff9a672c1503eadad626427ccf90c7ddbf47117bb  ./src/modules/relatorios/relatorios-view.js
 46dcf3bda2259c076875abb5a0ceb20e388898346ba13507259b9671797cc8e1  ./src/modules/simple-modules.js
 16a3e0bcf9a927d4c92b24b3e802a8915c23170d61bb9818facf95d9319a5a93  ./src/modules/workflow-services.js
-c0d88935995f0dc483b8f2c8ed5e77627a9940e99326177b93a521368c647260  ./src/modules/workflow.js
+3f6bce7521aa6d1d8ca28d7d62d2a6896f8836a6c3d4425b96e16bacf53fe6e4  ./src/modules/workflow.js
 b1ea37e1e1bf453165fcc834f2cb2da373662730d722eca7edec01ac40c7d87e  ./src/styles/layout.css
 e149c2c0451691f8a36f1ea012d3bcf369fbb9fc608210fb937a9faaa45dd0b6  ./src/styles/tokens.css
 02e149be4148764f2770811d812fc54a68fe27ac519dba780ae793b8b5e63762  ./src/ui/dom.js
@@ -103,5 +103,5 @@ f40e1fc43a5710e7d367a4d86cc927322ac1c445aaca82eab49d115954dd02f9  ./tests/unit/l
 4edf11a2bc5cc39b0842e739fd664d13b48696e9abc1e2bed106079b70f81c41  ./tests/unit/quote-template.test.js
 592d420653a5f9dadfd2fff22e220f36afe58cf69d7943c3752ebe9868bcd6b4  ./tests/unit/simple-modules.test.js
 dd1de8f88ca53748c6bec3fa7dbd1dd1a46f44247ebccbeb0a31a57166f2ae9e  ./tests/unit/store.test.js
-a76a6efec87ff7081b2b58508afe6ed49cc3c6a1fb48bb42d50646c910e0063a  ./tests/unit/workflow.test.js
+b5cf40775b29dde820a82557a0b3669d9d3b98da9392a9e2071c535263bc5c4b  ./tests/unit/workflow.test.js
 6563afc5569d82fb7828c7876e40d0afdb9cb3556a2fd9b654346f63a4e1e306  ./vite.config.js
