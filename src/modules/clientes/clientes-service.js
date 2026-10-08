@@ -80,10 +80,19 @@ export function createClientesService({ repositories, eventBus, store }) {
   }
 
   async function buildHistory(client) {
-    const name = client.name ?? client.nome ?? '';
     const transactions = txRepo ? await txRepo.list() : [];
+    const clients = await listRaw();
     const txHistory = transactions
-      .filter(tx => (tx.type === 'rec' || tx.tipo === 'receita') && matchesClientDescription(tx.desc ?? tx.description, name))
+      .filter(tx => {
+        if (tx.type !== 'rec' && tx.tipo !== 'receita') return false;
+        if (tx.clientId != null && String(tx.clientId) !== '') {
+          return String(tx.clientId) === String(client.id);
+        }
+        const candidates = clients.filter(candidate => matchesClientDescription(
+          tx.desc ?? tx.description, candidate.name ?? candidate.nome ?? ''
+        ));
+        return candidates.length === 1 && String(candidates[0].id) === String(client.id);
+      })
       .map(tx => ({
         tipo: 'tx', data: tx.date ?? tx.data ?? '', desc: tx.desc ?? tx.description ?? '',
         valor: Number(tx.val ?? tx.valor ?? 0) || 0, cat: tx.cat ?? tx.category ?? tx.categoria ?? '',

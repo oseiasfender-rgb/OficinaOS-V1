@@ -85,6 +85,25 @@ test('fotos do cliente usam a chave dinâmica fp_fotos_<id> no repository settin
   assert.equal(photos.antes.length, 0);
 });
 
+test('histórico não soma a mesma receita antiga em clientes com nome em comum', async () => {
+  const clients = [{id:1,name:'Carlos Silva',servicos:[]},{id:2,name:'Ana Silva',servicos:[]}];
+  const transactions = [{id:'ambigua',type:'rec',desc:'Pintura Silva',val:900},{id:'unica',type:'rec',desc:'Polimento Carlos',val:100}];
+  const ctx=createClientContext(clients,transactions),service=createClientesService(ctx);
+  assert.deepEqual((await service.history(1)).map(x=>x.id),['unica']);
+  assert.deepEqual(await service.history(2),[]);
+  assert.equal((await service.summary(1)).totalSpent,100);
+  assert.deepEqual(await ctx.repositories.transactions.list(),transactions);
+});
+
+test('histórico prioriza cliente vinculado e não atribui vínculo desconhecido por nome', async () => {
+  const clients=[{id:1,name:'Carlos Silva',servicos:[]},{id:2,name:'Ana Silva',servicos:[]}];
+  const transactions=[{id:'vinculada',type:'rec',clientId:'2',desc:'Pintura Carlos',val:300},{id:'semCadastro',type:'rec',clientId:99,desc:'Polimento Carlos',val:700}];
+  const ctx=createClientContext(clients,transactions),service=createClientesService(ctx);
+  assert.deepEqual(await service.history(1),[]);
+  assert.deepEqual((await service.history(2)).map(x=>x.id),['vinculada']);
+  assert.deepEqual(await ctx.repositories.transactions.list(),transactions);
+});
+
 function createSimpleContext(seed = {}) {
   const repositories = {
     categories: memoryRepo(seed.categories || []),

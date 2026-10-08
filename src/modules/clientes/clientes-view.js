@@ -257,6 +257,7 @@ export function renderClientesView(root, { service, onChanged }) {
 
   function renderHistory(container, services) {
     const pane = el('div', 'cli-tab-pane active');
+    pane.append(el('p', 'cli-empty', 'Receitas com cliente vinculado usam esse cadastro. Receitas antigas são associadas por nome somente quando correspondem a um único cliente; correspondências ambíguas não entram no total.'));
     if (!services.length) {
       pane.append(el('div', 'cli-empty', 'Nenhum serviço registrado ainda.'));
       container.append(pane);
