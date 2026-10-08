@@ -205,8 +205,8 @@ test('metas recalcula realizado pelas receitas reais do mês e não pelo campo r
   const ctx = createSimpleContext({
     goals: [{ id: 'Pintura', category: 'Pintura', cat: 'Pintura', meta: 2000, real: 99999 }],
     transactions: [
-      { id: 1, type: 'rec', cat: 'Pintura', val: 1200, date: '2026-09-10' },
-      { id: 2, type: 'rec', cat: 'Pintura', val: 300, date: '2026-09-11' },
+      { id: 1, type: 'rec', cat: 'Pintura', val: 1200, date: '2026-09-10', paid: 'Pago' },
+      { id: 2, type: 'rec', cat: 'Pintura', val: 300, date: '2026-09-11', paid: true },
       { id: 3, type: 'dep', cat: 'Pintura', val: 400, date: '2026-09-11' }
     ],
     settings: [{ id: 'fp_meta_principal', value: 5000 }]
@@ -230,4 +230,40 @@ test('configurações não inventa dados e exige nome da oficina e proprietário
   const saved = await service.saveOfficeConfig({ nome: 'Oficina X', dono: 'Responsável', cidade: 'Leme - SP' });
   assert.equal(saved.nome, 'Oficina X');
   assert.equal((await ctx.repositories.settings.get('os_config')).value.cidade, 'Leme - SP');
+});
+
+
+test('metas por caixa exclui pendências, despesas e outros meses sem alterar transações', async () => {
+  const transactions=[
+    {id:1,type:'rec',cat:'Pintura',val:100,date:'2026-10-08',paid:'Pago'},
+    {id:2,type:'rec',cat:'Pintura',val:900,date:'2026-10-08',paid:'Não pago'},
+    {id:3,type:'rec',cat:'Pintura',val:50,date:'2026-10-07',pago:true},
+    {id:4,type:'dep',cat:'Pintura',val:700,date:'2026-10-08',paid:true},
+    {id:5,type:'rec',cat:'Pintura',val:600,date:'2026-09-08',paid:true},
+    {id:6,type:'rec',cat:'Pintura',val:500,date:'2026-10-08'}
+  ];
+  const ctx=createSimpleContext({transactions,goals:[{id:'Pintura',category:'Pintura',meta:1000}],settings:[{id:'fp_meta_principal',value:2000}]});
+  const s=await createMetasService(ctx).summary(new Date(2026,9,8));
+  assert.equal(s.real,150);assert.equal(s.categories[0].real,150);assert.equal(s.missing,1850);
+  assert.deepEqual(await ctx.repositories.transactions.list(),transactions);
+});
+
+test('editar meta para categoria ocupada rejeita a operação e preserva ambas as metas', async () => {
+  const goals=[{id:'A',category:'A',meta:100},{id:'B',category:'B',meta:200}];
+  const ctx=createSimpleContext({goals}),service=createMetasService(ctx);
+  await assert.rejects(()=>service.renameCategoryGoal('A','B',300),/Já existe uma meta/);
+  await assert.rejects(()=>service.renameCategoryGoal('A','b',300),/Já existe uma meta/);
+  assert.deepEqual(await ctx.repositories.goals.list(),goals);
+  await service.renameCategoryGoal('A','C',400);
+  assert.equal((await ctx.repositories.goals.get('C')).meta,400);
+  assert.deepEqual(await ctx.repositories.goals.get('B'),goals[1]);
+});
+
+test('salvar configurações preserva cor e campos legados não exibidos no formulário', async () => {
+  const value={nome:'Oficina',dono:'Responsável',cor:'#123456',preferencias:{impressao:'premium'},cidade:'Leme'};
+  const ctx=createSimpleContext({settings:[{id:'os_config',value}]}),service=createConfiguracoesService(ctx);
+  const saved=await service.saveOfficeConfig({nome:'Oficina editada',dono:'Responsável',cidade:''});
+  assert.equal(saved.cor,'#123456');assert.deepEqual(saved.preferencias,value.preferencias);assert.equal(saved.cidade,'');
+  await assert.rejects(()=>service.saveOfficeConfig({nome:'',dono:'Responsável'}),/obrigatórios/);
+  assert.deepEqual((await ctx.repositories.settings.get('os_config')).value,saved);
 });

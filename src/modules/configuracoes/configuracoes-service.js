@@ -36,7 +36,9 @@ export function createConfiguracoesService({ repositories, eventBus }) {
       return sanitizeOfficeConfig(row?.value || {});
     },
     async saveOfficeConfig(input) {
-      const config = sanitizeOfficeConfig(input);
+      const current = await repo.get(CONFIG_KEY);
+      const merged = { ...(current?.value || {}), ...input };
+      const config = { ...merged, ...sanitizeOfficeConfig(merged) };
       if (!config.nome || !config.dono) throw new Error('Nome da oficina e proprietário são obrigatórios.');
       await repo.put({ id: CONFIG_KEY, value: config, updatedAt: new Date().toISOString() });
       eventBus.emit('configuracoes:changed', { key: CONFIG_KEY, value: config });

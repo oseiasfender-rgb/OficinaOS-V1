@@ -54,7 +54,7 @@ fe05b3eadf63b5e879319c22140ee52a7cd52d99b5ccf7281d69324483bcc2c6  ./src/data/sch
 6deff9f0dfe7905844725d695affd2cb0da2030515bbe897e58339c5c4c9548e  ./src/modules/categorias/categorias-view.js
 1da2a16fb0cd321eeee7ce526e8f299957ec988993d9725656d60111182b2cbd  ./src/modules/clientes/clientes-service.js
 6b7d13f4507de7d605bb5a9a65547873f4e33c42373f5eca40284ca0bb8a64a6  ./src/modules/clientes/clientes-view.js
-57dddc0e3beb65c9e77ff81d9732518f3a83fb51301e01863dcdcccf51e447ab  ./src/modules/configuracoes/configuracoes-service.js
+fc340d49aed2b43b0df94ddaf0079dd2f21390bda58245f0c671621e0c61848f  ./src/modules/configuracoes/configuracoes-service.js
 e354a592cfd683172721723072087525aec9fc2fb0cc3bc11a2f42c9a7edffca  ./src/modules/configuracoes/configuracoes-view.js
 19a56127676252af1966d8c347e858868358e828a2dea3112e33748b7e9e0346  ./src/modules/consultor/consultor-service.js
 9dd5581789c510cf3a48d1d70f889cdfbcef697e524311530df91e610c7b474f  ./src/modules/consultor/consultor-view.js
@@ -69,8 +69,8 @@ ea7ea363f6f7cbd78a799a7c29859ffe594c26d883840fd6107c3e82cbd03a73  ./src/modules/
 84595479b41daada723a3282f10a53d944630724852736b9665bc396708f4c3c  ./src/modules/historico-orcamentos/historico-orcamentos-service.js
 0a14dd614ae05df3709ff3ff8068b062ae5d887ab9d94d07f10bbc64314fb91f  ./src/modules/historico-orcamentos/historicos-view.js
 a4582faf5b32163e59dcbc2bbea20ba37f8de8debfa8daadee2de40c3ab9a054  ./src/modules/history-services.js
-1b44d22b5a4c6d4f463bdf31eb3781ee0913d8ecc94f259c7346cf1ea91884b2  ./src/modules/metas/metas-service.js
-cb59a6902a3003efdbbd7cc9146cd912d4a5eb1572aae5c9b59a082a69e9b351  ./src/modules/metas/metas-view.js
+598e4483e7c1654c19673b7c47e42ffdb1e4f822c05affe7c56c07c376dc5e15  ./src/modules/metas/metas-service.js
+5e064e40764a9b453cd78e08be43541de5c575fd12a45c9acfbadada418f54f7  ./src/modules/metas/metas-view.js
 641b84f91a670f48381902428b56962a64c9c49d176664ff511d55912589c55b  ./src/modules/orcamento/orcamento-calculator.js
 79616a21bf30d975fd18dfba2ca36247e3c64559cb1bfe200c41847f9ae88955  ./src/modules/orcamento/orcamento-model.js
 e64df3b9e3392f81f51154828b8461f244f8d75f92f1ce82971686b25062a6bb  ./src/modules/orcamento/orcamento-service.js
@@ -101,7 +101,7 @@ e0c7672cd38619b94a81959a9c3ad9b8101b4fa8a039268ba61f35103ce9491f  ./tests/unit/i
 f40e1fc43a5710e7d367a4d86cc927322ac1c445aaca82eab49d115954dd02f9  ./tests/unit/legacy-compat.test.js
 37c1d46de53995179c0aaef913905e020247281c851b3569afe14f313d4bf914  ./tests/unit/money.test.js
 4edf11a2bc5cc39b0842e739fd664d13b48696e9abc1e2bed106079b70f81c41  ./tests/unit/quote-template.test.js
-fd749bccad82a1c3c9fea67d575fba3cb3180a4d0087d16406322e46e2d4f2c4  ./tests/unit/simple-modules.test.js
+592d420653a5f9dadfd2fff22e220f36afe58cf69d7943c3752ebe9868bcd6b4  ./tests/unit/simple-modules.test.js
 dd1de8f88ca53748c6bec3fa7dbd1dd1a46f44247ebccbeb0a31a57166f2ae9e  ./tests/unit/store.test.js
 a76a6efec87ff7081b2b58508afe6ed49cc3c6a1fb48bb42d50646c910e0063a  ./tests/unit/workflow.test.js
 6563afc5569d82fb7828c7876e40d0afdb9cb3556a2fd9b654346f63a4e1e306  ./vite.config.js
