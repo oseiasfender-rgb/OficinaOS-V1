@@ -79,7 +79,7 @@ a4582faf5b32163e59dcbc2bbea20ba37f8de8debfa8daadee2de40c3ab9a054  ./src/modules/
 aa1f1791cccb14b92379cddfffe408bd356d369222cf95b98c7166d6b51f3ccd  ./src/modules/orcamento/quote-template.js
 acdae018c09f1de01560833cb1240d5458c4dcbf7c24ce0f0ee9795e05302057  ./src/modules/ordem-servico/checklist-service.js
 1a6d1db230e0742000d50c391f5996ddfb311b8df15087b5e2cf52a979127cf6  ./src/modules/ordem-servico/ordem-servico-service.js
-004522ea773cf1fcdaf574b501b856496330733a6057c97f5145b4f9d399c524  ./src/modules/ordem-servico/ordem-servico-view.js
+86525f0f9f4bef6496787b3f68eae8f15b29838ad3e4402dea4b967fa9938d44  ./src/modules/ordem-servico/ordem-servico-view.js
 e4130130d011dc348d44e412b00ba71f738b78a10e1dbf9e707af84b52e514ea  ./src/modules/relatorios/relatorios-service.js
 1beea7605ef533db994a5eeff9a672c1503eadad626427ccf90c7ddbf47117bb  ./src/modules/relatorios/relatorios-view.js
 46dcf3bda2259c076875abb5a0ceb20e388898346ba13507259b9671797cc8e1  ./src/modules/simple-modules.js
