@@ -56,8 +56,8 @@ fe05b3eadf63b5e879319c22140ee52a7cd52d99b5ccf7281d69324483bcc2c6  ./src/data/sch
 6b7d13f4507de7d605bb5a9a65547873f4e33c42373f5eca40284ca0bb8a64a6  ./src/modules/clientes/clientes-view.js
 fc340d49aed2b43b0df94ddaf0079dd2f21390bda58245f0c671621e0c61848f  ./src/modules/configuracoes/configuracoes-service.js
 e354a592cfd683172721723072087525aec9fc2fb0cc3bc11a2f42c9a7edffca  ./src/modules/configuracoes/configuracoes-view.js
-19a56127676252af1966d8c347e858868358e828a2dea3112e33748b7e9e0346  ./src/modules/consultor/consultor-service.js
-9dd5581789c510cf3a48d1d70f889cdfbcef697e524311530df91e610c7b474f  ./src/modules/consultor/consultor-view.js
+c745f5dbef23789d275ab33ccd69ed9e526741ed0a0e0f7757dc646a9b7f72e5  ./src/modules/consultor/consultor-service.js
+12caf56e230cb4216ee91cb368dd3ed984df22c9292cb9b0145dd45e6fa7293b  ./src/modules/consultor/consultor-view.js
 2f10adcd55b65f9c8a1ae448affb2fc91a644e1332cdf389530ae16d57466f82  ./src/modules/contas/contas-view.js
 5fa683fe69a439f595e19304c575f3219aaafab2fd2f2662582359b0cca2e8ca  ./src/modules/estoque/estoque-default.js
 d4bb9df3aa502b0af13530a9e7e3a40b1d463bd3ab580dd911de1d5fb49cc009  ./src/modules/estoque/estoque-service.js
@@ -81,7 +81,7 @@ acdae018c09f1de01560833cb1240d5458c4dcbf7c24ce0f0ee9795e05302057  ./src/modules/
 1a6d1db230e0742000d50c391f5996ddfb311b8df15087b5e2cf52a979127cf6  ./src/modules/ordem-servico/ordem-servico-service.js
 86525f0f9f4bef6496787b3f68eae8f15b29838ad3e4402dea4b967fa9938d44  ./src/modules/ordem-servico/ordem-servico-view.js
 e4130130d011dc348d44e412b00ba71f738b78a10e1dbf9e707af84b52e514ea  ./src/modules/relatorios/relatorios-service.js
-1beea7605ef533db994a5eeff9a672c1503eadad626427ccf90c7ddbf47117bb  ./src/modules/relatorios/relatorios-view.js
+bc465b34092d226e48a3cd27f6e65c1348dff86b31c80310c5543faad2b4bc1f  ./src/modules/relatorios/relatorios-view.js
 46dcf3bda2259c076875abb5a0ceb20e388898346ba13507259b9671797cc8e1  ./src/modules/simple-modules.js
 16a3e0bcf9a927d4c92b24b3e802a8915c23170d61bb9818facf95d9319a5a93  ./src/modules/workflow-services.js
 3f6bce7521aa6d1d8ca28d7d62d2a6896f8836a6c3d4425b96e16bacf53fe6e4  ./src/modules/workflow.js
@@ -91,7 +91,7 @@ e149c2c0451691f8a36f1ea012d3bcf369fbb9fc608210fb937a9faaa45dd0b6  ./src/styles/t
 dc0e6de9ddaaecf240d1690cbb6dfa1dda6373fb2bd638a076f1b7af341ee8e6  ./tests/acceptance/official-counts.json
 9813869302b40da64d468187aea3ad1453d799c5436ac063c9865b584b4aafa8  ./tests/unit/acceptance-auditor.test.js
 95711c46898a1df4d0af823ec7657fc041151b96ddfd232c56ba68e54c2b56d3  ./tests/unit/acceptance-contract.test.js
-b16ee8041586b383379abd83d13ce2d5e3a3ba99e91692907474acfb13414c1d  ./tests/unit/analytics-consultor.test.js
+a4fe72ac5dce6cc25b50b2cf8cc2077eb4c4378a194f491a7696735622caf8ab  ./tests/unit/analytics-consultor.test.js
 a08a1bc6bae9141230e050088e68f4be84cbecd7b0449624576e32e5c9f3f67d  ./tests/unit/backup-service.test.js
 dea94b92e34c5f7fb21ff7f8f02194b14c3023f0437d7d442ec1d700e38c0c15  ./tests/unit/budget.test.js
 5b1b3472f7cc18bcfa27438f8767e7765814d515d1aef7f6f89eaf1c249c7479  ./tests/unit/final-gate.test.js
