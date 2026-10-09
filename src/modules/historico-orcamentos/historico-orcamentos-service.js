@@ -1,3 +1,4 @@
+import { findRecordById } from '../workflow.js';
 import { safeText } from '../../core/validators.js';
 
 function clone(v){return structuredClone(v);}
@@ -18,7 +19,7 @@ export function createHistoricoOrcamentosService({repositories,eventBus,store,op
   async function safety(reason,item){
     const row={id:uid('bk'),at:new Date().toISOString(),reason,entityType:'budget',item:clone(item),payload:clone(item)};
     await backupRepo.put(row);
-    const rows=(await backupRepo.list()).sort((a,b)=>String(b.at??'').localeCompare(String(a.at??'')));
+    const rows=(await backupRepo.list()).filter(row=>row.entityType==='budget').sort((a,b)=>String(b.at??'').localeCompare(String(a.at??'')));
     for(const extra of rows.slice(50))await backupRepo.delete(extra.id);
     return row;
   }
@@ -32,7 +33,7 @@ export function createHistoricoOrcamentosService({repositories,eventBus,store,op
   }
   async function find(id,bucket='active'){
     const repo=bucket==='archived'?archiveRepo:bucket==='trash'?trashRepo:activeRepo;
-    const row=await repo.get(id);return row?clone(row):null;
+    const row=await findRecordById(repo,id);return row?clone(row):null;
   }
   async function links(item){
     const id=String(item?.id??''); if(!id)return {total:0,jobs:0,workOrders:0,appointments:0,transactions:0,accounts:0};
@@ -46,36 +47,42 @@ export function createHistoricoOrcamentosService({repositories,eventBus,store,op
     };
     counts.total=counts.jobs+counts.workOrders+counts.appointments+counts.transactions+counts.accounts;return counts;
   }
+  function requireBudget(item){if(item.entityType&&item.entityType!=='budget')throw new Error('Este registro não é um orçamento.');}
+  async function move(source,destination,item,next){
+    requireBudget(item);
+    if(await findRecordById(destination,item.id))throw new Error('Já existe um registro com este ID no destino.');
+    await destination.put(next);
+    try{await source.delete(item.id);}catch(error){await destination.delete(next.id);throw error;}
+  }
   async function archive(id){
-    const item=await activeRepo.get(id);if(!item)throw new Error('Orçamento ativo não encontrado.');
-    await safety('arquivar',item);
+    const item=await findRecordById(activeRepo,id);if(!item)throw new Error('Orçamento ativo não encontrado.');
+    requireBudget(item);if(await findRecordById(archiveRepo,item.id))throw new Error('Já existe um registro com este ID no destino.');await safety('arquivar',item);
     const next={...clone(item),archivedAt:new Date().toISOString(),statusBeforeArchive:item.status||'Salvo',status:'Arquivado'};
-    await archiveRepo.put(next);await activeRepo.delete(id);await log('Arquivar',item,'Orçamento movido para Arquivados');await sync();eventBus?.emit?.('budget-history:changed',{action:'archive',id});return clone(next);
+    await move(activeRepo,archiveRepo,item,next);await log('Arquivar',item,'Orçamento movido para Arquivados');await sync();eventBus?.emit?.('budget-history:changed',{action:'archive',id});return clone(next);
   }
   async function moveToTrash(id,source='active'){
     if(!['active','archived'].includes(source))throw new Error('Origem inválida para Lixeira.');
-    const repo=source==='archived'?archiveRepo:activeRepo;const item=await repo.get(id);if(!item)throw new Error('Orçamento não encontrado.');
-    await safety('mover-para-lixeira',item);const now=new Date().toISOString();
+    const repo=source==='archived'?archiveRepo:activeRepo;const item=await findRecordById(repo,id);if(!item)throw new Error('Orçamento não encontrado.');
+    requireBudget(item);if(await findRecordById(trashRepo,item.id))throw new Error('Já existe um registro com este ID no destino.');await safety('mover-para-lixeira',item);const now=new Date().toISOString();
     const next={...clone(item),entityType:'budget',deletedAt:now,deletedFrom:source,bucket:'trash',statusBeforeArchive:item.statusBeforeArchive||item.status||'Salvo',status:'Na lixeira'};
-    await trashRepo.put(next);await repo.delete(id);const linked=await links(item);await log('Mover para Lixeira',item,`Orçamento enviado para a Lixeira${linked.total?` · ${linked.total} vínculo(s) preservado(s)`:''}`);await sync();eventBus?.emit?.('budget-history:changed',{action:'trash',id,source});return {item:clone(next),links:linked};
+    await move(repo,trashRepo,item,next);const linked=await links(item);await log('Mover para Lixeira',item,`Orçamento enviado para a Lixeira${linked.total?` · ${linked.total} vínculo(s) preservado(s)`:''}`);await sync();eventBus?.emit?.('budget-history:changed',{action:'trash',id,source});return {item:clone(next),links:linked};
   }
   async function restore(id,source='trash'){
     if(!['trash','archived'].includes(source))throw new Error('Origem inválida para restauração.');
-    if(await activeRepo.get(id))throw new Error('Já existe um orçamento ativo com este ID.');
-    const repo=source==='trash'?trashRepo:archiveRepo;const item=await repo.get(id);if(!item)throw new Error('Orçamento não encontrado.');
-    await safety(`recuperar-${source}`,item);const next={...clone(item)};
+    if(await findRecordById(activeRepo,id))throw new Error('Já existe um orçamento ativo com este ID.');
+    const repo=source==='trash'?trashRepo:archiveRepo;const item=await findRecordById(repo,id);if(!item)throw new Error('Orçamento não encontrado.');
+    requireBudget(item);await safety(`recuperar-${source}`,item);const next={...clone(item)};
     delete next.archivedAt;delete next.deletedAt;delete next.deletedFrom;delete next.bucket;delete next.entityType;
     const previous=next.statusBeforeArchive||'Salvo';delete next.statusBeforeArchive;if(next.status==='Arquivado'||next.status==='Na lixeira')next.status=previous;
-    next.updatedAt=new Date().toISOString();await activeRepo.put(next);await repo.delete(id);await log(source==='trash'?'Recuperar da lixeira':'Retomar do arquivo',next,'Orçamento recuperado para Ativos');await sync();eventBus?.emit?.('budget-history:changed',{action:'restore',id,source});return clone(next);
+    next.updatedAt=new Date().toISOString();await move(repo,activeRepo,item,next);await log(source==='trash'?'Recuperar da lixeira':'Retomar do arquivo',next,'Orçamento recuperado para Ativos');await sync();eventBus?.emit?.('budget-history:changed',{action:'restore',id,source});return clone(next);
   }
   async function permanentDelete(id,confirmation=''){
     if(text(confirmation,32).toUpperCase()!=='EXCLUIR')throw new Error('Confirmação reforçada inválida.');
-    const item=await trashRepo.get(id);if(!item)throw new Error('Orçamento não encontrado na Lixeira.');
-    const backup=await safety('exclusao-definitiva',item);
-    await trashRepo.delete(id);
+    const item=await findRecordById(trashRepo,id);if(!item)throw new Error('Orçamento não encontrado na Lixeira.');
+    requireBudget(item);if((await links(item)).total)throw new Error('Este orçamento possui vínculos. Recupere-o ou preserve-o na Lixeira.');const backup=await safety('exclusao-definitiva',item);
     const row={id:uid('del'),entityId:String(id),entityType:'budget',at:new Date().toISOString(),cliente:item.cliente??item.clientName??'',reason:'exclusao-definitiva',backupId:backup.id,backupKey:'oficinaos_orc_exclusoes_backup_v1'};
-    await logRepo.put(row);
-    const logs=(await logRepo.list()).sort((a,b)=>String(b.at??'').localeCompare(String(a.at??'')));for(const extra of logs.slice(100))await logRepo.delete(extra.id);
+    await logRepo.put(row);try{await trashRepo.delete(item.id);}catch(error){await logRepo.delete(row.id);throw error;}
+    const logs=(await logRepo.list()).filter(row=>row.entityType==='budget').sort((a,b)=>String(b.at??'').localeCompare(String(a.at??'')));for(const extra of logs.slice(100))await logRepo.delete(extra.id);
     await log('Excluir definitivamente',item,'Orçamento removido da Lixeira após confirmação reforçada');await sync();eventBus?.emit?.('budget-history:changed',{action:'permanent-delete',id});return clone(row);
   }
   async function deletionBackups(){return clone((await backupRepo.list()).sort((a,b)=>String(b.at??'').localeCompare(String(a.at??''))));}
