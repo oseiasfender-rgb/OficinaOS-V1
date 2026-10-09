@@ -55,3 +55,22 @@ test('Gateway recebe apenas snapshot sanitizado e resposta é tratada como texto
 test('Falha no gateway faz fallback local sem bloquear o consultor',async()=>{
   const repos=repositories();const reports={async sanitizedSnapshot(){return{current:{receitas:0,despesas:0,lucro:0,margem:0},topServices:[]};}};const fetcher=async()=>({ok:false,status:503,async json(){return{};}});const s=createConsultorService({repositories:repos,relatoriosService:reports,fetcher});await s.configureGateway({enabled:true,endpoint:'https://example.com/ai'});const r=await s.ask({message:'Como precificar?',context:'precificacao',preferExternal:true});assert.equal(r.source,'local');assert.match(r.externalError,/503/);assert.match(r.answer,/mão de obra/i);
 });
+
+test('Fase 9: gateway remove nomes e campos extras do resumo antes do envio',async()=>{
+ let payload;const secret='NOME PRIVADO';const reports={async sanitizedSnapshot(){return{current:{receitas:100,cliente:secret},monthly:[{key:'2026-10',receitas:100,notes:secret}],annual:[],topServices:[{name:secret,value:100}],limits:[{category:secret,limit:80,spent:100,pct:125,over:true}],goals:{meta:200,real:100,cliente:secret}};}};
+ const s=createConsultorService({repositories:repositories(),relatoriosService:reports,fetcher:async(_url,options)=>{payload=JSON.parse(options.body);return{ok:true,json:async()=>({answer:'Teste'})};}});
+ await s.configureGateway({enabled:true,endpoint:'https://example.com/ai'});await s.askGateway('Pergunta de teste');assert.equal(JSON.stringify(payload).includes(secret),false);assert.equal(payload.snapshot.current.receitas,100);assert.equal(payload.snapshot.topServices[0].name,'Categoria 1');
+});
+test('Fase 9: configuração importada com URL insegura não é enviada',async()=>{
+ let calls=0;const s=createConsultorService({repositories:repositories({settings:[{id:'oficinaos_ai_gateway_v1',value:{enabled:true,endpoint:'http://example.com/ai'}}]}),relatoriosService:{sanitizedSnapshot:async()=>({})},fetcher:async()=>{calls++;}});
+ await assert.rejects(s.askGateway('Teste'),/HTTPS/);assert.equal(calls,0);
+});
+test('Fase 9: tempo limite cobre corpo de resposta travado e permite resposta local',async()=>{
+ const s=createConsultorService({repositories:repositories(),relatoriosService:{sanitizedSnapshot:async()=>({current:{},topServices:[]})},fetcher:async()=>({ok:true,json:()=>new Promise(()=>{})})});
+ await s.configureGateway({enabled:true,endpoint:'https://example.com/ai',timeoutMs:2000});const result=await s.ask({message:'Como está a margem?',preferExternal:true});assert.equal(result.source,'local');assert.match(result.externalError,/Tempo limite/);assert.equal(s.getHistory().length,2);
+});
+test('Fase 9: relatórios e consultas locais preservam todas as coleções',async()=>{
+ const repos=repositories({transactions:[{id:1,date:'2026-10-09',type:'rec',val:200,paid:'Não pago'},{id:2,date:'2026-10-09',type:'dep',val:50,paid:'Pago'}],clients:[{id:5,name:'Original'}]});const snapshot=async()=>Object.fromEntries(await Promise.all(Object.entries(repos).map(async([name,r])=>[name,await r.list()])));const before=await snapshot();
+ const reports=createRelatoriosService({repositories:repos,metasService:goalsStub()});const dashboard=await reports.dashboard({now:new Date(2026,9,9)});assert.equal(dashboard.current.receitas,200);const cash=await reports.currentMonth({now:new Date(2026,9,9),paidOnly:true});assert.equal(cash.receitas,0);
+ const s=createConsultorService({repositories:repos,relatoriosService:reports,fetcher:null});await s.askLocal('Como está meu faturamento?');await s.clearHistory();assert.deepEqual(await snapshot(),before);assert.equal(s.getHistory().length,0);
+});

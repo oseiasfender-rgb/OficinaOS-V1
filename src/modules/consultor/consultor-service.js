@@ -43,10 +43,29 @@ export function createConsultorService({repositories,relatoriosService,eventBus=
   function getHistory(){return clone(history);}
   async function askLocal(message,context='geral'){const clean=text(message,4000);if(!clean)throw new Error('Digite uma pergunta.');if(!CONSULTOR_CONTEXTS[context])context='geral';const snapshot=await relatoriosService.sanitizedSnapshot();const answer=localTechnicalReply(clean,context,snapshot);history.push({role:'user',content:clean,context,at:new Date().toISOString()},{role:'assistant',content:answer,context,source:'local',at:new Date().toISOString()});history=history.slice(-40);return{answer,source:'local',context,snapshot};}
   async function askGateway(message,context='geral'){
-    const clean=text(message,4000);if(!clean)throw new Error('Digite uma pergunta.');if(!CONSULTOR_CONTEXTS[context])context='geral';const cfg=await getGatewayConfig();if(!cfg.enabled||!cfg.endpoint)throw new Error('Gateway externo não configurado.');if(typeof fetcher!=='function')throw new Error('Cliente HTTP indisponível.');const snapshot=await relatoriosService.sanitizedSnapshot();const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),cfg.timeoutMs);let response;
-    try{response=await fetcher(cfg.endpoint,{method:'POST',headers:{'content-type':'application/json'},credentials:'omit',redirect:'error',referrerPolicy:'no-referrer',body:JSON.stringify({schema:'oficinaos-ai-request-v1',message:clean,context:{id:context,...CONSULTOR_CONTEXTS[context]},snapshot}),signal:controller.signal});}finally{clearTimeout(timer);}
-    if(!response?.ok)throw new Error(`Gateway respondeu com status ${response?.status??'desconhecido'}.`);const data=await response.json();const answer=text(data?.answer??data?.text,12000);if(!answer)throw new Error('Gateway retornou resposta vazia.');history.push({role:'user',content:clean,context,at:new Date().toISOString()},{role:'assistant',content:answer,context,source:'gateway',at:new Date().toISOString()});history=history.slice(-40);return{answer,source:'gateway',context};
+    const clean=text(message,4000);if(!clean)throw new Error('Digite uma pergunta.');if(!CONSULTOR_CONTEXTS[context])context='geral';
+    const cfg=await getGatewayConfig();if(!cfg.enabled||!cfg.endpoint)throw new Error('Gateway externo não configurado.');
+    const endpoint=validateEndpoint(cfg.endpoint);if(typeof fetcher!=='function')throw new Error('Cliente HTTP indisponível.');
+    const raw=await relatoriosService.sanitizedSnapshot();
+    const numeric=(row,keys)=>Object.fromEntries(keys.map(key=>[key,Number.isFinite(Number(row?.[key]))?Number(row[key]):0]));
+    const indicators=['receitas','despesas','lucro','margem'];
+    const snapshot={current:numeric(raw.current,indicators),
+      monthly:(raw.monthly||[]).map(row=>({...numeric(row,indicators),key:/^\d{4}-\d{2}$/.test(row.key)?row.key:''})),
+      annual:(raw.annual||[]).map(row=>numeric(row,['year',...indicators])),
+      topServices:(raw.topServices||[]).map((row,index)=>({name:`Categoria ${index+1}`,value:Number(row.value)||0})),
+      goals:raw.goals?numeric(raw.goals,['meta','real','pct','projection','missing']):null,
+      limits:(raw.limits||[]).map((row,index)=>({...numeric(row,['limit','spent','pct']),category:`Categoria ${index+1}`,over:row.over===true}))};
+    const controller=new AbortController();let timer;
+    const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('Tempo limite do gateway excedido.'));},cfg.timeoutMs);});
+    let answer;
+    try{answer=await Promise.race([timeout,(async()=>{
+      const response=await fetcher(endpoint,{method:'POST',headers:{'content-type':'application/json'},credentials:'omit',redirect:'error',referrerPolicy:'no-referrer',body:JSON.stringify({schema:'oficinaos-ai-request-v1',message:clean,context:{id:context,...CONSULTOR_CONTEXTS[context]},snapshot}),signal:controller.signal});
+      if(!response?.ok)throw new Error(`Gateway respondeu com status ${response?.status??'desconhecido'}.`);
+      const data=await response.json();const result=text(data?.answer??data?.text,12000);if(!result)throw new Error('Gateway retornou resposta vazia.');return result;
+    })()]);}finally{clearTimeout(timer);}
+    history.push({role:'user',content:clean,context,at:new Date().toISOString()},{role:'assistant',content:answer,context,source:'gateway',at:new Date().toISOString()});history=history.slice(-40);return{answer,source:'gateway',context};
   }
+
   async function ask({message,context='geral',preferExternal=false}={}){if(preferExternal){try{return await askGateway(message,context);}catch(error){const local=await askLocal(message,context);return{...local,externalError:error.message};}}return askLocal(message,context);}
   return Object.freeze({contexts:CONSULTOR_CONTEXTS,getGatewayConfig,configureGateway,ask,askLocal,askGateway,getHistory,clearHistory});
 }

@@ -2,7 +2,7 @@ import { el, button, labeledField, setFeedback } from '../../ui/dom.js';
 import { formatBRL } from '../../core/money.js';
 
 function input(type='text'){const n=el('input','mod-input');n.type=type;return n;}
-function pct(v){return `${Number(v||0).toFixed(1)}%`;}
+function pct(v){return `${Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%`;}
 function metric(label,value,cls=''){const c=el('article',`report-metric ${cls}`);c.append(el('span','report-metric-label',label),el('strong','report-metric-value',value));return c;}
 function section(title,subtitle=''){const c=el('section','card report-card');c.append(el('h2','',title));if(subtitle)c.append(el('p','module-subtitle',subtitle));return c;}
 function empty(text){return el('p','empty-state',text);}
@@ -15,7 +15,7 @@ function renderAnnual(host,rows){host.replaceChildren();if(!rows.length){host.ap
 function renderLimits(host,rows){host.replaceChildren();if(!rows.length){host.append(empty('Nenhum limite de categoria configurado.'));return;}for(const row of rows){const wrap=el('div','report-limit-row');const line=el('div','report-limit-head');line.append(el('strong','',row.category),el('span',row.over?'negative':'muted',`${formatBRL(row.spent)} / ${formatBRL(row.limit)}${row.over?' · ACIMA':''}`));const track=el('div','report-limit-track'),fill=el('div',`report-limit-fill${row.over?' over':row.pct>80?' warn':''}`);fill.style.width=`${Math.min(100,row.pct)}%`;track.append(fill);wrap.append(line,track);host.append(wrap);}}
 
 export function renderRelatoriosView(root,{service,onChanged}){
-  root.className='simple-module reports-module';const toolbar=el('div','module-toolbar');const title=el('div');title.append(el('h1','module-title','Relatórios'),el('p','module-subtitle','Indicadores derivados diretamente dos repositories modulares, sem arrays globais.'));const tools=el('div','module-toolbar-actions');const refreshBtn=button('Atualizar','btn btn-primary');tools.append(refreshBtn);toolbar.append(title,tools);const feedback=el('div','module-feedback');feedback.hidden=true;const body=el('div','module-body reports-body');root.replaceChildren(toolbar,feedback,body);
+  root.className='simple-module reports-module';const toolbar=el('div','module-toolbar');const title=el('div');title.append(el('h1','module-title','Relatórios'),el('p','module-subtitle','Indicadores dos lançamentos cadastrados, incluindo pendentes. Metas usam apenas receitas recebidas.'));const tools=el('div','module-toolbar-actions');const refreshBtn=button('Atualizar','btn btn-primary');tools.append(refreshBtn);toolbar.append(title,tools);const feedback=el('div','module-feedback');feedback.hidden=true;const body=el('div','module-body reports-body');root.replaceChildren(toolbar,feedback,body);
 
   const currentCard=section('Resumo do mês');const metrics=el('div','report-metrics');currentCard.append(metrics);const period=el('p','report-period');currentCard.append(period);
   const chartCard=section('Receitas × Despesas','Últimos 12 meses. Transferências são excluídas do resultado.');const monthlyHost=el('div');chartCard.append(monthlyHost);
