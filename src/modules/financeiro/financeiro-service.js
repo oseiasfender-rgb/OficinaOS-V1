@@ -1,3 +1,4 @@
+import { validateWorkflowDates } from '../workflow.js';
 import { safeText } from '../../core/validators.js';
 import { amount, dueForMonth, isPaid, monthKey, monthSummary, normalizeAccount, normalizeTransaction, projectCashFlow, reconcileFinancialData, recurringKey, todayISO } from './financial-model.js';
 
@@ -53,7 +54,7 @@ export function createFinancialServices({repositories,eventBus,store}){
 
   async function createTransaction(input={}){
     const type=String(input.type??input.tipo??'dep').toLowerCase().startsWith('rec')?'rec':String(input.type??input.tipo??'').toLowerCase().startsWith('trans')?'transfer':'dep';
-    const val=amount(input.val??input.valor);const desc=safeText(input.desc??input.descricao,240);const date=String(input.date??input.data??todayISO()).slice(0,10);if(!desc)throw new Error('Descrição é obrigatória.');if(val<=0)throw new Error('Valor deve ser maior que zero.');if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error('Data inválida.');
+    const val=amount(input.val??input.valor);const desc=safeText(input.desc??input.descricao,240);const date=String(input.date??input.data??todayISO()).slice(0,10);if(!desc)throw new Error('Descrição é obrigatória.');if(val<=0)throw new Error('Valor deve ser maior que zero.');if(!date)throw new Error('Data inválida.');validateWorkflowDates(date);
     const {transactions,accounts}=await reconciled();const {txIds,accountIds}=await nextIds();const id=freeId(input.id??uid('tx'),txIds);
     const tx=normalizeTransaction({...input,id,date,desc,val,type,cat:input.cat??input.categoria??(type==='transfer'?'Transferência':'Outros'),paid:input.paid??(type==='rec'||type==='transfer'?'Pago':'Não pago'),source:input.source??'manual'});
     if(type==='transfer'){
@@ -66,7 +67,7 @@ export function createFinancialServices({repositories,eventBus,store}){
 
   async function updateTransaction(id,changes={}){
     const {transactions,accounts}=await reconciled();const idx=transactions.findIndex(t=>String(t.id)===String(id));if(idx<0)throw new Error('Lançamento não encontrado.');const original=transactions[idx];if(original.type==='transfer')throw new Error('Transferências devem ser estornadas e recriadas, não editadas.');
-    const next={...original,...clone(changes),id:original.id};if('val' in changes)next.val=amount(changes.val);if('type' in changes)next.type=normalizeTransaction({type:changes.type}).type;if(next.val<=0)throw new Error('Valor deve ser maior que zero.');transactions[idx]=next;
+    if('date' in changes){if(!changes.date)throw new Error('Data inválida.');validateWorkflowDates(changes.date);}if('desc' in changes&&!safeText(changes.desc,240))throw new Error('Descrição é obrigatória.');const next={...original,...clone(changes),id:original.id};if('val' in changes)next.val=amount(changes.val);if('type' in changes)next.type=normalizeTransaction({type:changes.type}).type;if(next.val<=0)throw new Error('Valor deve ser maior que zero.');transactions[idx]=next;
     const linkedIndex=accounts.findIndex(c=>String(c.id)===String(original.contaId||'')||String(c.fromTx||'')===String(original.id)||String(c.paidTxId||'')===String(original.id));
     if(next.type==='dep'){const {accountIds}=await nextIds();await ensureAccountForExpense(next,accounts,accountIds);}
     else if(linkedIndex>=0){const linked=accounts[linkedIndex];await safety('account','transaction-changed-to-receipt',{account:linked,transaction:original});accounts.splice(linkedIndex,1);next.contaId='';}
@@ -91,11 +92,33 @@ export function createFinancialServices({repositories,eventBus,store}){
   }
 
   async function syncDeliveredWorkOrders(){
-    const orders=await workOrdersRepo.list();const {transactions,accounts}=await reconciled();const used=new Set(transactions.map(t=>String(t.id)));let added=0,changed=0;
-    for(const os of orders){if(String(os.status||'').toLocaleLowerCase('pt-BR')!=='entregue'||os.financialSyncPending!==true)continue;if(amount(os.value??os.valor)<=0)continue;let tx=transactions.find(t=>String(t.workOrderId??t.osId??t.jobId??'')===String(os.id)&&t.type==='rec');if(!tx){const base=`osrec_${String(os.legacyJobId??os.id)}`;const id=freeId(base,used);tx=normalizeTransaction({id,date:todayISO(),desc:`Receita OS — ${os.clientName||'Cliente'}${os.vehicle?' — '+os.vehicle:''}`,cat:'Serviços',val:amount(os.value??os.valor),type:'rec',paid:'Não pago',workOrderId:os.id,osId:os.id,jobId:os.legacyJobId??null,budgetId:os.budgetId??null,source:'os'});transactions.push(tx);added++;}
-      os.financialSyncPending=false;os.financialTransactionId=tx.id;os.updatedAt=new Date().toISOString();await workOrdersRepo.put(os);changed++;}
-    if(added||changed){await replaceFinancial(transactions,accounts);await log('Financeiro','Sincronizar OS','OS','',`${added} receita(s) de OS criada(s)`);eventBus?.emit?.('financeiro:changed',{action:'sync-os',added});}
-    return {added,ordersUpdated:changed};
+    const orders=await workOrdersRepo.list();const {transactions,accounts}=await reconciled();
+    const beforeTx=clone(transactions),beforeAccounts=clone(accounts),updates=[];
+    const used=new Set(transactions.map(t=>String(t.id)));let added=0;
+    for(const os of orders){
+      if(String(os.status||'').toLocaleLowerCase('pt-BR')!=='entregue'||os.financialSyncPending!==true||amount(os.value??os.valor)<=0)continue;
+      let tx=transactions.find(t=>t.type==='rec'&&(
+        String(t.id)===String(os.financialTransactionId??'')||
+        [t.workOrderId,t.osId].some(id=>id!=null&&String(id)===String(os.id))||
+        os.legacyJobId!=null&&t.jobId!=null&&String(t.jobId)===String(os.legacyJobId)));
+      if(!tx){const id=freeId(`osrec_${String(os.legacyJobId??os.id)}`,used);
+        tx=normalizeTransaction({id,date:todayISO(),desc:`Receita OS — ${os.clientName||'Cliente'}${os.vehicle?' — '+os.vehicle:''}`,cat:'Serviços',val:amount(os.value??os.valor),type:'rec',paid:'Não pago',clientId:os.clientId??null,workOrderId:os.id,osId:os.id,jobId:os.legacyJobId??null,budgetId:os.budgetId??null,source:'os'});
+        transactions.push(tx);added++;
+      }
+      updates.push({...os,financialSyncPending:false,financialTransactionId:tx.id,updatedAt:new Date().toISOString()});
+    }
+    if(updates.length){
+      try{await replaceFinancial(transactions,accounts);for(const os of updates)await workOrdersRepo.put(os);}
+      catch(error){
+        await replaceFinancial(beforeTx,beforeAccounts);
+        for(const os of orders.filter(row=>updates.some(next=>String(next.id)===String(row.id))))await workOrdersRepo.put(os);
+        throw error;
+      }
+      store?.patch?.({workOrders:await workOrdersRepo.list()});
+      await log('Financeiro','Sincronizar OS','OS','',`${added} receita(s) de OS criada(s)`);
+      eventBus?.emit?.('financeiro:changed',{action:'sync-os',added});
+    }
+    return {added,ordersUpdated:updates.length};
   }
 
   async function list({year,month,query='',category='',type=''}={}){const transactions=(await txRepo.list()).map(row=>normalizeTransaction(row));const q=lower(query),cat=lower(category),tfilter=String(type||'');let rows=transactions;if(Number.isInteger(year)&&Number.isInteger(month))rows=rows.filter(t=>{const p=t.date.split('-');return Number(p[0])===year&&Number(p[1])===month+1;});if(q)rows=rows.filter(t=>`${t.desc} ${t.cat}`.toLocaleLowerCase('pt-BR').includes(q));if(cat)rows=rows.filter(t=>lower(t.cat)===cat);if(tfilter)rows=rows.filter(t=>t.type===tfilter);return rows.sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.id).localeCompare(String(a.id)));}
@@ -119,12 +142,12 @@ export function createFinancialServices({repositories,eventBus,store}){
   }
 
   async function createAccount(input={}){
-    const val=amount(input.val??input.valor),name=safeText(input.name??input.desc,180),due=String(input.due??'').slice(0,10);if(!name)throw new Error('Descrição é obrigatória.');if(val<=0)throw new Error('Valor deve ser maior que zero.');if(!/^\d{4}-\d{2}-\d{2}$/.test(due))throw new Error('Vencimento inválido.');const {transactions,accounts}=await reconciled();const {accountIds}=await nextIds();const recur=!!input.recur;const key=recur?recurringKey({...input,name,val,due}):'';const comp=recur?monthKey(due):'';const id=freeId(input.id??(recur?`ct_${key}_${comp.replace('-','')}`:uid('ct')),accountIds);const account=normalizeAccount({...input,id,name,val,due,recur,recurKey:key,competencia:comp});accounts.push(account);
+    const val=amount(input.val??input.valor),name=safeText(input.name??input.desc,180),due=String(input.due??'').slice(0,10);if(!name)throw new Error('Descrição é obrigatória.');if(val<=0)throw new Error('Valor deve ser maior que zero.');if(!due)throw new Error('Vencimento inválido.');validateWorkflowDates(due);const {transactions,accounts}=await reconciled();const {accountIds}=await nextIds();const recur=!!input.recur;const key=recur?recurringKey({...input,name,val,due}):'';const comp=recur?monthKey(due):'';const id=freeId(input.id??(recur?`ct_${key}_${comp.replace('-','')}`:uid('ct')),accountIds);const account=normalizeAccount({...input,id,name,val,due,recur,recurKey:key,competencia:comp});accounts.push(account);
     if(recur){const tplId=input.recurTemplateId||`rec_${key}`;account.recurTemplateId=tplId;if(!(await recurringRepo.get(tplId)))await recurringRepo.put({id:tplId,name,category:account.cat,value:val,startDate:due,type:input.recurrenceType==='installment'?'installment':'monthly',totalInstallments:Number(input.totalInstallments)||0,active:true,legacyKey:key,createdAt:new Date().toISOString()});}
     const next=reconcileFinancialData(transactions,accounts,{createAccountIds:[account.id]});await replaceFinancial(next.transactions,next.accounts);await log('Contas','Adicionar','Conta',account.id,'Conta adicionada');eventBus?.emit?.('contas:changed',{action:'create',id:account.id});return clone(next.accounts.find(c=>String(c.id)===String(account.id))||account);
   }
   async function updateAccount(id,changes={}){
-    const {transactions,accounts}=await reconciled();const idx=accounts.findIndex(c=>String(c.id)===String(id));if(idx<0)throw new Error('Conta não encontrada.');const old=accounts[idx];const next={...old,...clone(changes),id:old.id};if('val' in changes)next.val=amount(changes.val);if('name' in changes)next.name=safeText(changes.name,180);if(next.val<=0)throw new Error('Valor deve ser maior que zero.');accounts[idx]=next;const tx=transactions.find(t=>String(t.id)===String(next.paidTxId||'')||String(t.id)===String(next.fromTx||'')||String(t.contaId||'')===String(next.id));if(tx){if('name' in changes||'desc' in changes)tx.desc=tx.source==='contas'||/^Conta:/i.test(tx.desc)?`Conta: ${next.name}`:next.name;if('cat' in changes)tx.cat=next.cat;if('val' in changes)tx.val=next.val;if('due' in changes||'paidAt' in changes||'paid' in changes)tx.date=next.paid?(next.paidAt||next.due):next.due;if('paid' in changes)tx.paid=next.paid?'Pago':'Não pago';tx.contaId=String(next.id);}
+    const {transactions,accounts}=await reconciled();const idx=accounts.findIndex(c=>String(c.id)===String(id));if(idx<0)throw new Error('Conta não encontrada.');const old=accounts[idx];if('due' in changes){if(!changes.due)throw new Error('Vencimento inválido.');validateWorkflowDates(changes.due);}if('name' in changes&&!safeText(changes.name,180))throw new Error('Descrição é obrigatória.');const next={...old,...clone(changes),id:old.id};if('val' in changes)next.val=amount(changes.val);if('name' in changes)next.name=safeText(changes.name,180);if(next.val<=0)throw new Error('Valor deve ser maior que zero.');accounts[idx]=next;const tx=transactions.find(t=>String(t.id)===String(next.paidTxId||'')||String(t.id)===String(next.fromTx||'')||String(t.contaId||'')===String(next.id));if(tx){if('name' in changes||'desc' in changes)tx.desc=tx.source==='contas'||/^Conta:/i.test(tx.desc)?`Conta: ${next.name}`:next.name;if('cat' in changes)tx.cat=next.cat;if('val' in changes)tx.val=next.val;if('due' in changes||'paidAt' in changes||'paid' in changes)tx.date=next.paid?(next.paidAt||next.due):next.due;if('paid' in changes)tx.paid=next.paid?'Pago':'Não pago';tx.contaId=String(next.id);}
     await replaceFinancial(transactions,accounts);await log('Contas','Editar','Conta',id,'Conta atualizada');eventBus?.emit?.('contas:changed',{action:'update',id});return clone(next);
   }
   async function setAccountPaid(id,paid){

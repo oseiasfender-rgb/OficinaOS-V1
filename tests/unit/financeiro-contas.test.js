@@ -125,3 +125,31 @@ test('Pagamento explícito sem vínculo cria apenas a transação selecionada e 
  assert.equal(txs.length,3);assert.equal(txs[2].id,'conta_same-business');await contas.setPaid('same-business',true);
  assert.deepEqual(await ctx.repositories.transactions.list(),txs);assert.deepEqual(await ctx.repositories.accounts.list(),accounts);
 });
+
+test('Fase 7: datas impossíveis e descrição vazia são rejeitadas sem alterar dados',async()=>{
+ const ctx=context(),{financeiro,contas}=createFinancialServices(ctx);
+ await assert.rejects(financeiro.create({desc:'Teste',val:10,date:'2026-02-30'}),/data válida/);
+ await assert.rejects(contas.create({name:'Teste',val:10,due:'2026-13-01'}),/data válida/);
+ const tx=await financeiro.create({desc:'Teste',val:10,date:'2026-10-09'}),account=(await ctx.repositories.accounts.list())[0];
+ const beforeTx=await ctx.repositories.transactions.list(),beforeAccounts=await ctx.repositories.accounts.list();
+ await assert.rejects(financeiro.update(tx.id,{date:'2026-02-29'}),/data válida/);
+ await assert.rejects(contas.update(account.id,{due:'2026-04-31'}),/data válida/);
+ await assert.rejects(financeiro.update(tx.id,{desc:' '}),/Descrição/);
+ await assert.rejects(contas.update(account.id,{name:''}),/Descrição/);
+ assert.deepEqual(await ctx.repositories.transactions.list(),beforeTx);assert.deepEqual(await ctx.repositories.accounts.list(),beforeAccounts);
+});
+
+test('Fase 7: receita legada vinculada por jobId é reutilizada sem alterar valor ou pagamento',async()=>{
+ const original={id:81,type:'rec',jobId:7,desc:'Original',val:123,paid:'Pago',date:'2026-01-01'};
+ const ctx=context({transactions:[original],workOrders:[{id:'os_7',legacyJobId:7,status:'Entregue',financialSyncPending:true,value:200}]});
+ const result=await createFinancialServices(ctx).financeiro.syncDeliveredWorkOrders();assert.equal(result.added,0);
+ assert.deepEqual(await ctx.repositories.transactions.list(),[original]);assert.equal((await ctx.repositories.workOrders.get('os_7')).financialTransactionId,81);
+});
+for(const failingStore of ['transactions','workOrders'])test(`Fase 7: falha em ${failingStore} restaura receita e pendência da OS`,async()=>{
+ const os={id:'os_teste',clientId:42,status:'Entregue',financialSyncPending:true,value:150};const ctx=context({workOrders:[os]});
+ const repo=ctx.repositories[failingStore],method=failingStore==='transactions'?'replaceAll':'put',original=repo[method];let fail=true;
+ repo[method]=async(...args)=>{if(fail){fail=false;throw new Error('Falha simulada');}return original(...args);};
+ const {financeiro}=createFinancialServices(ctx);await assert.rejects(financeiro.syncDeliveredWorkOrders(),/Falha simulada/);
+ assert.deepEqual(await ctx.repositories.transactions.list(),[]);assert.deepEqual(await ctx.repositories.workOrders.list(),[os]);
+ const result=await financeiro.syncDeliveredWorkOrders();assert.equal(result.added,1);assert.equal((await ctx.repositories.transactions.list())[0].clientId,42);
+});
