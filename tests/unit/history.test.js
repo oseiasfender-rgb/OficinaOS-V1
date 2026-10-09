@@ -57,3 +57,38 @@ test('bridge do event bus registra alterações dos módulos operacionais',async
   createHistoryServices({repositories,eventBus,store:{patch(){}}});eventBus.emit('clientes:changed',{action:'create',id:100});await new Promise(r=>setTimeout(r,15));
   const rows=await repositories.operationalHistory.list();assert.equal(rows.length,1);assert.equal(rows[0].module,'Clientes');assert.equal(rows[0].entityId,'100');
 });
+
+test('Fase 8: consultar histórico e exportar não apagam eventos antigos',async()=>{
+ const events=[{id:'antigo',at:'2000-01-01',module:'OS',summary:'Preservado'}];const ctx=context({operationalHistory:events});
+ await ctx.operational.list();await ctx.operational.exportData();assert.deepEqual(await ctx.repositories.operationalHistory.list(),events);
+});
+test('Fase 8: colisão de ID numérico e textual não sobrescreve arquivo nem ativo',async()=>{
+ const ctx=context({budgets:[{id:7,cliente:'Ativo'}],archivedBudgets:[{id:'7',cliente:'Arquivo'}]});
+ await assert.rejects(ctx.budgets.archive('7'),/Já existe/);assert.equal((await ctx.repositories.budgets.get(7)).cliente,'Ativo');assert.equal((await ctx.repositories.archivedBudgets.get('7')).cliente,'Arquivo');
+ await assert.rejects(ctx.budgets.restore('7','archived'),/Já existe/);
+});
+test('Fase 8: restauração respeita ID numérico e mantém conteúdo comercial',async()=>{
+ const ctx=context({trash:[{id:8,entityType:'budget',status:'Na lixeira',statusBeforeArchive:'Aprovado',total:123.45,clientId:10,notes:'Original'}]});
+ const row=await ctx.budgets.restore('8');assert.equal(row.id,8);assert.equal(row.status,'Aprovado');assert.equal(row.total,123.45);assert.equal(row.notes,'Original');assert.equal((await ctx.repositories.trash.list()).length,0);
+});
+test('Fase 8: lixeira de outras entidades e orçamento vinculado não são excluídos',async()=>{
+ const ctx=context({trash:[{id:'cliente',entityType:'client'},{id:'orc',entityType:'budget'}],transactions:[{id:'receita',budgetId:'orc',val:100}]});
+ await assert.rejects(ctx.budgets.restore('cliente'),/não é um orçamento/);
+ await assert.rejects(ctx.budgets.permanentDelete('cliente','EXCLUIR'),/não é um orçamento/);
+ await assert.rejects(ctx.budgets.permanentDelete('orc','EXCLUIR'),/possui vínculos/);
+ assert.equal((await ctx.repositories.trash.list()).length,2);assert.equal((await ctx.repositories.deletionLog.list()).length,0);
+});
+test('Fase 8: falha ao remover origem desfaz a cópia de restauração',async()=>{
+ const row={id:'orc',entityType:'budget',status:'Na lixeira',total:90};const ctx=context({trash:[row]});
+ ctx.repositories.trash.delete=async()=>{throw new Error('Falha simulada');};await assert.rejects(ctx.budgets.restore('orc'),/Falha simulada/);
+ assert.deepEqual(await ctx.repositories.trash.list(),[row]);assert.equal((await ctx.repositories.budgets.list()).length,0);
+});
+test('Fase 8: retenção de cópias de orçamento preserva cópias financeiras',async()=>{
+ const financial={id:'financeiro',entityType:'financial',at:'2000-01-01',payload:{val:100}};
+ const copies=Array.from({length:50},(_,i)=>({id:'b'+i,entityType:'budget',at:'2026-01-01'}));
+ const ctx=context({budgets:[{id:'orc'}],deletionBackups:[financial,...copies]});await ctx.budgets.archive('orc');assert.deepEqual(await ctx.repositories.deletionBackups.get('financeiro'),financial);
+});
+test('Fase 8: falha no log impede remoção definitiva e preserva cópia preventiva',async()=>{
+ const row={id:'orc',entityType:'budget',total:90};const ctx=context({trash:[row]});ctx.repositories.deletionLog.put=async()=>{throw new Error('Falha no log');};
+ await assert.rejects(ctx.budgets.permanentDelete('orc','EXCLUIR'),/Falha no log/);assert.deepEqual(await ctx.repositories.trash.list(),[row]);assert.equal((await ctx.repositories.deletionBackups.list()).length,1);
+});

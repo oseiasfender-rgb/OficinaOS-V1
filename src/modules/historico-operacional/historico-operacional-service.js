@@ -49,7 +49,7 @@ export function createHistoricoOperacionalService({repositories,eventBus,store})
   }
   async function list({query='',module='all',limit=0}={}){
     const q=text(query,200).toLocaleLowerCase('pt-BR');
-    let rows=(await prune()).sort((a,b)=>String(b.at??'').localeCompare(String(a.at??'')));
+    let rows=(await repo.list()).sort((a,b)=>String(b.at??'').localeCompare(String(a.at??'')));
     if(module&&module!=='all')rows=rows.filter(row=>String(row.module||'')===String(module));
     if(q)rows=rows.filter(row=>[row.module,row.action,row.entity,row.entityId,row.summary,row.details].join(' ').toLocaleLowerCase('pt-BR').includes(q));
     if(limit>0)rows=rows.slice(0,limit);
