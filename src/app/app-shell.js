@@ -88,7 +88,7 @@ export function renderAppShell(root, api) {
     ['Fase 5', 'Agenda → OS → Checklist', 'Concluída · fluxo integrado e persistência validados'],
     ['Fase 6', 'Orçamento e PDF comercial', 'Concluída · cálculos validados; PDF/PNG e WhatsApp confirmados pelo usuário'],
     ['Fase 7', 'Financeiro e Contas', 'Concluída · testes aprovados e recuperação do financeiro confirmada pelo usuário'],
-    ['Fase 8', 'Históricos, Arquivados e Lixeira', 'Concluída no escopo testado · arquivo e lixeira validados; recuperação após exclusão definitiva pendente'],
+    ['Fase 8', 'Históricos, Arquivados e Lixeira', 'Concluída no escopo testado · arquivo, lixeira e recuperação pela cópia preventiva validados'],
     ['Fase 9', 'Relatórios e Consultor IA', 'Concluída no escopo local · relatórios e consultor por regras validados; provedor de IA externo pendente']
   ];
   for (const [title, description, state] of blocks) {
@@ -100,7 +100,7 @@ export function renderAppShell(root, api) {
   const closure = el('section', 'card');
   closure.append(el('h2', '', 'Encerramento da homologação'),
     el('p', '', '10/10/2026: instalação no Desktop e Android, funcionamento sem conexão e exportação/compartilhamento de PDF e PNG confirmados pelo usuário. Recuperação do financeiro e estoque zerado também conferidos pelo usuário.'),
-    el('p', '', 'Pendências: recuperação pela cópia preventiva após exclusão definitiva; testes de interrupção durante gravação e uso em múltiplas abas. Integração com provedor real de IA é opcional e ainda não foi homologada.'));
+    el('p', '', 'Recuperação de orçamentos pela cópia preventiva após exclusão definitiva implementada e validada. Pendências: testes de interrupção durante gravação e uso geral em múltiplas abas. Integração com provedor real de IA é opcional e ainda não foi homologada.'));
   overview.append(intro, status, metricsCard, phase, closure);
   host.prepend(overview);
   root.append(header, host);
