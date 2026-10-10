@@ -1,6 +1,6 @@
-const CACHE_NAME = 'oficinaos-v0.9.1-rc1-pwa-4';
+const CACHE_NAME = 'oficinaos-v0.9.1-rc1-pwa-5';
 const APP_ROOT = new URL('./', self.registration.scope).href;
-const STATIC_ASSETS = ['./manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
+const STATIC_ASSETS = ['./manifest.json', './icons/icon-192.png', './icons/icon-512.png', ...['bebas-neue-400','cinzel-700','cinzel-900','dm-mono-400','dm-mono-500','lato-400','lato-700'].map(name => `./fonts/${name}.ttf`)];
 
 async function precacheAppShell() {
   const cache = await caches.open(CACHE_NAME);
