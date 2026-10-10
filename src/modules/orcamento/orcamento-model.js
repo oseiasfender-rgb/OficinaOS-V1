@@ -25,9 +25,9 @@ export function createEmptyBudgetDraft(){
   };
 }
 
-function normalizeMaterial(item,index){ return { id:item?.id ?? `mat_${index+1}`, name:text(item?.name ?? item?.nome,160), qty:amount(item?.qty ?? item?.quantity), unit:amount(item?.unit ?? item?.custo ?? item?.cost), unid:text(item?.unid ?? item?.unitLabel,30) }; }
+function normalizeMaterial(item,index){ return { id:item?.id ?? `mat_${index+1}`, stockId:item?.stockId??null, name:text(item?.name ?? item?.nome,160), qty:amount(item?.qty ?? item?.quantity), unit:amount(item?.unit ?? item?.custo ?? item?.cost), unid:text(item?.unid ?? item?.unitLabel,30) }; }
 function normalizeServiceItem(item,index){ return { id:item?.id ?? `svc_${index+1}`, stage:text(item?.stage,100), desc:text(item?.desc ?? item?.description,300), qty:amount(item?.qty ?? item?.quantity ?? 1), value:amount(item?.value ?? item?.valor ?? item?.unitValue) }; }
-function normalizePart(item,index){ return { id:item?.id ?? `part_${index+1}`, name:text(item?.name ?? item?.nome,180), category:text(item?.category ?? item?.categoria,80), condition:text(item?.condition ?? item?.condicao ?? 'Boa',40), application:text(item?.application ?? item?.aplicacao,160), qty:amount(item?.qty ?? item?.qtd ?? 1), value:amount(item?.value ?? item?.valor ?? item?.total) }; }
+function normalizePart(item,index){ return { id:item?.id ?? `part_${index+1}`, catalogId:item?.catalogId??null, name:text(item?.name ?? item?.nome,180), category:text(item?.category ?? item?.categoria,80), condition:text(item?.condition ?? item?.condicao ?? 'Boa',40), application:text(item?.application ?? item?.aplicacao,160), qty:amount(item?.qty ?? item?.qtd ?? 1), value:amount(item?.value ?? item?.valor ?? item?.total) }; }
 function normalizeThird(item,index){ return { id:item?.id ?? `third_${index+1}`, desc:text(item?.desc ?? item?.description ?? item?.nome,220), value:amount(item?.value ?? item?.valor ?? item?.total) }; }
 function normalizeProcess(item,index){ return { key:text(item?.key ?? item?.id ?? `proc_${index+1}`,50), label:text(item?.label ?? item?.name ?? item?.nome,80), hours:amount(item?.hours ?? item?.horas) }; }
 

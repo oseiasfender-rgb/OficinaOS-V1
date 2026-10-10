@@ -1,3 +1,4 @@
+import { createPartsCatalogService } from './parts-catalog.js';
 import { safeText } from '../../core/validators.js';
 import { calculateBudget } from './orcamento-calculator.js';
 import { createEmptyBudgetDraft, draftFromBudget, normalizeBudgetDraft, recordFromDraft } from './orcamento-model.js';
@@ -16,9 +17,11 @@ export function createOrcamentoService({repositories,eventBus,store}){
   async function resolveClient(draft){const name=text(draft.clientName,120).toLocaleLowerCase('pt-BR');if(draft.clientId!=null&&draft.clientId!==''){const client=await findRecordById(clientsRepo,draft.clientId);if(!client)throw new Error('Cliente cadastrado não encontrado.');if(text(client.name??client.nome,120).toLocaleLowerCase('pt-BR')!==name)throw new Error('Nome do cliente diferente do cliente cadastrado selecionado.');return client.id;}if(!name)return null;const clients=await clientsRepo.list();return clients.find(c=>text(c.name??c.nome,120).toLocaleLowerCase('pt-BR')===name)?.id??null;}
   async function settings(){const rows=await settingsRepo.list();return Object.fromEntries(rows.map(r=>[r.id,r.value]));}
   return Object.freeze({
+    partsCatalog:createPartsCatalogService(repositories),
     createDraft:createEmptyBudgetDraft,
     calculate(input){return calculateBudget(normalizeBudgetDraft(input));},
     async clients(){return clientsRepo.list();},
+    async stock(){return repositories.stock.list();},
     async list({query=''}={}){const q=text(query,160).toLocaleLowerCase('pt-BR');let rows=await repo.list();rows=rows.sort((a,b)=>String(b.updatedAt??b.data??'').localeCompare(String(a.updatedAt??a.data??'')));if(!q)return rows;return rows.filter(r=>[r.cliente,r.clientName,r.veiculo,r.vehicle,r.servico,r.service,r.id].some(v=>text(v,1000).toLocaleLowerCase('pt-BR').includes(q)));},
     async get(budgetId){const row=await repo.get(budgetId);return row?{record:row,draft:draftFromBudget(row)}:null;},
     async save(input={}){const draft=normalizeBudgetDraft(input);if(!draft.clientName)throw new Error('Cliente é obrigatório.');if(!draft.service)throw new Error('Descrição do serviço é obrigatória.');validateWorkflowDates(draft.entryDate,draft.dueDate);const existing=draft.id?await findRecordById(repo,draft.id):null;if(draft.id&&!existing)throw new Error('Orçamento não encontrado.');draft.id=existing?.id??id();draft.clientId=await resolveClient(draft);const record=recordFromDraft(draft,existing);record.id=draft.id;await repo.put(record);await changed(existing?'update':'create',record.id);return clone(record);},

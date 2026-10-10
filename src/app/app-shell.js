@@ -39,7 +39,7 @@ export function renderAppShell(root, api) {
   nav.setAttribute('aria-label', 'Módulos da oficina');
   const navItems = [
     ['overview','Migração'], ['budget','Orçamento'], ['finance','Financeiro'], ['clients','Clientes'], ['categories','Categorias'],
-    ['stock','Estoque'], ['settings','Configurações'], ['agenda','Agenda'], ['workOrders','OS'], ['history','Históricos'], ['reports','Resultados'], ['consultant','Consultor IA']
+    ['stock','Estoque'], ['settings','Configurações'], ['agenda','Agenda'], ['workOrders','OS'], ['history','Históricos'], ['reports','Resultados'], ['consultant','Manual']
   ];
   const navButtons = new Map();
   for (const [id, label] of navItems) {
@@ -101,7 +101,7 @@ export function renderAppShell(root, api) {
     ['Fase 6', 'Orçamento e PDF comercial', 'Concluída · cálculos validados; PDF/PNG e WhatsApp confirmados pelo usuário'],
     ['Fase 7', 'Financeiro e Contas', 'Concluída · testes aprovados e recuperação do financeiro confirmada pelo usuário'],
     ['Fase 8', 'Históricos, Arquivados e Lixeira', 'Concluída no escopo testado · arquivo, lixeira e recuperação pela cópia preventiva validados'],
-    ['Fase 9', 'Relatórios e Consultor IA', 'Concluída no escopo local · relatórios e consultor por regras validados; provedor de IA externo pendente']
+    ['Fase 9', 'Relatórios e Manual local', 'Manual interativo local · integração com provedor de IA opcional para uma etapa futura']
   ];
   for (const [title, description, state] of blocks) {
     const card = el('article', 'card');
@@ -158,7 +158,7 @@ export function renderAppShell(root, api) {
     if (!views.has(name)) {
       const common = { onChanged: () => refresh() };
       let view;
-      if (name === 'budget') view = renderOrcamentoView(moduleHosts.get(name), { service: api.budget, ...common });
+      if (name === 'budget') view = renderOrcamentoView(moduleHosts.get(name), { service: api.budget,agenda:api.agenda,finance:api.finance,onNavigate:showView,onOpenOS:async id=>{await showView('workOrders');await views.get('workOrders')?.select?.(id);}, ...common });
       if (name === 'finance') view = renderFinanceiroView(moduleHosts.get(name), { service: api.finance, ...common });
       if (name === 'accounts') view = renderContasView(moduleHosts.get(name), { service: api.accounts, ...common });
       if (name === 'clients') view = renderClientesView(moduleHosts.get(name), { service: api.clients, ...common });

@@ -1,3 +1,4 @@
+import { documentFiles } from '../documentos/document-files.js';
 import { formatBRL } from '../../core/money.js';
 import { calculateBudget } from './orcamento-calculator.js';
 import { quotePages, renderQuotePage, quotePngBlobs } from './quote-template.js';
@@ -44,3 +45,5 @@ export async function downloadCommercialQuotePng(record,settings={}){
   const base=`Orcamento_${model.quoteNumber||'rascunho'}`.replace(/[^a-zA-Z0-9_-]/g,'_');
   for(const [i,blob]of blobs.entries()){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${base}_${i+1}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}return {pages:blobs.length};
 }
+
+export async function commercialQuoteFiles(record,settings={},format='pdf'){const model=buildCommercialQuoteModel(record,settings);return documentFiles(pagesFor(model),`Orcamento_${model.quoteNumber||'rascunho'}`,format);}

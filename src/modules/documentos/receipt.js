@@ -1,0 +1,18 @@
+import { normalizeTransaction, isPaid } from '../financeiro/financial-model.js';
+import { safeText } from '../../core/validators.js';
+import { quotePages } from '../orcamento/quote-template.js';
+import { documentFiles, downloadFiles, shareOrDownload } from './document-files.js';
+import { el, button, labeledField } from '../../ui/dom.js';
+
+export function buildReceiptModel(transaction,details={},config={}){
+  const tx=normalizeTransaction(transaction);if(tx.type!=='rec'||!isPaid(tx.paid))throw new Error('O recibo exige uma receita marcada como paga.');if(!(tx.val>0))throw new Error('Valor recebido deve ser maior que zero.');
+  const clientName=safeText(details.clientName,120),vehicle=safeText(details.vehicle,160);if(!clientName||!vehicle)throw new Error('Informe cliente e veículo para o recibo.');
+  return {documentKind:'receipt',footerText:`${config.dono||''} — Responsável — ${config.nome||'OficinaOS'}`,documentTitle:'RECIBO DE SERVIÇO',totalLabel:'VALOR RECEBIDO',signatureTitle:'ASSINATURA DO RESPONSÁVEL',quoteNumber:`REC-${tx.id}`,issueDate:tx.date.split('-').reverse().join('/'),companyName:config.nome||'OficinaOS',companyOwner:config.dono||'',companyPhone:config.fone||'',companyDocument:config.cnpj||'',companyAddress:config.endereco||'',companyCity:config.cidade||'',companySubtitle:config.subtitulo||'',clientName,clientPhone:'',vehicle,vehiclePlate:safeText(details.vehiclePlate,20),vehicleYear:'',vehicleColor:'',payment:'Receita registrada como paga',warrantyDays:'',validityDays:'',deadlineText:'Serviço descrito abaixo',commercialComplexity:'Não se aplica',service:tx.desc,notes:`Recebemos de ${clientName} o valor indicado pelos serviços descritos. Referência do lançamento: ${tx.id}.`,items:[{label:'Serviço',description:tx.desc,value:tx.val}],parts:[],total:tx.val};
+}
+export async function openReceiptEditor({service,transaction,host}){
+  const context=await service.receiptContext(transaction.id);const panel=el('section','card receipt-editor');panel.append(el('h2','','Recibo de serviço'),el('p','muted','Confira cliente e veículo. O valor corresponde à receita paga selecionada.'));
+  function field(label,v){const input=el('input','mod-input');input.value=v||'';panel.append(labeledField(label,input));return input;}
+  const client=field('Cliente',context.clientName),vehicle=field('Veículo',context.vehicle),plate=field('Placa',context.vehiclePlate);const value=el('p','',`Valor: ${Number(transaction.val).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`);panel.append(value);const feedback=el('p','status-line');const actions=el('div','row-actions');
+  for(const [label,format,share]of [['Baixar PDF','pdf',false],['Baixar PNG','png',false],['WhatsApp · PDF','pdf',true],['WhatsApp · PNG','png',true]]){const b=button(label,'btn');b.addEventListener('click',async()=>{try{const latest=await service.receiptContext(transaction.id);const model=buildReceiptModel(latest.transaction,{clientName:client.value,vehicle:vehicle.value,vehiclePlate:plate.value},latest.config);const files=await documentFiles(quotePages(model),model.quoteNumber,format);if(share){const result=await shareOrDownload(files,{title:'Recibo de serviço',text:`Recibo de ${model.clientName}`});feedback.textContent=result==='shared'?'Recibo compartilhado.':result==='cancelled'?'Compartilhamento cancelado.':'Recibo baixado. Anexe no WhatsApp.';}else{downloadFiles(files);feedback.textContent='Recibo preparado.';}}catch(e){feedback.textContent=e.message;}});actions.append(b);}
+  const close=button('Fechar','btn');close.addEventListener('click',()=>panel.remove());actions.append(close);panel.append(actions,feedback);host.querySelector('.receipt-editor')?.remove();host.prepend(panel);panel.scrollIntoView({behavior:'smooth',block:'start'});
+}

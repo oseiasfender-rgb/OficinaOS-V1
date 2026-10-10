@@ -91,7 +91,7 @@ try{
   await page.reload({waitUntil:'networkidle'});const afterReload=await dbSnapshot();auditStage('reload',afterReload);const reloadHashes=browserHashes(afterReload);const reloadDiff=Object.keys(importHashes).filter(k=>importHashes[k]!==reloadHashes[k]);
   gate('indexedDbReloadPersistence',reloadDiff.length===0,reloadDiff.length?`stores divergentes: ${reloadDiff.join(', ')}`:'persistência exata após reload');
 
-  const navLabels=['Orçamento','Financeiro','Contas','Clientes','Categorias','Estoque','Metas','Configurações','Agenda','OS','Históricos','Relatórios','Consultor IA'];
+  const navLabels=['Orçamento','Financeiro','Contas','Clientes','Categorias','Estoque','Metas','Configurações','Agenda','OS','Históricos','Relatórios','Manual'];
   for(const label of navLabels){
     const mainNav=page.getByRole('navigation',{name:'Módulos da oficina'});
     if(label==='Contas')await mainNav.getByRole('button',{name:'Financeiro',exact:true}).click();
@@ -99,7 +99,7 @@ try{
     const internal=['Contas','Metas','Relatórios'].includes(label);
     const target=internal?page.getByRole('navigation',{name:label==='Contas'?'Seções de Financeiro':'Seções de Resultados'}):mainNav;
     await target.getByRole('button',{name:label,exact:true}).click();
-    await page.getByRole('heading',{name:label==='OS'?'Ordens de Serviço':label==='Contas'?'Contas a pagar':label==='Históricos'?'Históricos, Arquivados e Lixeira':label,exact:true,level:1}).waitFor();
+    await page.getByRole('heading',{name:label==='OS'?'Ordens de Serviço':label==='Contas'?'Contas a pagar':label==='Históricos'?'Históricos, Arquivados e Lixeira':label==='Manual'?'Manual da oficina':label,exact:true,level:1}).waitFor();
     await fs.mkdir(path.resolve(path.dirname(outputJson),'screenshots'),{recursive:true});await page.screenshot({path:path.resolve(path.dirname(outputJson),'screenshots',`${navLabels.indexOf(label)+1}.png`),fullPage:true});
   }
   auditStage('navigation',await dbSnapshot());
@@ -109,7 +109,7 @@ try{
   const beforePdf=await dbSnapshot();auditStage('beforePdf',beforePdf);const beforePdfHashes=hashes(beforePdf);
   const firstBudget=page.locator('.budget-history-open').first();
   if(await firstBudget.count()){await firstBudget.click();}else{await page.getByRole('button',{name:'Novo',exact:true}).click();}
-  {await page.getByRole('button',{name:'PDF comercial',exact:true}).click();await page.locator('.commercial-print-sheet').waitFor({state:'visible'});const quoteText=(await page.locator('.commercial-print-sheet').innerText()).toLowerCase();const forbidden=['segredo interno','r$ / hora','margem','custo interno','observações internas'];const leaked=forbidden.filter(k=>quoteText.includes(k));const pdfBytes=await page.pdf({path:path.resolve(path.dirname(outputJson),'commercial-quote.pdf'),format:'A4',printBackground:true});gate('chromiumPdfFile',pdfBytes.subarray(0,5).toString()==='%PDF-','PDF real gerado pelo Chromium');const printCalls=await page.evaluate(()=>window.__OFIX_PRINT_CALLS__||0);gate('commercialPdfBrowserPrivacy',leaked.length===0&&printCalls===1,leaked.length?`vazamentos: ${leaked.join(', ')}`:`print chamado ${printCalls}x e sem campos internos`);}
+  {await page.getByRole('button',{name:'Imprimir',exact:true}).click();await page.locator('.commercial-print-sheet').waitFor({state:'visible'});const quoteText=(await page.locator('.commercial-print-sheet').innerText()).toLowerCase();const forbidden=['segredo interno','r$ / hora','margem','custo interno','observações internas'];const leaked=forbidden.filter(k=>quoteText.includes(k));const pdfBytes=await page.pdf({path:path.resolve(path.dirname(outputJson),'commercial-quote.pdf'),format:'A4',printBackground:true});gate('chromiumPdfFile',pdfBytes.subarray(0,5).toString()==='%PDF-','PDF real gerado pelo Chromium');const printCalls=await page.evaluate(()=>window.__OFIX_PRINT_CALLS__||0);gate('commercialPdfBrowserPrivacy',leaked.length===0&&printCalls===1,leaked.length?`vazamentos: ${leaked.join(', ')}`:`print chamado ${printCalls}x e sem campos internos`);}
 
   const afterPdf=await dbSnapshot();auditStage('pdf',afterPdf);const afterPdfHashes=hashes(afterPdf);
   const pdfDiff=Object.keys(beforePdfHashes).filter(k=>beforePdfHashes[k]!==afterPdfHashes[k]);
@@ -118,7 +118,7 @@ try{
   {
     const notes=page.getByLabel('Observações para o cliente',{exact:true});
     await notes.fill('ALTERAÇÃO NÃO SALVA PARA TESTE DO PDF');
-    await page.getByRole('button',{name:'PDF comercial',exact:true}).click();
+    await page.getByRole('button',{name:'Imprimir',exact:true}).click();
     await page.locator('.commercial-print-sheet').waitFor({state:'visible'});
     const previewText=await page.locator('.commercial-print-sheet').innerText();
     gate('pdfDraftPreview',previewText.includes('ALTERAÇÃO NÃO SALVA PARA TESTE DO PDF'),'PDF reflete o rascunho atual');
@@ -127,7 +127,7 @@ try{
     await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
   }
   await page.getByRole('button',{name:'Novo',exact:true}).click();
-  await page.getByRole('button',{name:'PDF comercial',exact:true}).click();
+  await page.getByRole('button',{name:'Imprimir',exact:true}).click();
   await page.locator('.commercial-print-sheet').waitFor({state:'visible'});
   const newDraftPdf=await dbSnapshot();auditStage('pdfNewDraft',newDraftPdf);const newDraftPdfHashes=hashes(newDraftPdf);
   gate('newDraftPdfDoesNotPersist',Object.keys(beforePdfHashes).every(k=>beforePdfHashes[k]===newDraftPdfHashes[k]),'PDF de orçamento novo não cria registros');

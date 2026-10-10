@@ -100,7 +100,8 @@ export function createFinancialServices({repositories,eventBus,store}){
       let tx=transactions.find(t=>t.type==='rec'&&(
         String(t.id)===String(os.financialTransactionId??'')||
         [t.workOrderId,t.osId].some(id=>id!=null&&String(id)===String(os.id))||
-        os.legacyJobId!=null&&t.jobId!=null&&String(t.jobId)===String(os.legacyJobId)));
+        os.legacyJobId!=null&&t.jobId!=null&&String(t.jobId)===String(os.legacyJobId)||
+        os.budgetId!=null&&t.budgetId!=null&&String(t.budgetId)===String(os.budgetId)));
       if(!tx){const id=freeId(`osrec_${String(os.legacyJobId??os.id)}`,used);
         tx=normalizeTransaction({id,date:todayISO(),desc:`Receita OS — ${os.clientName||'Cliente'}${os.vehicle?' — '+os.vehicle:''}`,cat:'Serviços',val:amount(os.value??os.valor),type:'rec',paid:'Não pago',clientId:os.clientId??null,workOrderId:os.id,osId:os.id,jobId:os.legacyJobId??null,budgetId:os.budgetId??null,source:'os'});
         transactions.push(tx);added++;
@@ -193,7 +194,24 @@ export function createFinancialServices({repositories,eventBus,store}){
   async function accountList({year,month,status='all',query=''}={}){const accounts=(await accountRepo.list()).map(row=>normalizeAccount(row));const q=lower(query),today=todayISO();return accounts.filter(c=>{if(q&&!`${c.name} ${c.cat}`.toLocaleLowerCase('pt-BR').includes(q))return false;if(Number.isInteger(year)&&Number.isInteger(month)){const key=`${year}-${String(month+1).padStart(2,'0')}`;if(monthKey(c.paid?c.paidAt||c.due:c.due)!==key&&status!=='late')return false;}if(status==='paid'&&!c.paid)return false;if(status==='pending'&&c.paid)return false;if(status==='late'&&(c.paid||c.due>=today))return false;if(status==='recur'&&!c.recur)return false;return true;}).sort((a,b)=>String(a.due).localeCompare(String(b.due))||String(a.name).localeCompare(String(b.name),'pt-BR'));}
   async function accountSummary(year,month){const rows=await accountList({year,month});const today=todayISO(),paid=rows.filter(c=>c.paid),pending=rows.filter(c=>!c.paid),late=pending.filter(c=>c.due<today);const soon=pending.filter(c=>c.due>=today&&((new Date(c.due+'T00:00:00')-new Date(today+'T00:00:00'))/86400000)<=7);const sum=list=>list.reduce((s,c)=>s+c.val,0);return {total:rows.length,paid:paid.length,pending:pending.length,late:late.length,soon:soon.length,paidValue:sum(paid),pendingValue:sum(pending),lateValue:sum(late),soonValue:sum(soon)};}
 
-  const financeiro=Object.freeze({list,summary,categories,create:createTransaction,update:updateTransaction,setPaid:setTransactionPaid,remove:removeTransaction,reconcile:reconciliation,syncDeliveredWorkOrders,bankState,setBankBalance,transfer:(input)=>createTransaction({...input,type:'transfer'}),reverseTransfer,cashFlow});
+  async function createBudgetReceipt(budgetId){
+    const budget=await repositories.budgets.get(budgetId);if(!budget)throw new Error('Salve o orçamento antes de lançar a receita.');
+    const value=amount(budget.total);if(!(value>0))throw new Error('Orçamento sem valor positivo.');
+    const {transactions,accounts}=await reconciled();const orders=await workOrdersRepo.list();const os=orders.find(row=>String(row.budgetId)===String(budgetId));
+    const existing=transactions.find(row=>row.type==='rec'&&(String(row.budgetId??'')===String(budgetId)||(os&&[row.workOrderId,row.osId].some(id=>id!=null&&String(id)===String(os.id)))));
+    if(existing)return {transaction:clone(existing),created:false};
+    const transaction=normalizeTransaction({id:`budgetrec_${budgetId}`,type:'rec',paid:'Não pago',val:value,date:todayISO(),desc:`Orçamento — ${budget.cliente??budget.clientName??'Cliente'} — ${budget.servico??budget.service??'Serviço'}`,cat:'Serviços',budgetId,clientId:budget.clientId??budget.clienteId??null,clientName:budget.clientName??budget.cliente,vehicle:budget.vehicle??budget.veiculo,vehiclePlate:budget.vehiclePlate,workOrderId:os?.id??null,osId:os?.id??null,source:'budget'});
+    await replaceFinancial([...transactions,transaction],accounts);await log('Financeiro','Lançar orçamento','Orçamento',budgetId,'Receita pendente vinculada ao orçamento');eventBus?.emit?.('financeiro:changed',{action:'budget-receipt',id:transaction.id});return {transaction:clone(transaction),created:true};
+  }
+  async function receiptContext(id){
+    const transaction=await repositories.transactions.get(id);if(!transaction)throw new Error('Lançamento não encontrado.');
+    const tx=normalizeTransaction(transaction);if(tx.type!=='rec'||!isPaid(tx.paid))throw new Error('O recibo exige uma receita marcada como paga.');
+    const os=tx.workOrderId||tx.osId?await repositories.workOrders.get(tx.workOrderId||tx.osId):null;
+    const budgetId=tx.budgetId??os?.budgetId;const budget=budgetId!=null?await repositories.budgets.get(budgetId):null;
+    const clientId=tx.clientId??os?.clientId??budget?.clientId;const client=clientId!=null?await repositories.clients.get(clientId):null;
+    return {transaction:tx,config:await setting('os_config',{}),clientName:client?.name??client?.nome??os?.clientName??budget?.clientName??budget?.cliente??tx.clientName??'',vehicle:os?.vehicle??budget?.vehicle??budget?.veiculo??tx.vehicle??'',vehiclePlate:budget?.vehiclePlate??tx.vehiclePlate??''};
+  }
+  const financeiro=Object.freeze({createBudgetReceipt,configuration:()=>setting('os_config',{}),receiptContext,list,summary,categories,create:createTransaction,update:updateTransaction,setPaid:setTransactionPaid,remove:removeTransaction,reconcile:reconciliation,syncDeliveredWorkOrders,bankState,setBankBalance,transfer:(input)=>createTransaction({...input,type:'transfer'}),reverseTransfer,cashFlow});
   const contas=Object.freeze({list:accountList,summary:accountSummary,create:createAccount,update:updateAccount,setPaid:setAccountPaid,remove:removeAccount,generateRecurring,terminateRecurring,removeRecurringAll,templates,dasYear,setDasPaid,dasValue:DAS_VALUE,reconcile:reconciliation});
   return Object.freeze({financeiro,contas});
 }
