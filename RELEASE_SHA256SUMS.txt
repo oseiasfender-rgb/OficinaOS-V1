@@ -22,7 +22,7 @@ e805d327c7ba12962b67b0bcb9ed1432435b231852453de5b46d9f1dc0821b1b  ./scripts/chec
 73851c7affe69df837d5dcff2d412d879d95c57737bf91d8c80f0a22e1123948  ./scripts/finalize-external-homologation.mjs
 d527aa4bb8089ff0d14b2518c0b2a3ddd778fb38464b891c47b64502db30fe45  ./scripts/generate-external-smoke-fixture.mjs
 1f4c0a5dadeae55bf6c125b6682258daa8c1330b8bb0af29a7771d264632686e  ./scripts/homologate-backup.mjs
-a0d8a4e9216c4210ce80671d9a04f4b385c71937b37d35eeae762de1f191ec45  ./scripts/homologate-browser.mjs
+7b402e8d8571229a4f3e5e9db2a9307074c21abcc535159c602d33f31d60dbc0  ./scripts/homologate-browser.mjs
 4151a732c78f0ce4979181ba48e55d9901be6ca90b1058fca6bf942cc6082745  ./scripts/homologate-functional.mjs
 24794f1d670ce40d3443b23662f6bab569b87aff049f81320d71cdc9fc521d00  ./scripts/homologate-official-private.mjs
 9e84e5f972c496669c0e402744c484845c58ceb5f810976e8d14ecd67edc1660  ./scripts/homologate-pwa.mjs

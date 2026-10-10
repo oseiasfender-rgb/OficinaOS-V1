@@ -92,7 +92,16 @@ try{
   gate('indexedDbReloadPersistence',reloadDiff.length===0,reloadDiff.length?`stores divergentes: ${reloadDiff.join(', ')}`:'persistência exata após reload');
 
   const navLabels=['Orçamento','Financeiro','Contas','Clientes','Categorias','Estoque','Metas','Configurações','Agenda','OS','Históricos','Relatórios','Consultor IA'];
-  for(const label of navLabels){await page.getByRole('button',{name:label,exact:true}).click();await page.waitForTimeout(60);await fs.mkdir(path.resolve(path.dirname(outputJson),'screenshots'),{recursive:true});await page.screenshot({path:path.resolve(path.dirname(outputJson),'screenshots',`${navLabels.indexOf(label)+1}.png`),fullPage:true});}
+  for(const label of navLabels){
+    const mainNav=page.getByRole('navigation',{name:'Módulos da oficina'});
+    if(label==='Contas')await mainNav.getByRole('button',{name:'Financeiro',exact:true}).click();
+    if(label==='Metas'||label==='Relatórios')await mainNav.getByRole('button',{name:'Resultados',exact:true}).click();
+    const internal=['Contas','Metas','Relatórios'].includes(label);
+    const target=internal?page.getByRole('navigation',{name:label==='Contas'?'Seções de Financeiro':'Seções de Resultados'}):mainNav;
+    await target.getByRole('button',{name:label,exact:true}).click();
+    await page.getByRole('heading',{name:label==='OS'?'Ordens de Serviço':label==='Contas'?'Contas a pagar':label==='Históricos'?'Históricos, Arquivados e Lixeira':label,exact:true,level:1}).waitFor();
+    await fs.mkdir(path.resolve(path.dirname(outputJson),'screenshots'),{recursive:true});await page.screenshot({path:path.resolve(path.dirname(outputJson),'screenshots',`${navLabels.indexOf(label)+1}.png`),fullPage:true});
+  }
   auditStage('navigation',await dbSnapshot());
   gate('moduleNavigation',true,`${navLabels.length} módulos navegados`);
 
