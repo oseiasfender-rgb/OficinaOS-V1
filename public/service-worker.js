@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oficinaos-v0.9.1-rc1-pwa-3';
+const CACHE_NAME = 'oficinaos-v0.9.1-rc1-pwa-4';
 const APP_ROOT = new URL('./', self.registration.scope).href;
 const STATIC_ASSETS = ['./manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
 
