@@ -77,14 +77,14 @@ export function renderAppShell(root, api) {
   const blocks = [
     ['Fase 1', 'Baseline preservada', 'Concluída'],
     ['Fase 2', 'Shell ES Modules / Vite', 'Concluída'],
-    ['Fase 3', 'IndexedDB + compatibilidade legada', 'Implementada · homologação com JSON oficial pendente'],
-    ['Fase 4', 'Clientes', 'CRUD, veículos, serviços, histórico e fotos migrados'],
-    ['Fase 4', 'Categorias, Estoque, Metas e Configurações', 'UI + services + repositories implementados'],
-    ['Fase 5', 'Agenda → OS → Checklist', 'Implementada · vínculos com Cliente e Orçamento preservados'],
-    ['Fase 6', 'Orçamento e PDF comercial', 'Implementada · cálculo, histórico, peças, terceiros, frete e impressão comercial'],
-    ['Fase 7', 'Financeiro e Contas', 'Implementada · vínculos conta/lançamento, recorrências, pagamentos, transferências e fluxo projetado'],
-    ['Fase 8', 'Históricos, Arquivados e Lixeira', 'Implementada · restauração, logs e exclusão definitiva protegida'],
-    ['Fase 9', 'Relatórios e Consultor IA', 'Implementada · gráficos, metas, rankings e gateway externo seguro']
+    ['Fase 3', 'IndexedDB + compatibilidade legada', 'Concluída · compatibilidade com JSON oficial validada'],
+    ['Fase 4', 'Clientes', 'Concluída · cadastro, veículos, serviços, histórico e fotos validados'],
+    ['Fase 4', 'Categorias, Estoque, Metas e Configurações', 'Concluída · categorias, estoque, metas e configurações validados'],
+    ['Fase 5', 'Agenda → OS → Checklist', 'Concluída · fluxo integrado e persistência validados'],
+    ['Fase 6', 'Orçamento e PDF comercial', 'Concluída · cálculos validados; PDF/PNG e WhatsApp confirmados pelo usuário'],
+    ['Fase 7', 'Financeiro e Contas', 'Concluída · testes aprovados e recuperação do financeiro confirmada pelo usuário'],
+    ['Fase 8', 'Históricos, Arquivados e Lixeira', 'Concluída no escopo testado · arquivo e lixeira validados; recuperação após exclusão definitiva pendente'],
+    ['Fase 9', 'Relatórios e Consultor IA', 'Concluída no escopo local · relatórios e consultor por regras validados; provedor de IA externo pendente']
   ];
   for (const [title, description, state] of blocks) {
     const card = el('article', 'card');
@@ -92,7 +92,11 @@ export function renderAppShell(root, api) {
     phase.append(card);
   }
 
-  overview.append(intro, status, metricsCard, phase);
+  const closure = el('section', 'card');
+  closure.append(el('h2', '', 'Encerramento da homologação'),
+    el('p', '', '10/10/2026: instalação no Desktop e Android, funcionamento sem conexão e exportação/compartilhamento de PDF e PNG confirmados pelo usuário. Recuperação do financeiro e estoque zerado também conferidos pelo usuário.'),
+    el('p', '', 'Pendências: recuperação pela cópia preventiva após exclusão definitiva; testes de interrupção durante gravação e uso em múltiplas abas. Integração com provedor real de IA é opcional e ainda não foi homologada.'));
+  overview.append(intro, status, metricsCard, phase, closure);
   host.prepend(overview);
   root.append(header, host);
 
