@@ -27,7 +27,7 @@ a0d8a4e9216c4210ce80671d9a04f4b385c71937b37d35eeae762de1f191ec45  ./scripts/homo
 24794f1d670ce40d3443b23662f6bab569b87aff049f81320d71cdc9fc521d00  ./scripts/homologate-official-private.mjs
 9e84e5f972c496669c0e402744c484845c58ceb5f810976e8d14ecd67edc1660  ./scripts/homologate-pwa.mjs
 1dd1ea99ba205db6917d4adb9f056c9d1af3a4b26255ad2c85a8e72a40312e5f  ./scripts/test-financial-preservation.mjs
-594995dec835a1d536ddac8980e526ded75f01bff6a2af3d91911eeead5487ad  ./src/app/app-shell.js
+a3b3573ede3a5ddbe2f5568ee03bce9f4c5814353ed7fd4ff9442f86f53e5886  ./src/app/app-shell.js
 816ab221a5cdfd5f7b7dc6d2e1e45ed687083817ae7950bd7eb98803b5f7e2bc  ./src/app/boot.js
 29bdd8babedf2c17920c85acd056a427919eeb3b3bb742ef3b7799a8dcb021fe  ./src/app/legacy-adapter.js
 1cc0836c7de07ab8a27e9053633023bb411d90e1625ee9b6db803b939a6c1016  ./src/app/pwa.js
@@ -85,7 +85,7 @@ bc465b34092d226e48a3cd27f6e65c1348dff86b31c80310c5543faad2b4bc1f  ./src/modules/
 46dcf3bda2259c076875abb5a0ceb20e388898346ba13507259b9671797cc8e1  ./src/modules/simple-modules.js
 16a3e0bcf9a927d4c92b24b3e802a8915c23170d61bb9818facf95d9319a5a93  ./src/modules/workflow-services.js
 3f6bce7521aa6d1d8ca28d7d62d2a6896f8836a6c3d4425b96e16bacf53fe6e4  ./src/modules/workflow.js
-38c51f69893948b796db5eed7e6b917bfd0bc302975ada0006ea4eea930b3e4a  ./src/styles/layout.css
+cd2f1ab3fe7e5df457a911dd139ac0bbf2d27caafad24ea122dd8c04e71eb5e6  ./src/styles/layout.css
 e149c2c0451691f8a36f1ea012d3bcf369fbb9fc608210fb937a9faaa45dd0b6  ./src/styles/tokens.css
 02e149be4148764f2770811d812fc54a68fe27ac519dba780ae793b8b5e63762  ./src/ui/dom.js
 dc0e6de9ddaaecf240d1690cbb6dfa1dda6373fb2bd638a076f1b7af341ee8e6  ./tests/acceptance/official-counts.json
