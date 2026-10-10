@@ -38,8 +38,8 @@ export function renderAppShell(root, api) {
   const nav = el('nav', 'app-nav');
   nav.setAttribute('aria-label', 'Módulos da oficina');
   const navItems = [
-    ['overview','Migração'], ['budget','Orçamento'], ['finance','Financeiro'], ['accounts','Contas'], ['clients','Clientes'], ['categories','Categorias'],
-    ['stock','Estoque'], ['goals','Metas'], ['settings','Configurações'], ['agenda','Agenda'], ['workOrders','OS'], ['history','Históricos'], ['reports','Relatórios'], ['consultant','Consultor IA']
+    ['overview','Migração'], ['budget','Orçamento'], ['finance','Financeiro'], ['clients','Clientes'], ['categories','Categorias'],
+    ['stock','Estoque'], ['settings','Configurações'], ['agenda','Agenda'], ['workOrders','OS'], ['history','Históricos'], ['reports','Resultados'], ['consultant','Consultor IA']
   ];
   const navButtons = new Map();
   for (const [id, label] of navItems) {
@@ -48,9 +48,19 @@ export function renderAppShell(root, api) {
   header.append(brandWrap, nav);
 
   const host = el('div', 'view-host');
+  const sectionNav = el('nav', 'section-nav');
+  sectionNav.hidden = true;
+  sectionNav.setAttribute('aria-label', 'Seções do módulo');
+  host.append(sectionNav);
+  const groups = {
+    finance: [['finance', 'Movimentações e fluxo'], ['accounts', 'Contas']],
+    reports: [['reports', 'Relatórios'], ['goals', 'Metas']]
+  };
+  const groupFor = name => ['finance', 'accounts'].includes(name) ? 'finance' : ['reports', 'goals'].includes(name) ? 'reports' : name;
+  const lastSection = {finance: 'finance', reports: 'reports'};
   const overview = el('main', 'shell');
   const moduleHosts = new Map();
-  for (const [id] of navItems.slice(1)) { const h=el('div'); h.hidden=true; moduleHosts.set(id,h); host.append(h); }
+  for (const [id] of [...navItems.slice(1), ['accounts'], ['goals']]) { const h=el('div'); h.hidden=true; moduleHosts.set(id,h); host.append(h); }
 
   const intro = el('section', 'card');
   intro.append(
@@ -126,7 +136,22 @@ export function renderAppShell(root, api) {
   async function showView(name) {
     overview.hidden = name !== 'overview';
     for (const [id, h] of moduleHosts) h.hidden = id !== name;
-    for (const [id, b] of navButtons) b.classList.toggle('active', id === name);
+    const group = groupFor(name);
+    if (groups[group]) lastSection[group] = name;
+    for (const [id, b] of navButtons) {
+      b.classList.toggle('active', id === group);
+      if (id === group) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    }
+    sectionNav.hidden = !groups[group];
+    sectionNav.replaceChildren();
+    if (groups[group]) {
+      sectionNav.setAttribute('aria-label', group === 'finance' ? 'Seções de Financeiro' : 'Seções de Resultados');
+      for (const [id, label] of groups[group]) {
+        const b = el('button', `section-btn${id === name ? ' active' : ''}`, label);
+        b.type = 'button'; b.setAttribute('aria-pressed', String(id === name));
+        b.addEventListener('click', () => showView(id)); sectionNav.append(b);
+      }
+    }
     if (name === 'overview') return;
     if (!views.has(name)) {
       const common = { onChanged: () => refresh() };
@@ -148,7 +173,7 @@ export function renderAppShell(root, api) {
     } else if (views.get(name)?.refresh) await views.get(name).refresh();
   }
 
-  for (const [id, button] of navButtons) button.addEventListener('click', () => showView(id));
+  for (const [id, button] of navButtons) button.addEventListener('click', () => showView(lastSection[id] || id));
 
   importFile.addEventListener('click', async () => { const result = await api.importJsonFile(); await refresh(result.message); });
   importDb.addEventListener('click', async () => { const result = await api.importLegacyDatabase(); await refresh(result.message); });
