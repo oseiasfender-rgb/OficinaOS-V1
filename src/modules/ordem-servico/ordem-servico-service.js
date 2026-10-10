@@ -1,5 +1,5 @@
 import { safeText } from '../../core/validators.js';
-import { normalizeStage, findRecordById, validateWorkflowDates } from '../workflow.js';
+import { WORKFLOW_STAGES, normalizeStage, findRecordById, validateWorkflowDates } from '../workflow.js';
 import { createChecklistService } from './checklist-service.js';
 
 function arr(v){ return Array.isArray(v) ? v : []; }
@@ -130,6 +130,13 @@ export function createOrdemServicoService({ repositories, eventBus, store }){
   async function getRequired(id){ const row=await repo.get(id); if(!row) throw new Error('OS não encontrada.'); return row; }
 
   return Object.freeze({
+    async addStagePhoto(id,stage,dataUrl){
+      if(!WORKFLOW_STAGES.some(s=>s.id===stage))throw new Error('Etapa inválida.');
+      if(typeof dataUrl!=='string'||dataUrl.length>2500000||!/^data:image\/(jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(dataUrl))throw new Error('Foto inválida.');
+      const row=await getRequired(id);const photos=Array.isArray(row.stagePhotos)?clone(row.stagePhotos):[];if(photos.length>=30)throw new Error('Limite de 30 fotos por OS.');
+      photos.push({id:`foto_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,stage,dataUrl,at:now()});const next={...row,stagePhotos:photos,updatedAt:now()};await repo.put(next);await changed('photo',next);return next;
+    },
+    async removeStagePhoto(id,photoId){const row=await getRequired(id);const next={...row,stagePhotos:(row.stagePhotos||[]).filter(p=>p.id!==photoId),updatedAt:now()};await repo.put(next);await changed('photo',next);return next;},
     async list({status='',stage='',query=''}={}){
       const q=safeText(query,120).toLocaleLowerCase('pt-BR');
       return (await repo.list()).filter(row=>{

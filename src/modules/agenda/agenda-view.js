@@ -11,7 +11,7 @@ function iso(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padS
 function parseDate(v){if(!v)return null;const d=new Date(`${v}T00:00:00`);return Number.isNaN(d.getTime())?null:d;}
 
 export function renderAgendaView(root,{service,onChanged}){
-  const now=new Date();let year=now.getFullYear(),month=now.getMonth(),selectedDay=null;
+  const now=new Date();let year=now.getFullYear(),month=now.getMonth(),selectedDay=null,editingId=null;
   root.className='simple-module agenda-module';
 
   const toolbar=el('div','module-toolbar');
@@ -29,11 +29,11 @@ export function renderAgendaView(root,{service,onChanged}){
   const form=el('form','agenda-form');
   const budgetSel=select();budgetSel.append(option('','Sem orçamento vinculado'));
   const clientSel=select();clientSel.append(option('','Selecione o cliente'));
-  const vehicle=input();const serviceInput=input();const entry=input('date');const due=input('date');const value=input('number');value.step='0.01';value.min='0';const notes=el('textarea','mod-input');notes.rows=2;
+  const vehicle=input();const serviceInput=input();const entry=input('date');const due=input('date');const time=input('time');const value=input('number');value.step='0.01';value.min='0';const notes=el('textarea','mod-input');notes.rows=2;
   const save=button('Agendar e gerar OS','btn btn-primary','submit');
   const fields=el('div','agenda-form-grid');
-  fields.append(labeledField('Orçamento',budgetSel),labeledField('Cliente',clientSel),labeledField('Veículo',vehicle),labeledField('Serviço',serviceInput),labeledField('Entrada',entry),labeledField('Entrega prevista',due),labeledField('Valor',value),labeledField('Observação',notes));
-  form.append(fields,save);formCard.append(form);
+  fields.append(labeledField('Orçamento',budgetSel),labeledField('Cliente',clientSel),labeledField('Veículo',vehicle),labeledField('Serviço',serviceInput),labeledField('Entrada',entry),labeledField('Entrega prevista',due),labeledField('Horário',time),labeledField('Valor',value),labeledField('Observação',notes));
+  const cancel=button('Cancelar edição','btn');cancel.hidden=true;function resetEditor(){editingId=null;form.reset();budgetSel.disabled=false;clientSel.disabled=false;cancel.hidden=true;save.textContent='Agendar e gerar OS';}cancel.addEventListener('click',resetEditor);form.append(fields,save,cancel);formCard.append(form);
 
   const listCard=el('section','module-card');const listHead=el('div','module-card-head');listHead.append(el('h2','','Serviços do período'),el('span','muted-small',''));const list=el('div','agenda-list');listCard.append(listHead,list);
   body.append(calendarCard,formCard,listCard);root.replaceChildren(toolbar,feedback,body);
@@ -68,8 +68,8 @@ export function renderAgendaView(root,{service,onChanged}){
     info.append(el('strong','',row.clientName||'Cliente'),el('span','muted-small',`${row.vehicle||'Veículo não informado'} · ${row.service||'Serviço'}`),el('span','muted-small',`${row.date||'—'}${row.dueDate?` → ${row.dueDate}`:''} · ${row.time||''}`));
     const amount=el('strong','agenda-value',money(row.value));const actions=el('div','row-actions');
     const edit=button('Editar','btn btn-small');const done=button(row.status==='Concluído'?'Reabrir':'Entregue','btn btn-small');const del=button('Excluir','btn btn-small btn-danger');actions.append(edit,done,del);wrap.append(info,amount,actions);
-    edit.addEventListener('click',async()=>{const dueNext=window.prompt('Entrega prevista (AAAA-MM-DD):',row.dueDate||'');if(dueNext===null)return;const obs=window.prompt('Observação:',row.notes||'');if(obs===null)return;try{await service.update(row.id,{dueDate:dueNext.trim(),notes:obs.trim()});setFeedback(feedback,'Agendamento atualizado.','ok');await refresh();onChanged?.();}catch(e){setFeedback(feedback,e.message,'error');}});
-    done.addEventListener('click',async()=>{try{if(row.status==='Concluído')await service.reopen(row.id);else await service.markDone(row.id);setFeedback(feedback,row.status==='Concluído'?'Serviço reaberto.':'OS marcada como entregue. Sincronização financeira ficou pendente para a Fase 7.','ok');await refresh();onChanged?.();}catch(e){setFeedback(feedback,e.message,'error');}});
+    edit.addEventListener('click',()=>{editingId=row.id;budgetSel.value=row.budgetId??'';clientSel.value=row.clientId??'';budgetSel.disabled=true;clientSel.disabled=true;vehicle.value=row.vehicle??'';serviceInput.value=row.service??'';entry.value=row.date??'';due.value=row.dueDate??'';time.value=row.time??'';value.value=row.value??0;notes.value=row.notes??'';cancel.hidden=false;save.textContent='Salvar agendamento';formCard.scrollIntoView({behavior:'smooth',block:'start'});});
+    done.addEventListener('click',async()=>{try{if(row.status==='Concluído')await service.reopen(row.id);else await service.markDone(row.id);setFeedback(feedback,row.status==='Concluído'?'Serviço reaberto.':'OS marcada como entregue. Use Sincronizar OS entregues no Financeiro para vincular a receita pendente.','ok');await refresh();onChanged?.();}catch(e){setFeedback(feedback,e.message,'error');}});
     del.addEventListener('click',async()=>{if(!window.confirm(`Excluir o agendamento de ${row.clientName||'Cliente'}? A OS vinculada será mantida.`))return;try{await service.remove(row.id);setFeedback(feedback,'Agendamento removido com backup preventivo.','ok');await refresh();onChanged?.();}catch(e){setFeedback(feedback,e.message,'error');}});
     return wrap;
   }
@@ -82,7 +82,7 @@ export function renderAgendaView(root,{service,onChanged}){
   async function refresh(){currentRows=await service.list({year,month});countLabel.textContent=`${currentRows.length} agendamento(s)`;await loadSelectors();renderCalendar();renderList();}
 
   budgetSel.addEventListener('change',async()=>{if(!budgetSel.value)return;const ctx=await service.budgetContext(budgetSel.value);if(!ctx)return;if(ctx.client?.id!=null)clientSel.value=String(ctx.client.id);vehicle.value=ctx.budget.veiculo??'';serviceInput.value=ctx.budget.servico??ctx.budget.descricao??'';value.value=Number(ctx.budget.total??0)||'';});
-  form.addEventListener('submit',async ev=>{ev.preventDefault();try{const row=await service.create({budgetId:budgetSel.value||null,clientId:clientSel.value||null,vehicle:vehicle.value,service:serviceInput.value,date:entry.value,dueDate:due.value,value:value.value,notes:notes.value});setFeedback(feedback,`Agendamento criado e vinculado à OS ${row.workOrderId}.`,'ok');form.reset();await refresh();onChanged?.();}catch(e){setFeedback(feedback,e.message,'error');}});
+  form.addEventListener('submit',async ev=>{ev.preventDefault();try{const payload={vehicle:vehicle.value,service:serviceInput.value,date:entry.value,dueDate:due.value,time:time.value,value:Number(value.value)||0,notes:notes.value};const row=editingId?await service.update(editingId,payload):await service.create({...payload,budgetId:budgetSel.value||null,clientId:clientSel.value||null});setFeedback(feedback,editingId?'Agendamento e OS atualizados.':`Agendamento criado e vinculado à OS ${row.workOrderId}.`,'ok');resetEditor();await refresh();onChanged?.();}catch(e){setFeedback(feedback,e.message,'error');}});
   prev.addEventListener('click',()=>{month--;if(month<0){month=11;year--;}selectedDay=null;refresh();});next.addEventListener('click',()=>{month++;if(month>11){month=0;year++;}selectedDay=null;refresh();});todayBtn.addEventListener('click',()=>{const d=new Date();year=d.getFullYear();month=d.getMonth();selectedDay=d.toISOString().slice(0,10);refresh();});
 
   refresh();return {refresh};

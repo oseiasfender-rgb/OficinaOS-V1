@@ -1,3 +1,4 @@
+import { MANUAL_ARTICLES, searchManual } from './manual-local.js';
 import { safeText } from '../../core/validators.js';
 
 export const CONSULTOR_CONTEXTS=Object.freeze({
@@ -23,16 +24,13 @@ function validateEndpoint(value){const raw=text(value,500);if(!raw)return'';let 
 function localTechnicalReply(question,context,snapshot){
   const q=normalizeQuestion(question),ctx=CONSULTOR_CONTEXTS[context]||CONSULTOR_CONTEXTS.geral;const lines=[ctx.label];
   if(q.includes('fatur')||q.includes('finance')||q.includes('lucro')||q.includes('margem')||q.includes('meta')){
-    const cur=snapshot?.current||{},goal=snapshot?.goals;lines.push(`No mês atual, o sistema registra ${money(cur.receitas)} em receitas, ${money(cur.despesas)} em despesas e resultado de ${money(cur.lucro)}. Margem apurada: ${pct(cur.margem)}.`);if(goal?.meta>0)lines.push(`Meta mensal: ${money(goal.meta)}; realizado ${money(goal.real)} (${Math.round(goal.pct||0)}%). Faltam ${money(goal.missing)} para a meta.`);lines.push('Use esses números como leitura operacional do que já está registrado; confirme lançamentos pendentes antes de tomar uma decisão financeira.');return lines.join('\n\n');
+    const cur=snapshot?.current||{},goal=snapshot?.goals;lines.push(`No mês atual, o sistema registra ${money(cur.receitas)} em receitas, ${money(cur.despesas)} em despesas e resultado de ${money(cur.lucro)}. Margem apurada: ${pct(cur.margem)}.`);if(goal?.meta>0)lines.push(`Meta mensal: ${money(goal.meta)}; realizado ${money(goal.real)} (${Math.round(goal.pct||0)}%). Faltam ${money(goal.missing)} para a meta.`);lines.push('Use esses números como leitura operacional do que já está registrado; confirme lançamentos pendentes antes de tomar uma decisão financeira.');lines.push('Referência: indicadores locais dos módulos Relatórios e Metas.');return lines.join('\n\n');
   }
-  if(q.includes('preço')||q.includes('precific')||q.includes('orçament')){lines.push('Não precifique apenas por percepção. Some mão de obra por hora real, materiais, peças, terceiros e frete; aplique a complexidade e depois trate margem e desconto.');lines.push('Ordem prática: inspeção → horas por processo → materiais → terceiros → deslocamento → complexidade → margem → desconto → cenário comercial.');return lines.join('\n\n');}
-  if(q.includes('metal finish')||q.includes('planagem')||q.includes('repuxo')||q.includes('chapa')){lines.push('Metal Finish depende de controle progressivo: mapeie altos e baixos, alivie tensão aos poucos, use apoio correto, confira reflexo/régua com frequência e evite aquecimento sem critério.');lines.push('Um erro recorrente é tentar fechar a chapa rápido demais e criar alongamento ou novas tensões.');return lines.join('\n\n');}
-  if(q.includes('pintura')||q.includes('verniz')||q.includes('primer')||q.includes('hvlp')||q.includes('lix')){lines.push('O acabamento começa na preparação: superfície uniforme, progressão de lixa coerente, limpeza, controle de poeira/umidade, flash-off, viscosidade e padrão constante de aplicação.');lines.push('Se houver escorrimento ou mancha, revise diluição, pressão, distância, sobreposição e velocidade antes de compensar com mais produto.');return lines.join('\n\n');}
-  if(q.includes('solda')||q.includes('mig')||q.includes('tig')){lines.push('Em funilaria, priorize controle térmico: pontos alternados, limpeza da área, intervalos entre pontos e acabamento sem retirar material estrutural em excesso.');return lines.join('\n\n');}
-  if(q.includes('cliente')||q.includes('venda')||q.includes('fechar')){lines.push('A comunicação comercial deve reduzir incerteza: diagnóstico claro, processo explicado, riscos objetivos, opções comerciais coerentes e próximo passo bem definido.');return lines.join('\n\n');}
-  if(q.includes('checklist')||q.includes('entrega')||q.includes('desmont')){lines.push('Checklist reduz retrabalho: fotos antes/depois, peças identificadas, folgas e funções conferidas, acabamento revisado sob iluminação adequada e validação final antes da entrega.');return lines.join('\n\n');}
-  if(q.includes('serviço')||q.includes('servico')||q.includes('mais vendido')||q.includes('ranking')){const top=snapshot?.topServices?.[0];if(top)lines.push(`O serviço/categoria com maior receita no histórico carregado é “${top.name}”, com ${money(top.value)}.`);lines.push('Use ranking como sinal de demanda, não como decisão isolada: combine volume, margem, tempo de execução, retrabalho e capacidade da oficina.');return lines.join('\n\n');}
-  lines.push('Meça primeiro o problema e depois escolha o processo. Separe diagnóstico técnico, custo, risco, padrão mínimo aceitável e registro do que foi decidido.');return lines.join('\n\n');
+  if(q.includes('ranking')||((q.includes('histórico')||q.includes('historico'))&&(q.includes('serviço')||q.includes('servico')))){const top=(snapshot?.topServices||[]).slice(0,5);if(!top.length)return 'Não há receitas por serviço/categoria no histórico carregado para apresentar este ranking.';lines.push('Serviços/categorias com maior receita registrada — não representa quantidade de serviços:');lines.push(top.map((row,i)=>`${i+1}. ${row.name}: ${money(row.value)}`).join('\n'));lines.push('Referência: ranking de receitas do módulo Relatórios.');return lines.join('\n\n');}
+  const articles=searchManual(question,context);
+  if(!articles.length)return 'Não sei responder a essa pergunta com o manual local disponível. Busque um assunto cadastrado ou consulte a documentação específica.';
+  for(const article of articles.slice(0,2)){lines.push(article.title);lines.push(article.steps.map((step,i)=>`${i+1}. ${step}`).join('\n'));lines.push(`Referência: ${article.source}`);}
+  return lines.join('\n\n');
 }
 
 export function createConsultorService({repositories,relatoriosService,eventBus=null,fetcher=globalThis.fetch}){
@@ -67,5 +65,5 @@ export function createConsultorService({repositories,relatoriosService,eventBus=
   }
 
   async function ask({message,context='geral',preferExternal=false}={}){if(preferExternal){try{return await askGateway(message,context);}catch(error){const local=await askLocal(message,context);return{...local,externalError:error.message};}}return askLocal(message,context);}
-  return Object.freeze({contexts:CONSULTOR_CONTEXTS,getGatewayConfig,configureGateway,ask,askLocal,askGateway,getHistory,clearHistory});
+  return Object.freeze({articles:MANUAL_ARTICLES,searchManual,contexts:CONSULTOR_CONTEXTS,getGatewayConfig,configureGateway,ask,askLocal,askGateway,getHistory,clearHistory});
 }

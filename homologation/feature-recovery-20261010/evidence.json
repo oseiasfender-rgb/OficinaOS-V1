@@ -1,0 +1,108 @@
+{
+  "baseline": "3054fedbe8572701761a9b8ad057ee5c30542c2d",
+  "syntheticTestsOnly": true,
+  "unitTests": 164,
+  "unitPass": true,
+  "browser": {
+    "pass": true,
+    "gates": {
+      "pageLoads": {
+        "pass": true,
+        "detail": "shell OficinaOS carregado"
+      },
+      "noDuplicateHtmlIds": {
+        "pass": true,
+        "detail": "0 IDs duplicados"
+      },
+      "cleanBootNoOperationalData": {
+        "pass": true,
+        "detail": "Inicialização sem dados operacionais fictícios"
+      },
+      "indexedDbImportCounts": {
+        "pass": true,
+        "detail": "contagens IndexedDB após importação comparadas ao snapshot"
+      },
+      "indexedDbImportCriticalHashes": {
+        "pass": true,
+        "detail": "hashes críticos idênticos"
+      },
+      "indexedDbFinancialSignatures": {
+        "pass": true,
+        "detail": "assinaturas Financeiro/Contas idênticas"
+      },
+      "indexedDbReloadPersistence": {
+        "pass": true,
+        "detail": "persistência exata após reload"
+      },
+      "moduleNavigation": {
+        "pass": true,
+        "detail": "13 módulos navegados"
+      },
+      "chromiumPdfFile": {
+        "pass": true,
+        "detail": "PDF real gerado pelo Chromium"
+      },
+      "commercialPdfBrowserPrivacy": {
+        "pass": true,
+        "detail": "print chamado 1x e sem campos internos"
+      },
+      "pdfDoesNotPersist": {
+        "pass": true,
+        "detail": "PDF preserva todos os stores, incluindo IDs, tipos e timestamps"
+      },
+      "pdfDraftPreview": {
+        "pass": true,
+        "detail": "PDF reflete o rascunho atual"
+      },
+      "pdfUnsavedEditsNotPersisted": {
+        "pass": true,
+        "detail": "PDF de rascunho não grava alterações em nenhum store"
+      },
+      "newDraftPdfDoesNotPersist": {
+        "pass": true,
+        "detail": "PDF de orçamento novo não cria registros"
+      },
+      "browserExportRoundTrip": {
+        "pass": true,
+        "detail": "exportação UI preserva hashes críticos"
+      },
+      "uiReimportReload": {
+        "pass": true,
+        "detail": "reimportação em banco limpo e reload preservam todos os stores"
+      },
+      "noPageErrors": {
+        "pass": true,
+        "detail": "0 page errors"
+      },
+      "noConsoleErrors": {
+        "pass": true,
+        "detail": "0 console errors"
+      }
+    }
+  },
+  "recoveredFeatures": {
+    "pass": true,
+    "gates": {
+      "dasVisible": true,
+      "pixLocal": true,
+      "receiptFiles": true,
+      "clickableMargin": true,
+      "budgetFiles": true,
+      "shareFallback": true,
+      "nativeSharePath": true,
+      "stockUnchanged": true,
+      "partsCatalog": true,
+      "stagePhoto": true,
+      "photoReload": true,
+      "manualLocal": true,
+      "financialPreservation": true,
+      "newDataInJson": true,
+      "manualOffline": true,
+      "desktopMobileLayout": true,
+      "noPageErrors": true
+    },
+    "errors": []
+  },
+  "deviceVerificationPending": true,
+  "bankAppVerificationPending": true
+}
