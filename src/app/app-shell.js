@@ -43,7 +43,9 @@ export function renderAppShell(root, api) {
   ];
   const navButtons = new Map();
   for (const [id, label] of navItems) {
-    const b = el('button', `nav-btn${id==='overview'?' active':''}`, label); b.type='button'; navButtons.set(id,b); nav.append(b);
+    const b = el('button', `nav-btn${id==='overview'?' active':''}`, label); b.type='button';
+    const symbols={overview:'◈',budget:'🧮',finance:'📊',clients:'👥',categories:'▤',stock:'📦',settings:'⚙️',agenda:'📅',workOrders:'🔧',history:'🗂️',reports:'📈',consultant:'🤖'};
+    const icon=el('span','nav-icon',symbols[id]);icon.setAttribute('aria-hidden','true');b.prepend(icon); navButtons.set(id,b); nav.append(b);
   }
   header.append(brandWrap, nav);
 
