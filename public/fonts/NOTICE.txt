@@ -1,0 +1,31 @@
+Fontes distribuídas com o aplicativo, obtidas do serviço oficial Google Fonts.
+https://fonts.google.com/
+
+bebas-neue-400.ttf
+Copyright 2019 The Bebas Neue Project Authors (https://github.com/dharmatype/Bebas-Neue)
+http://scripts.sil.org/OFL
+
+cinzel-700.ttf
+Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)
+https://scripts.sil.org/OFL
+
+cinzel-900.ttf
+Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)
+https://scripts.sil.org/OFL
+
+dm-mono-400.ttf
+Copyright 2020 The DM Mono Project Authors (https://www.github.com/googlefonts/dm-mono)
+http://scripts.sil.org/OFL
+
+dm-mono-500.ttf
+Copyright 2020 The DM Mono Project Authors (https://www.github.com/googlefonts/dm-mono)
+http://scripts.sil.org/OFL
+
+lato-400.ttf
+Copyright (c) 2010-2011 by tyPoland Lukasz Dziedzic with Reserved Font Name "Lato". Licensed under the SIL Open Font License, Version 1.1.
+http://scripts.sil.org/OFL
+
+lato-700.ttf
+Copyright (c) 2010-2011 by tyPoland Lukasz Dziedzic with Reserved Font Name "Lato". Licensed under the SIL Open Font License, Version 1.1.
+http://scripts.sil.org/OFL
+
