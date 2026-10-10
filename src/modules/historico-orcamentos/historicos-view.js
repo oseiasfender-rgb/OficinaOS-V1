@@ -13,11 +13,11 @@ export function renderHistoricosView(root,{operational,budgets,onChanged}){
   const feedback=el('div','module-feedback');feedback.hidden=true;const body=el('div','module-body history-body');root.replaceChildren(toolbar,feedback,body);
 
   const activityFilters=el('div','history-filters');const moduleSel=select();moduleSel.append(option('all','Todos os módulos'));const days=input('number');days.min='0';const max=input('number');max.min='0';const savePolicy=button('Salvar retenção','btn');activityFilters.append(labeledField('Módulo',moduleSel),labeledField('Retenção (dias)',days),labeledField('Máximo de eventos',max),savePolicy);
-  const shelfTabs=el('div','history-shelf-tabs');const active=button('Ativos','btn btn-small btn-primary'),archived=button('Arquivados','btn btn-small'),trash=button('Lixeira','btn btn-small');shelfTabs.append(active,archived,trash,el('span','muted-small','Exclusão definitiva exige backup e confirmação EXCLUIR.'));
+  const shelfTabs=el('div','history-shelf-tabs');const active=button('Ativos','btn btn-small btn-primary'),archived=button('Arquivados','btn btn-small'),trash=button('Lixeira','btn btn-small');const preventive=button('Cópias preventivas','btn btn-small');shelfTabs.append(active,archived,trash,preventive,el('span','muted-small','Exclusão definitiva exige backup e confirmação EXCLUIR.'));
   const list=el('div','history-list');
 
   function setMode(next){mode=next;activityBtn.classList.toggle('btn-primary',mode==='activity');budgetsBtn.classList.toggle('btn-primary',mode==='budgets');render();}
-  function setBucket(next){bucket=next;for(const [id,b] of [['active',active],['archived',archived],['trash',trash]])b.classList.toggle('btn-primary',id===bucket);render();}
+  function setBucket(next){bucket=next;for(const [id,b] of [['active',active],['archived',archived],['trash',trash],['preventive',preventive]])b.classList.toggle('btn-primary',id===bucket);render();}
   async function renderActivity(){
     body.replaceChildren(activityFilters,list);const cfg=await operational.config();days.value=cfg.days;max.value=cfg.max;const modules=await operational.modules();const prev=moduleSel.value;moduleSel.replaceChildren(option('all','Todos os módulos'));for(const name of modules)moduleSel.append(option(name,name));if([...moduleSel.options].some(o=>o.value===prev))moduleSel.value=prev;
     const rows=await operational.list({query:search.value,module:moduleSel.value||'all'});list.replaceChildren();if(!rows.length){list.append(el('p','empty-state','Nenhuma alteração registrada no período de retenção.'));return;}
@@ -39,9 +39,22 @@ export function renderHistoricosView(root,{operational,budgets,onChanged}){
     }
     card.append(main,date,amount,actions);return card;
   }
-  async function renderBudgets(){body.replaceChildren(shelfTabs,list);const rows=await budgets.list(bucket,{query:search.value});list.replaceChildren();if(!rows.length){list.append(el('p','empty-state',bucket==='active'?'Nenhum orçamento ativo.':bucket==='archived'?'Nenhum orçamento arquivado.':'A Lixeira está vazia.'));return;}for(const row of rows)list.append(await budgetCard(row));}
+  async function renderPreventive(){
+    body.replaceChildren(shelfTabs,list);list.replaceChildren();
+    list.append(el('p','muted-small','Recupere orçamentos excluídos definitivamente enquanto a cópia estiver disponível. As últimas 50 cópias de orçamento são mantidas; exporte o backup JSON para conservar uma cópia externa.'));
+    const rows=await budgets.preventiveCopies({query:search.value});
+    if(!rows.length)list.append(el('p','empty-state','Nenhuma cópia preventiva de exclusão definitiva disponível.'));
+    for(const backup of rows){
+      const row=backup.item??backup.payload;const card=el('article','history-budget-row');
+      const main=el('div','history-budget-main');main.append(el('strong','',row.cliente??row.clientName??'Cliente'),el('span','muted-small',[row.veiculo??row.vehicle,row.servico??row.service,`ID: ${row.id}`].filter(Boolean).join(' · ')));
+      const actions=el('div','history-budget-actions');const recover=button(backup.recoveredAt?'Recuperado':'Recuperar para Ativos','btn btn-small');recover.disabled=!!backup.recoveredAt;
+      recover.addEventListener('click',async()=>{if(!window.confirm('Recuperar este orçamento para Ativos? O ID e os valores originais serão preservados.'))return;recover.disabled=true;try{await budgets.recoverPreventive(backup.id);setFeedback(feedback,'Orçamento recuperado pela cópia preventiva.','ok');onChanged?.();await render();}catch(e){setFeedback(feedback,e.message,'error');recover.disabled=false;}});
+      actions.append(recover);card.append(main,el('span','',dateTime(backup.at)),el('strong','history-budget-value',formatBRL(row.total)),actions);list.append(card);
+    }
+  }
+  async function renderBudgets(){if(bucket==='preventive')return renderPreventive();body.replaceChildren(shelfTabs,list);const rows=await budgets.list(bucket,{query:search.value});list.replaceChildren();if(!rows.length){list.append(el('p','empty-state',bucket==='active'?'Nenhum orçamento ativo.':bucket==='archived'?'Nenhum orçamento arquivado.':'A Lixeira está vazia.'));return;}for(const row of rows)list.append(await budgetCard(row));}
   async function render(){if(mode==='activity')await renderActivity();else await renderBudgets();}
-  activityBtn.addEventListener('click',()=>setMode('activity'));budgetsBtn.addEventListener('click',()=>setMode('budgets'));active.addEventListener('click',()=>setBucket('active'));archived.addEventListener('click',()=>setBucket('archived'));trash.addEventListener('click',()=>setBucket('trash'));search.addEventListener('input',render);moduleSel.addEventListener('change',render);
+  activityBtn.addEventListener('click',()=>setMode('activity'));budgetsBtn.addEventListener('click',()=>setMode('budgets'));active.addEventListener('click',()=>setBucket('active'));archived.addEventListener('click',()=>setBucket('archived'));trash.addEventListener('click',()=>setBucket('trash'));preventive.addEventListener('click',()=>setBucket('preventive'));search.addEventListener('input',render);moduleSel.addEventListener('change',render);
   savePolicy.addEventListener('click',async()=>{try{const cfg=await operational.configure({days:Number(days.value),max:Number(max.value)});setFeedback(feedback,`Retenção atualizada: ${cfg.days} dias · máximo ${cfg.max} eventos.`,'ok');await render();}catch(e){setFeedback(feedback,e.message,'error');}});
   render();return {refresh:render};
 }

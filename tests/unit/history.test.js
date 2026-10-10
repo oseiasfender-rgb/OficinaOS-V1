@@ -92,3 +92,28 @@ test('Fase 8: falha no log impede remoção definitiva e preserva cópia prevent
  const row={id:'orc',entityType:'budget',total:90};const ctx=context({trash:[row]});ctx.repositories.deletionLog.put=async()=>{throw new Error('Falha no log');};
  await assert.rejects(ctx.budgets.permanentDelete('orc','EXCLUIR'),/Falha no log/);assert.deepEqual(await ctx.repositories.trash.list(),[row]);assert.equal((await ctx.repositories.deletionBackups.list()).length,1);
 });
+
+
+test('Cópia preventiva recupera conteúdo, ID numérico e status sem alterar financeiro',async()=>{
+ const original={id:42,cliente:'Teste',status:'Aprovado',total:123.45,notes:'Conteúdo original'};
+ const ctx=context({budgets:[original],transactions:[{id:'tx',val:90}],stock:[]});
+ await ctx.budgets.moveToTrash(42);await ctx.budgets.permanentDelete(42,'EXCLUIR');
+ const copies=await ctx.budgets.preventiveCopies();assert.equal(copies.length,1);
+ const result=await ctx.budgets.recoverPreventive(copies[0].id);
+ assert.equal(result.id,42);assert.equal(result.total,123.45);assert.equal(result.status,'Aprovado');assert.equal(result.notes,'Conteúdo original');
+ assert.equal((await ctx.repositories.transactions.list())[0].val,90);assert.deepEqual(await ctx.repositories.stock.list(),[]);
+ await assert.rejects(ctx.budgets.recoverPreventive(copies[0].id),/já foi recuperada/);
+ assert.equal((await ctx.repositories.budgets.list()).length,1);
+});
+test('Cópia preventiva rejeita colisões entre IDs textuais e numéricos em todos os destinos',async()=>{
+ for(const bucket of ['budgets','archivedBudgets','trash']){
+ const ctx=context({[bucket]:[{id:'7',cliente:'Preservado'}],deletionBackups:[{id:'bk',reason:'exclusao-definitiva',entityType:'budget',item:{id:7,cliente:'Backup'}}]});
+ await assert.rejects(ctx.budgets.recoverPreventive('bk'),/Já existe/);assert.equal((await ctx.repositories[bucket].get('7')).cliente,'Preservado');
+ }
+});
+test('Cópias financeiras, snapshots de arquivo e payloads inválidos não são recuperados como orçamento',async()=>{
+ for(const row of [{id:'bk',reason:'exclusao-definitiva',entityType:'transaction',item:{id:1}},{id:'bk',reason:'arquivar',item:{id:1}},{id:'bk',reason:'exclusao-definitiva',item:{}},{id:'bk',reason:'exclusao-definitiva',item:{id:1,entityType:'client'}}]){
+ const ctx=context({deletionBackups:[row]});assert.equal((await ctx.budgets.preventiveCopies()).length,0);await assert.rejects(ctx.budgets.recoverPreventive('bk'),/inválida/);assert.equal((await ctx.repositories.budgets.list()).length,0);
+ }
+ const ctx=context({deletionBackups:[{id:'legado',reason:'exclusao-definitiva',item:{id:'old',total:10,status:'Na lixeira'}}]});assert.equal((await ctx.budgets.recoverPreventive('legado')).id,'old');
+});

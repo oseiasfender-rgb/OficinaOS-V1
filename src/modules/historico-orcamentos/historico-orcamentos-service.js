@@ -87,5 +87,36 @@ export function createHistoricoOrcamentosService({repositories,eventBus,store,op
   }
   async function deletionBackups(){return clone((await backupRepo.list()).sort((a,b)=>String(b.at??'').localeCompare(String(a.at??''))));}
   async function deletionLog(){return clone((await logRepo.list()).sort((a,b)=>String(b.at??'').localeCompare(String(a.at??''))));}
-  return Object.freeze({list:listBucket,find,links,archive,moveToTrash,restore,permanentDelete,deletionBackups,deletionLog});
+  function recoverable(row){
+    const item=row?.item??row?.payload;
+    return row?.reason==='exclusao-definitiva'&&(!row.entityType||row.entityType==='budget')&&item&&typeof item==='object'&&!Array.isArray(item)&&['string','number'].includes(typeof item.id)&&String(item.id).trim()!==''&&(!item.entityType||item.entityType==='budget');
+  }
+  async function preventiveCopies({query=''}={}){
+    const q=text(query,200).toLocaleLowerCase('pt-BR');
+    return (await deletionBackups()).filter(recoverable).filter(row=>!q||[row.item?.cliente,row.item?.clientName,row.item?.id,row.payload?.cliente,row.payload?.id].join(' ').toLocaleLowerCase('pt-BR').includes(q));
+  }
+  let recovering=false;
+  async function recoverPreventive(backupId){
+    if(recovering)throw new Error('Uma recuperação já está em andamento.');
+    recovering=true;
+    try{
+      const backup=await findRecordById(backupRepo,backupId);
+      if(!recoverable(backup))throw new Error('Cópia preventiva inválida ou incompatível com orçamento.');
+      if(backup.recoveredAt)throw new Error('Esta cópia já foi recuperada.');
+      const next=clone(backup.item??backup.payload);const at=new Date().toISOString();
+      for(const repo of [activeRepo,archiveRepo,trashRepo])if(await findRecordById(repo,next.id))throw new Error('Já existe um orçamento com este ID em Ativos, Arquivados ou Lixeira.');
+      const previous=next.statusBeforeArchive||'Salvo';
+      for(const key of ['archivedAt','deletedAt','deletedFrom','bucket','entityType','statusBeforeArchive'])delete next[key];
+      if(['Na lixeira','Arquivado'].includes(next.status))next.status=previous;
+      next.updatedAt=at;next.recoveredFromBackupId=backup.id;
+      if(repositories.recoverDeletedBudget)await repositories.recoverDeletedBudget(backup.id,next,at);
+      else{
+        await activeRepo.put(next);
+        try{await backupRepo.put({...backup,recoveredAt:at,recoveredEntityId:next.id});}catch(error){await activeRepo.delete(next.id);throw error;}
+      }
+      await log('Recuperar cópia preventiva',next,'Orçamento recuperado para Ativos após exclusão definitiva');
+      await sync();eventBus?.emit?.('budget-history:changed',{action:'recover-preventive',id:next.id,backupId:backup.id});return clone(next);
+    }finally{recovering=false;}
+  }
+  return Object.freeze({list:listBucket,find,links,archive,moveToTrash,restore,permanentDelete,deletionBackups,deletionLog,preventiveCopies,recoverPreventive});
 }
