@@ -30,8 +30,13 @@ export function renderAppShell(root, api) {
 
   const header = el('header', 'topbar');
   const brandWrap = el('div', 'brand-wrap');
-  brandWrap.append(el('strong', 'brand', 'OficinaOS'), el('span', 'badge', 'homologação modular v0.9.1 RC1'));
+  const brandIdentity = el('div', 'brand-identity');
+  brandIdentity.append(el('strong', 'brand', 'OficinaOS'), el('span', 'brand-sub', 'Reparações Automotivas'), el('span', 'badge', 'v0.9.1 · versão modular'));
+  const brandLogo = el('span', 'brand-logo', 'OS');
+  brandLogo.setAttribute('aria-hidden', 'true');
+  brandWrap.append(brandLogo, brandIdentity);
   const nav = el('nav', 'app-nav');
+  nav.setAttribute('aria-label', 'Módulos da oficina');
   const navItems = [
     ['overview','Migração'], ['budget','Orçamento'], ['finance','Financeiro'], ['accounts','Contas'], ['clients','Clientes'], ['categories','Categorias'],
     ['stock','Estoque'], ['goals','Metas'], ['settings','Configurações'], ['agenda','Agenda'], ['workOrders','OS'], ['history','Históricos'], ['reports','Relatórios'], ['consultant','Consultor IA']
@@ -50,7 +55,7 @@ export function renderAppShell(root, api) {
   const intro = el('section', 'card');
   intro.append(
     el('h1', '', 'Migração controlada a partir do Clean v8'),
-    el('p', '', 'A baseline continua intacta. A Fase 9 migra Relatórios e Consultor IA para os repositories estabilizados, mantendo o consultor em modo somente leitura e integrações externas sem segredo no frontend.')
+    el('p', '', 'A versão original está preservada. Os módulos foram migrados e validados. Consulte abaixo as etapas concluídas, as cópias de segurança e as pendências de homologação.')
   );
 
   const status = el('section', 'card');
