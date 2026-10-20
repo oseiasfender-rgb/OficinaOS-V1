@@ -1,0 +1,58 @@
+name: Homologacao Orcamento 0f898a7
+on:
+  push:
+    branches: ['homologacao/orcamento-0f898a7-20261020']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserve published production revision
+        uses: actions/checkout@v4
+        with:
+          ref: 3054fedbe8572701761a9b8ad057ee5c30542c2d
+          path: production
+      - name: Build unchanged production
+        working-directory: production
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+      - name: Extract isolated candidate
+        run: |
+          mkdir candidate
+          unzip -q homologation/orcamento-0f898a7/source.zip -d candidate
+      - name: Test and build candidate
+        working-directory: candidate
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+      - name: Add homologation subdirectory
+        run: |
+          mkdir -p production/dist/homologacao/orcamento-0f898a7
+          cp -R candidate/dist/. production/dist/homologacao/orcamento-0f898a7/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: production/dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
