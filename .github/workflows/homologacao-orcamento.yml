@@ -43,6 +43,20 @@ jobs:
         run: |
           mkdir -p production/dist/homologacao/orcamento-0f898a7
           cp -R candidate/dist/. production/dist/homologacao/orcamento-0f898a7/
+      - name: Extract isolated synchronization candidate
+        run: |
+          mkdir cloud-candidate
+          unzip -q homologation/sync-20261021/source.zip -d cloud-candidate
+      - name: Test and build synchronization
+        working-directory: cloud-candidate
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+      - name: Add synchronization subdirectory
+        run: |
+          mkdir -p production/dist/homologacao/sincronizacao
+          cp -R cloud-candidate/dist/. production/dist/homologacao/sincronizacao/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
