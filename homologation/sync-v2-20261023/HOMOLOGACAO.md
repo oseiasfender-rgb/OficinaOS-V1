@@ -35,3 +35,15 @@ Endereço previsto: https://oseiasfender-rgb.github.io/OficinaOS-V1/homologacao/
 7. Confirmar que a instalação V1 conserva seus dados. Registrar resultado, data e aparelhos antes de autorizar substituição.
 
 SHA256 source.zip: cdc69369aa59ba1ea4f005e7b37728d8feee8ee90fa80ed3c9ce13b37112027b
+
+## Conferência publicada — 23/10/2026
+- Commit da candidata: 6587c78a36efe6f88883ec7336f939fb2458f36b.
+- Publicação e todas as verificações aprovadas: https://github.com/oseiasfender-rgb/OficinaOS-V1/actions/runs/39957741577
+- Página HTTPS aberta com banner Sync V2 de testes.
+- Configurações abriu sem herdar sessão/habilitação da instalação V1.
+- Cadastro fictício TESTE V2 salvo pela interface e encontrado após recarregamento completo.
+- Não houve teste autenticado no navegador do agente, nem teste físico Android nesta etapa.
+- Erros observados no console eram de extensão Chrome (envio de metadados), sem origem no aplicativo.
+- RLS continua habilitada; anon sem SELECT e authenticated sem escrita direta nas duas tabelas.
+- Advisors registram dois avisos: RPC SECURITY DEFINER autenticada e proteção contra senhas vazadas desabilitada (preexistente).
+- Decisão: GO para testes nos aparelhos; NO-GO para substituir a sincronização instalada até concluir roteiro físico e tratar limitações relevantes.
