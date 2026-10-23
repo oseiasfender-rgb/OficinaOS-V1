@@ -55,6 +55,20 @@ jobs:
         run: |
           mkdir -p production/dist/homologacao/sincronizacao
           cp -R cloud-candidate/dist/. production/dist/homologacao/sincronizacao/
+      - name: Extract Sync V2 isolated homologation
+        run: |
+          mkdir sync-v2
+          unzip -q homologation/sync-v2-20261023/source.zip -d sync-v2
+      - name: Test and build Sync V2
+        working-directory: sync-v2
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+      - name: Add Sync V2 without replacing installed Sync V1
+        run: |
+          mkdir -p production/dist/homologacao/sincronizacao-v2
+          cp -R sync-v2/dist/. production/dist/homologacao/sincronizacao-v2/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
