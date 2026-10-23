@@ -1,0 +1,21 @@
+name: Sync V2 isolated checks
+on:
+  push:
+    branches: ['sincronizacao/registros-offline-20261023']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: mkdir sync-v2 && unzip -q homologation/sync-v2-20261023/source.zip -d sync-v2
+      - working-directory: sync-v2
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
