@@ -19,14 +19,14 @@ Brechas identificadas/reproduzidas em testes:
 - Edição local sinaliza formulário pendente; salvamento sinaliza envio pendente.
 - Tela identifica ambiente homologacao_v2, build sync-v2-20261023-r2, última revisão e quantidade de orçamentos conferidos.
 - Texto deixa explícito que a conferência deste aparelho com a nuvem não confirma recebimento no segundo aparelho.
-- Ausência de orçamento sem registro correspondente em trash/archivedBudgets bloqueia envio, recebimento automático e resolução genérica. Exclusão legítima com lixeira continua permitida.
+- Ausência de orçamento sem registro correspondente em trash/archivedBudgets bloqueia envio, recebimento automático, explícito e resolução genérica. Exclusão legítima com lixeira continua permitida.
 - Primeiro recebimento bloqueia orçamento próprio cujo ID está ausente da nuvem.
 - Cache atualizado somente no escopo V2. Nomes dos bancos, sessão e namespace V2 preservados. Sem limpeza de dados.
 - Sync V1, main e dados da nuvem não foram modificados.
 
 ## Verificação
-295 testes unitários aprovados e build local aprovado.
-7 regressões adicionais: mesma revisão/conteúdo diferente; gravação local durante confirmação; rede indisponível após envio; substituição sem exclusão; remoção remota sem lixeira; primeiro recebimento com orçamento próprio; exclusão legítima.
+296 testes unitários aprovados e build local aprovado.
+8 regressões adicionais: mesma revisão/conteúdo diferente; gravação local durante confirmação; rede indisponível após envio; substituição sem exclusão; remoção remota sem lixeira; primeiro recebimento com orçamento próprio; exclusão legítima.
 A verificação de CI e publicação é vinculada ao commit deste relatório.
 
 ## Limites e próximo passo
