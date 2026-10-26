@@ -1,2 +1,2 @@
-# Candidata R3 — duplicidade
-Teste local: 298 testes aprovados; build aprovado. Escolha explícita da nuvem preserva cópia preventiva local. Bloqueio para orçamento aprovado ou vínculos identificados. Ainda não publicada nem verificada nos aparelhos. Não importar backups na nuvem ou repositório. Preservar versões atuais; homologação pendente.
+# Candidata R3 — 26/10/2026
+299 testes locais aprovados. A resolução seleciona a nuvem mantendo cópias de exclusão e cria backup preventivo; registros de execução, financeiro e demais vínculos bloqueiam a ação. Simulação com backup G75 após restauração e revisão 18: escolheu R$ 839,29 e preservou duas cópias; base comum reconstruída, conteúdo longo substituído por marcadores. Não corresponde a teste real nos aparelhos. Não publicada. Dados dos backups não foram incluídos no repositório.
