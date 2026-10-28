@@ -1,11 +1,9 @@
-# Baixa ao salvar orçamento — candidata, não publicada
+# Baixa de estoque — candidata não publicada
 
-Arquivos deste diretório substituem os caminhos correspondentes na fonte r5-quota1. Não aplicar sobre o aplicativo de produção.
+Arquivos substituem os caminhos correspondentes na fonte r5-quota1. Materiais baixam da coleção stock; peças do catálogo fp_pecas_rec. Salvar aplica diferença e não repete débito; remover linha devolve só o debitado. Itens manuais sem vínculo não baixam estoque. Legado não recebe baixa ou crédito retroativo. Fotos preservadas. Gravação atômica de saldos, orçamento e trilha, com bloqueio por saldo insuficiente.
 
-Implementado: transação IndexedDB de orçamento, materiais e catálogo de peças; ajustes por diferença; bloqueio de saldo insuficiente; trilha em settings; preservação de fotos; duplicação baixa como nova inclusão; linhas sem vínculo não movimentam saldo. Orçamentos antigos não geram baixa nem crédito retroativo. Reduzir/remover linha devolve somente quantidades debitadas por esta função. Arquivar/enviar orçamento à lixeira não devolve automaticamente.
+Integração OS: consumo aproveita baixa prévia do orçamento e debita somente excedente. Devolução repõe saldo, sem reabrir crédito já utilizado. Orçamento vinculado à OS não admite ajuste de baixa: consumo/devolução deve ocorrer na execução. Revisão sem OS transfere alocação sem novo débito; revisão com execução vinculada é bloqueada para análise operacional. Duplicar orçamento representa nova inclusão e baixa. Arquivar/lixeira não devolvem automaticamente.
 
-Validação local: 319 testes passaram, build Vite passou. Teste de atomicidade com fake-indexeddb confirma que falta de peças reverte também a baixa de material e a gravação do orçamento.
+Sincronização bloqueia combinação de operações concorrentes de saldo, catálogo, créditos e execução. Não soma automaticamente saldos nem escolhe por relógio.
 
-PENDENTE antes de deploy: integração entre baixa do orçamento e consumo/devolução na execução da OS (evitar duas baixas do mesmo consumo); consistência em conflitos de sincronização com dois aparelhos alterando simultaneamente saldo e orçamento; revisão/aprovação/restauração; testes físicos PC/G75. Os cadastros de peças ainda usam fp_pecas_rec; não foram unificados à coleção stock.
-
-Esta branch é preparação de código. A r5 hospedada, main, produção e dados dos aparelhos permanecem inalterados. Não homologada.
+323 testes locais passaram e build Vite passou: atomicidade, repetição, insuficiência, crédito pré-baixado, excedente, devolução, transferência de revisão e conflitos concorrentes. Ainda não validada fisicamente no PC/G75. Resolução assistida dos conflitos de saldo e teste da interface permanecem pendentes. Nenhum deploy foi executado; r5 e produção permanecem inalteradas.
