@@ -1,4 +1,4 @@
-name: Candidata Sync V2 r4
+name: Candidata Sync V2 r5
 on:
   push:
     branches: ['homologacao/resolucao-assistida-20261027']
@@ -33,18 +33,19 @@ jobs:
           npm run build
       - name: Extract existing homologations and new candidate
         run: |
-          mkdir candidate cloud-candidate sync-v2 sync-r4
+          mkdir candidate cloud-candidate sync-v2 sync-r4 sync-r5
           unzip -q homologation/orcamento-0f898a7/source.zip -d candidate
           unzip -q homologation/sync-20261021/source.zip -d cloud-candidate
           unzip -q homologation/sync-v2-20261023/source.zip -d sync-v2
           unzip -q homologation/sync-v2-20261027/source.zip -d sync-r4
+          unzip -q homologation/sync-v2-20261027/source-r5.zip -d sync-r5
       - name: Build preserved homologations
         run: |
-          for app in candidate cloud-candidate sync-v2; do
+          for app in candidate cloud-candidate sync-v2 sync-r4; do
             (cd "$app" && npm ci --no-audit --no-fund && npm test && npm run build)
           done
       - name: Verify candidate and browser choices
-        working-directory: sync-r4
+        working-directory: sync-r5
         run: |
           npm ci --no-audit --no-fund
           npm test
@@ -53,11 +54,12 @@ jobs:
           node scripts/check-duplicate-resolution-ui.mjs
       - name: Add candidate without replacing existing applications
         run: |
-          mkdir -p production/dist/homologacao/orcamento-0f898a7 production/dist/homologacao/sincronizacao production/dist/homologacao/sincronizacao-v2 production/dist/homologacao/sincronizacao-v2-r4
+          mkdir -p production/dist/homologacao/orcamento-0f898a7 production/dist/homologacao/sincronizacao production/dist/homologacao/sincronizacao-v2 production/dist/homologacao/sincronizacao-v2-r4 production/dist/homologacao/sincronizacao-v2-r5
           cp -R candidate/dist/. production/dist/homologacao/orcamento-0f898a7/
           cp -R cloud-candidate/dist/. production/dist/homologacao/sincronizacao/
           cp -R sync-v2/dist/. production/dist/homologacao/sincronizacao-v2/
           cp -R sync-r4/dist/. production/dist/homologacao/sincronizacao-v2-r4/
+          cp -R sync-r5/dist/. production/dist/homologacao/sincronizacao-v2-r5/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
