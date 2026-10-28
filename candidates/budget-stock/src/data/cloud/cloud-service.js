@@ -12,7 +12,7 @@ export async function createCloudService({db,onApplied=()=>{},canApply=()=>false
   const subscribers=new Set();
   let reviewStarted=false;
   let session=null,engine=null,enabled=false,edited=false,phase='signed-out',lastSync=null,lastError='',busy=false,verifiedRevision=null,budgetCount=null;
-  const trackEdit=event=>{if(!event.target?.closest?.('.cloud-settings')){edited=true;if(session&&enabled){phase='unsaved-local';publish();}}};
+  const trackEdit=event=>{if(!event.target?.closest?.('.cloud-settings,[data-sync-read-only]')){edited=true;if(session&&enabled){phase='unsaved-local';publish();}}};
   document.addEventListener('input',trackEdit,true);
   document.addEventListener('change',trackEdit,true);
   // Login itself doesn't authorize uploading the device's database. Enrollment
@@ -21,7 +21,7 @@ export async function createCloudService({db,onApplied=()=>{},canApply=()=>false
   const remote=createSupabaseTransport({url:CLOUD_PROJECT.url,publishableKey:CLOUD_PROJECT.publishableKey,getSession:async()=>{
     const {data,error}=await client.auth.getSession();if(error)throw error;return data.session;
   }});
-  function state(){return {phase,enabled,email:session?.user?.email??'',namespace:CLOUD_PROJECT.namespace,lastSync,lastError,busy,verifiedRevision,budgetCount,build:'estoque-20261028-r1-fix2'};}
+  function state(){return {phase,enabled,email:session?.user?.email??'',namespace:CLOUD_PROJECT.namespace,lastSync,lastError,busy,verifiedRevision,budgetCount,build:'estoque-20261028-r1-fix3'};}
   function publish(){for(const fn of subscribers)fn(state());}
   async function configure(next){
     session=next;lastSync=null;verifiedRevision=null;budgetCount=null;

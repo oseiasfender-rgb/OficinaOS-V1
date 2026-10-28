@@ -35,3 +35,11 @@ Conferência no aparelho: antes de editar, confira o build em Configurações. R
 Build estoque-20261028-r1-fix2, mesmo banco e ambiente. Campo Quantidade disponível da peça (unidades); novo cadastro não presume uma unidade. Indicadores de tipos de peças separados do total de unidades. Linhas mostram disponível/já baixado e avisam quando são avulsas sem baixa. Confirmação de salvar diferencia ajuste de estoque de salvamento sem nova baixa. Edição parcial do cadastro preserva quantidade/foto e envio duplicado do formulário é bloqueado. Materiais com baixa de orçamento também são protegidos contra exclusão, troca de unidade e edição obsoleta do saldo.
 
 Registro de fechamento: ENCERRAMENTO_ORCAMENTO_20261028.md. Testes ampliados incluem devolução ao excluir linha, reabertura na aplicação completa, novo salvamento sem débito repetido, peça avulsa sem movimentação e ausência de rolagem horizontal. Documento comercial e consumo da OS também verificados. Homologação física de saldos e revisão entre PC/G75 continua pendente; produção não foi liberada.
+
+## Correção 3 — janela de Peças semelhante à de Materiais
+
+Build estoque-20261028-r1-fix3. O botão Escolher do catálogo e os indicadores por condição abrem uma janela modal de Peças com busca, filtro, fotos, unidades disponíveis e ações Usar no orçamento, Editar e Excluir. Cadastro/edição usam uma segunda janela, sem expandir formulário no orçamento. Fechar e Escape disponíveis; alterações não salvas no editor pedem confirmação para descartar. Durante a preparação da foto e gravação, o envio repetido é bloqueado. Busca/filtro são consultas e não marcam o orçamento como editado para a sincronização.
+
+Mantidos IDs, fotos, unidades, proteção contra edição obsoleta e baixa somente ao salvar o orçamento. Mesmo banco local, conta e ambiente, sem alteração automática de dados ou publicação na produção.
+
+Validação: 329 testes, build e testes de interface desktop/mobile passaram. Janela testada com busca, filtro, cadastro com foto PNG válida, verificação de decodificação das fotos, edição obsoleta, descarte/cancelamento, Escape e ausência de rolagem horizontal. Validações anteriores de saldo e documentos permanecem no workflow.
