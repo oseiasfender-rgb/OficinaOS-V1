@@ -43,3 +43,33 @@ test('transação reverte orçamento e material se peça não tiver saldo; repet
  await assert.rejects(r.saveBudgetWithStock({...saved,stockExpectedUpdatedAt:'stale'}),/alterado/);
  }finally{db.close();}
 });
+test('OS aproveita baixa do orçamento, baixa só excedente e não reutiliza quantidade devolvida',async()=>{
+ globalThis.indexedDB=indexedDB;const db=await createDatabase(),r=createRepositories(db);
+ try{
+ await r.stock.put({id:7,qty:10,unid:'Un',nome:'Material'});
+ const record=await r.saveBudgetWithStock({id:'prepaid',updatedAt:'one',materials:[{stockId:7,qty:3}],parts:[]});
+ await r.workOrders.put({id:'os-prepaid',budgetId:'prepaid'});
+ const consume=(qty,requestId)=>r.recordStockConsumption({osId:'os-prepaid',input:{stockId:7,qty,unit:'Un',requestId},at:'two',movementId:requestId});
+ const first=await consume(2,'use-one');assert.equal(first.budgetPrepaidQty,2);assert.equal((await r.stock.get(7)).qty,7);
+ await consume(2,'use-one');assert.equal((await r.stock.get(7)).qty,7);
+ const second=await consume(2,'use-two');assert.equal(second.budgetPrepaidQty,1);assert.equal(second.stockDebitedQty,1);assert.equal((await r.stock.get(7)).qty,6);
+ await r.recordStockConsumption({osId:'os-prepaid',returning:true,input:{consumptionId:first.id,qty:1,requestId:'return-one'},at:'three',movementId:'return-one'});
+ assert.equal((await r.stock.get(7)).qty,7);
+ const third=await consume(1,'use-three');assert.equal(third.budgetPrepaidQty,0);assert.equal((await r.stock.get(7)).qty,6);
+ await assert.rejects(r.saveBudgetWithStock({...record,materials:[{stockId:7,qty:1}],stockExpectedUpdatedAt:'one',updatedAt:'four'}),/vinculado/);
+ assert.equal((await r.stock.get(7)).qty,6);
+ }finally{db.close();}
+});
+test('revisão transfere baixa sem debitar de novo e rejeita transferência após vínculo com OS',async()=>{
+ globalThis.indexedDB=indexedDB;const db=await createDatabase(),r=createRepositories(db);
+ try{
+ await r.stock.put({id:8,qty:10});
+ const source=await r.saveBudgetWithStock({id:'source',updatedAt:'one',materials:[{stockId:8,qty:2}],parts:[]});
+ const next=await r.reviseBudgetWithStock(source.id,{...source,id:'revision',updatedAt:'two'});
+ assert.equal(next.stockAllocation.held['material:8'],2);assert.deepEqual((await r.budgets.get('source')).stockAllocation.held,{});
+ await r.saveBudgetWithStock({...next,stockExpectedUpdatedAt:'two'});assert.equal((await r.stock.get(8)).qty,8);
+ await r.workOrders.put({id:'linked',budgetId:'revision'});
+ await assert.rejects(r.reviseBudgetWithStock('revision',{...next,id:'blocked'}),/execução/);
+ assert.equal(await r.budgets.get('blocked'),null);
+ }finally{db.close();}
+});
