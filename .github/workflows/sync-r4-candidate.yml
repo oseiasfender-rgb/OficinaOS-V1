@@ -61,6 +61,8 @@ jobs:
           npm run build
           npx playwright install --with-deps chromium
           node scripts/check-budget-stock-ui.mjs
+          node scripts/check-document-hub.mjs
+          node scripts/check-stock-consumption.mjs
       - name: Add candidate without replacing existing applications
         run: |
           mkdir -p production/dist/homologacao/orcamento-0f898a7 production/dist/homologacao/sincronizacao production/dist/homologacao/sincronizacao-v2 production/dist/homologacao/sincronizacao-v2-r4 production/dist/homologacao/sincronizacao-v2-r5
