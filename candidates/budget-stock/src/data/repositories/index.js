@@ -102,5 +102,17 @@ export function createRepositories(db) {
       await done;return result.row;
     }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
   }});
+  Object.defineProperty(repositories,'mutateStock',{value:async({action,row,expected,backup})=>{
+    const tx=db.transaction(['stock','settings','budgets','archivedBudgets','trash','deletionBackups'],'readwrite'),done=transactionDone(tx);
+    try{
+      const stocks=tx.objectStore('stock'),current=await requestToPromise(stocks.get(row.id));
+      if(!current||JSON.stringify(current)!==JSON.stringify(expected))throw Error('O material ou seu saldo mudou. Reabra o cadastro antes de salvar.');
+      const [settings,...buckets]=await Promise.all([requestToPromise(tx.objectStore('settings').getAll()),...['budgets','archivedBudgets','trash'].map(n=>requestToPromise(tx.objectStore(n).getAll()))]);
+      const linked=buckets.flat().some(b=>Number(b.stockAllocation?.held?.[`material:${row.id}`])>0)||settings.some(s=>String(s.id).startsWith('os_execution:')&&(s.value?.materials||[]).some(m=>m.stockMovementId&&String(m.stockId)===String(row.id)));
+      if(linked&&(action==='delete'||String(row.unid||'Un')!==String(current.unid||'Un')))throw Error('Material vinculado a baixa de orçamento ou consumo de OS. Preserve o cadastro e a unidade para histórico e devoluções.');
+      if(action==='delete'){tx.objectStore('deletionBackups').put({...backup,payload:current});stocks.delete(current.id);}else if(action==='update')stocks.put(row);else throw Error('Operação de estoque inválida.');
+      await done;return row;
+    }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
+  }});
   return Object.freeze(repositories);
 }

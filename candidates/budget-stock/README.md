@@ -28,3 +28,10 @@ Correção: atualização de peça e baixa agora disputam a mesma transação de
 Validação: 326 testes passaram, build e interface desktop/mobile passaram com o fluxo completo pricingVersion 2. Novo teste abre editor, baixa pelo orçamento, tenta salvar editor antigo, verifica rejeição e saldo preservado. Replay isolado do backup reproduz a proteção e verifica arquivo original intacto. Backup, fotos e dados pessoais não foram incluídos no GitHub.
 
 Conferência no aparelho: antes de editar, confira o build em Configurações. Reabra o catálogo; para testar a correção use um orçamento de teste com uma nova peça, saldo 10 e quantidade 5. Ao salvar orçamento, deve ficar 5. Salvar novamente deve manter 5. Não force nova baixa no orçamento anterior; o ledger já registra suas 5 unidades. O saldo atual do cadastro Paralama deve ser conciliado com a contagem real, sem inferência automática a partir de registros incompletos.
+
+
+## Correção 2 — clareza de unidades e conferência do ciclo completo
+
+Build estoque-20261028-r1-fix2, mesmo banco e ambiente. Campo Quantidade disponível da peça (unidades); novo cadastro não presume uma unidade. Indicadores de tipos de peças separados do total de unidades. Linhas mostram disponível/já baixado e avisam quando são avulsas sem baixa. Confirmação de salvar diferencia ajuste de estoque de salvamento sem nova baixa. Edição parcial do cadastro preserva quantidade/foto e envio duplicado do formulário é bloqueado. Materiais com baixa de orçamento também são protegidos contra exclusão, troca de unidade e edição obsoleta do saldo.
+
+Registro de fechamento: ENCERRAMENTO_ORCAMENTO_20261028.md. Testes ampliados incluem devolução ao excluir linha, reabertura na aplicação completa, novo salvamento sem débito repetido, peça avulsa sem movimentação e ausência de rolagem horizontal. Documento comercial e consumo da OS também verificados. Homologação física de saldos e revisão entre PC/G75 continua pendente; produção não foi liberada.

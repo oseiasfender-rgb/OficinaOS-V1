@@ -35,3 +35,10 @@ test('excluir cadastro com baixa de orçamento é bloqueado e rollback preserva 
  assert.equal((await catalog.list())[0].qtd,8);assert.equal((await r.deletionBackups.list()).length,0);
  }finally{db.close();}
 });
+test('editar somente descrição preserva unidades e foto do cadastro conferido',async()=>{
+ const {db,catalog}=await context();try{
+ const original=await catalog.put(piece);
+ const updated=await catalog.put({id:original.id,aplicacao:'Master'},{expected:original});
+ assert.equal(updated.qtd,10);assert.equal(updated.foto,piece.foto);assert.equal(updated.aplicacao,'Master');
+ }finally{db.close();}
+});

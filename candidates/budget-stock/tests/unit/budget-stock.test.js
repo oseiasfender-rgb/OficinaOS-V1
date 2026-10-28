@@ -73,3 +73,24 @@ test('revisão transfere baixa sem debitar de novo e rejeita transferência apó
  assert.equal(await r.budgets.get('blocked'),null);
  }finally{db.close();}
 });
+import {createEstoqueService} from '../../src/modules/estoque/estoque-service.js';
+test('material com baixa de orçamento não pode ser excluído nem trocar unidade; retirar linha permite devolução antes de excluir',async()=>{
+ globalThis.indexedDB=indexedDB;const db=await createDatabase(),r=createRepositories(db),s=createEstoqueService({repositories:r,eventBus:{emit(){}}});
+ try{
+ await r.stock.put({id:99,nome:'Primer',unid:'L',qty:10,custo:20});
+ const b=await r.saveBudgetWithStock({id:'linked-material',materials:[{stockId:99,qty:2}],parts:[],updatedAt:'one'});
+ await assert.rejects(s.remove(99),/baixa de orçamento/);await assert.rejects(s.update(99,{unid:'ml'}),/baixa de orçamento/);
+ assert.equal((await r.stock.get(99)).qty,8);assert.equal((await r.stock.get(99)).unid,'L');
+ await r.saveBudgetWithStock({...b,materials:[],updatedAt:'two',stockExpectedUpdatedAt:'one'});assert.equal((await r.stock.get(99)).qty,10);
+ await s.remove(99);assert.equal(await r.stock.get(99),null);
+ }finally{db.close();}
+});
+test('edição de material obsoleta é rejeitada na transação sem restaurar saldo anterior',async()=>{
+ globalThis.indexedDB=indexedDB;const db=await createDatabase(),r=createRepositories(db);
+ try{
+ const old={id:100,nome:'Material',qty:10,unid:'Un'};await r.stock.put(old);
+ await r.saveBudgetWithStock({id:'material-race',materials:[{stockId:100,qty:2}],parts:[],updatedAt:'one'});
+ await assert.rejects(r.mutateStock({action:'update',row:{...old,nome:'Descrição antiga'},expected:old}),/mudou/);
+ assert.equal((await r.stock.get(100)).qty,8);
+ }finally{db.close();}
+});
