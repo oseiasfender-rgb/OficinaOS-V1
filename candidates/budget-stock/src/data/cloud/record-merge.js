@@ -42,7 +42,7 @@ export function mergeRecords(base,local,remote){
   // Concurrent workflows need domain review even when IDs differ.
   const protectedStores=new Set(['transactions','accounts','workOrders','appointments','checklists','stock','recurringTemplates']);
   const lc=recordChanges(base,local),rc=recordChanges(base,remote);
-  const protectedChange=c=>protectedStores.has(c.collection)||(c.collection==='budgets'&&(c.before?.approval||c.after?.approval||c.before?.stockAllocation||c.after?.stockAllocation))||(c.collection==='settings'&&[c.before?.id,c.after?.id].some(id=>id==='fp_pecas_rec'||/^(os_execution:|budget_stock:|budget_stock_claims:|budget_stock_transfer:)/.test(String(id||''))));
+  const protectedChange=c=>protectedStores.has(c.collection)||(c.collection==='budgets'&&(c.before?.approval||c.after?.approval||c.before?.stockAllocation||c.after?.stockAllocation))||(c.collection==='settings'&&[c.before?.id,c.after?.id].some(id=>id==='fp_pecas_rec'||/^(os_execution:|budget_stock:|budget_stock_claims:|budget_stock_transfer:|parts_catalog_adjustment:)/.test(String(id||''))));
   if(lc.some(protectedChange)&&rc.some(protectedChange))conflicts.push({collection:'workflow',key:'linked-operations',reason:'concurrent-workflow'});
   // A documented terminal deletion may follow a restore after the common base.
   // Compare the full backed-up version so a competing edit remains a conflict.

@@ -15,3 +15,16 @@ Abra a candidata Estoque r1. Não importe os backups da r5 para este primeiro te
 ## Supabase
 
 A migração adiciona somente o ambiente homologacao_estoque_v1 à lista permitida. Mantém auth.uid(), isolamento por dono, RLS, execução anônima revogada, limites de 8 MiB/64 MiB por conta e ambiente e todos os backups. RPC validada em transação revertida; novo ambiente permaneceu sem registros. Avisos de segurança pré-existentes não foram introduzidos: RPC security definer autenticada intencional e proteção de senhas vazadas desativada. Referências: https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable e https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection .
+
+
+## Correção 1 — editor do catálogo e proteção do saldo (28/10/2026)
+
+Build estoque-20261028-r1-fix1, mesmo banco local e mesmo ambiente homologacao_estoque_v1. Não modifica saldos existentes automaticamente.
+
+Um backup enviado pelo usuário mostrava alocação de 5 Paralama no orçamento, baixas registradas e cadastro final com 10 disponíveis. Isso comprova divergência entre histórico e cadastro, mas não prova se houve reposição física ou qual ação do usuário produziu o saldo final. A análise identificou e reproduziu um caminho de sobrescrita: editor de catálogo aberto antes da baixa pode salvar a quantidade antiga depois dela.
+
+Correção: atualização de peça e baixa agora disputam a mesma transação de settings. Salvar ou excluir cadastro exige snapshot atual da peça; edições antigas são rejeitadas sem alterar saldo/foto. Excluir peça com alocação de orçamento é bloqueado. Ajuste manual de quantidade exige confirmação explícita na interface e registra antes/depois em settings. Inclusão de outra peça não sobrescreve saldo de cadastros existentes. Todos os backups e fotos são preservados.
+
+Validação: 326 testes passaram, build e interface desktop/mobile passaram com o fluxo completo pricingVersion 2. Novo teste abre editor, baixa pelo orçamento, tenta salvar editor antigo, verifica rejeição e saldo preservado. Replay isolado do backup reproduz a proteção e verifica arquivo original intacto. Backup, fotos e dados pessoais não foram incluídos no GitHub.
+
+Conferência no aparelho: antes de editar, confira o build em Configurações. Reabra o catálogo; para testar a correção use um orçamento de teste com uma nova peça, saldo 10 e quantidade 5. Ao salvar orçamento, deve ficar 5. Salvar novamente deve manter 5. Não force nova baixa no orçamento anterior; o ledger já registra suas 5 unidades. O saldo atual do cadastro Paralama deve ser conciliado com a contagem real, sem inferência automática a partir de registros incompletos.

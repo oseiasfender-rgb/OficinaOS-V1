@@ -1,5 +1,5 @@
 const CACHE_PREFIX = `oficinaos:${new URL(self.registration.scope).pathname}:`;
-const CACHE_NAME = CACHE_PREFIX + 'estoque-20261028-r1';
+const CACHE_NAME = CACHE_PREFIX + 'estoque-20261028-r1-fix1';
 const APP_ROOT = new URL('./', self.registration.scope).href;
 const STATIC_ASSETS = ['./manifest.json', './icons/icon-192.png', './icons/icon-512.png', ...['bebas-neue-400','cinzel-700','cinzel-900','dm-mono-400','dm-mono-500','lato-400','lato-700'].map(name => `./fonts/${name}.ttf`)];
 

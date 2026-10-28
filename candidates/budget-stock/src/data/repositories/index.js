@@ -1,3 +1,4 @@
+import {planPartsCatalogMutation} from '../../modules/orcamento/parts-catalog-mutation.js';
 import {budgetStockPlan} from '../../modules/orcamento/budget-stock.js';
 import {applyConsumption,returnConsumption} from '../../modules/orcamento/stock-consumption.js';
 import { STORES } from '../schema.js';
@@ -81,6 +82,24 @@ export function createRepositories(db) {
       if(result.movements.some(m=>m.kind==='part'))settings.put({...catalog,id:'fp_pecas_rec',value:result.catalog,updatedAt:record.updatedAt});
       if(result.movements.length)settings.put({id:`budget_stock:${record.id}:${crypto.randomUUID()}`,value:{budgetId:record.id,at:record.updatedAt,movements:result.movements}});
       await done;return result.record;
+    }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
+  }});
+  Object.defineProperty(repositories,'mutatePartsCatalog',{value:async(operation)=>{
+    const tx=db.transaction(['settings','deletionBackups','budgets','archivedBudgets','trash'],'readwrite'),done=transactionDone(tx);
+    try{
+      const settings=tx.objectStore('settings'),catalog=await requestToPromise(settings.get('fp_pecas_rec'));
+      if(operation.action==='delete'){
+        const buckets=await Promise.all(['budgets','archivedBudgets','trash'].map(n=>requestToPromise(tx.objectStore(n).getAll())));
+        if(buckets.flat().some(b=>Number(b.stockAllocation?.held?.[`part:${operation.row.id}`])>0))throw Error('Peça com baixa vinculada a orçamento. Preserve o cadastro para histórico e devoluções.');
+      }
+      const result=planPartsCatalogMutation(catalog?.value||[],operation);
+      if(result.changed){
+        settings.put({...catalog,id:'fp_pecas_rec',value:result.rows,updatedAt:operation.at});
+        if(result.backup)tx.objectStore('deletionBackups').put(result.backup);
+        const before=(catalog?.value||[]).find(r=>String(r.id)===String(operation.row.id));
+        if(operation.action==='put'&&Number(before?.qtd)!==Number(result.row.qtd))settings.put({id:`parts_catalog_adjustment:${crypto.randomUUID()}`,value:{partId:result.row.id,at:operation.at,before:before?.qtd??null,after:result.row.qtd,source:before?'catalog-edit':'catalog-create'}});
+      }
+      await done;return result.row;
     }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
   }});
   return Object.freeze(repositories);

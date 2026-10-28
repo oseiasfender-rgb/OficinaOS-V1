@@ -17,7 +17,7 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await repositories.stock.put({id:1,nome:'Material teste',qty:10,custo:20,unid:'Un'});
  await repositories.settings.put({id:'fp_pecas_rec',value:[{id:'p',nome:'Peça teste',condicao:'Boa',qtd:5,valor:50,foto:'data:image/png;base64,AAAA'}]});
  const service=createOrcamentoService({repositories});
- const wrapper={...service,createDraft:()=>normalizeBudgetDraft({pricingVersion:1,clientName:'Teste baixa',service:'Pintura',entryDate:'2026-10-28',hourRate:50,laborProcesses:[{key:'pintura',hours:1,label:'Pintura'}]})};
+ const wrapper={...service,createDraft:()=>({...service.createDraft(),clientName:'Teste baixa',service:'Pintura',entryDate:'2026-10-28',laborProcesses:service.createDraft().laborProcesses.map(p=>({...p,hours:p.key==='pintura'?1:p.hours}))})};
  document.body.replaceChildren();const root=document.createElement('main');document.body.append(root);
  renderOrcamentoView(root,{service:wrapper,stockService:createEstoqueService({repositories}),workOrders:{list:()=>repositories.workOrders.list()}});
  });
@@ -26,12 +26,18 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await page.getByRole('dialog',{name:'Escolher material do estoque',exact:true}).getByRole('button',{name:'Fechar',exact:true}).click();
  await page.locator('.parts-catalog summary').click();
  await page.getByRole('button',{name:'Usar no orçamento',exact:true}).click();
+ await page.getByRole('button',{name:'Editar peça',exact:true}).click();
  const save=page.getByRole('button',{name:'Salvar',exact:true});
  const balances=()=>page.evaluate(async()=>({material:(await window.stockTestRepositories.stock.get(1)).qty,part:(await window.stockTestRepositories.settings.get('fp_pecas_rec')).value[0].qtd,budgets:(await window.stockTestRepositories.budgets.list()).length}));
  assert.deepEqual(await balances(),{material:10,part:5,budgets:0});
  await save.click();await until(async()=>(await balances()).budgets===1);
  assert.deepEqual(await balances(),{material:9,part:4,budgets:1});
  await page.waitForFunction(()=>document.querySelector('.module-feedback')?.textContent.includes('Orçamento salvo'));
+ await page.getByRole('button',{name:'Salvar peça no catálogo',exact:true}).click();
+ await page.getByText('O cadastro ou saldo desta peça mudou. Cancele a edição e abra novamente para conferir a quantidade atual.',{exact:true}).waitFor();
+ assert.deepEqual(await balances(),{material:9,part:4,budgets:1});
+ await page.getByRole('button',{name:'Cancelar edição',exact:true}).click();
+ await page.locator('.parts-catalog .list-row').filter({hasText:'Peça teste'}).getByText(/4 disponível/).waitFor();
  await save.click();await page.waitForTimeout(150);assert.deepEqual(await balances(),{material:9,part:4,budgets:1});
  const materials=page.locator('.budget-materials-index');await materials.getByLabel('Qtd.',{exact:true}).fill('2');await save.click();await page.waitForTimeout(100);
  await until(async()=>(await balances()).material===8);
@@ -43,5 +49,5 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await until(async()=>(await balances()).budgets===2);
  assert.deepEqual(await balances(),{material:6,part:3,budgets:2});
  const photos=await page.evaluate(async()=>(await window.stockTestRepositories.budgets.list()).map(b=>b.parts[0].foto));assert.deepEqual(photos,['data:image/png;base64,AAAA','data:image/png;base64,AAAA']);
- assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: incluir/salvar/repetir/editar/insuficiente/duplicar/fotos, IndexedDB real no navegador`);await page.close();
+ assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: incluir/salvar/editor-obsoleto/repetir/editar/insuficiente/duplicar/fotos, IndexedDB real no navegador`);await page.close();
  }}finally{await browser.close();server.kill();}
