@@ -27,7 +27,7 @@ export function createRepositories(db) {
     } catch (error) { try { tx.abort(); } catch {} await done.catch(() => {}); throw error; }
   }});
   Object.defineProperty(repositories,'recordStockConsumption',{value:async ({osId,input,at,movementId,returning=false})=>{
-    const tx=db.transaction(['stock','settings','workOrders'],'readwrite'),done=transactionDone(tx);
+    const tx=db.transaction(['stock','settings','workOrders','budgets'],'readwrite'),done=transactionDone(tx);
     try {
       const os=await requestToPromise(tx.objectStore('workOrders').get(osId));
       if(!os)throw Error('OS não encontrada.');
@@ -36,18 +36,45 @@ export function createRepositories(db) {
       const stockId=returning?execution?.materials.find(m=>m.id===input.consumptionId)?.stockId:input.stockId;
       if(stockId==null)throw Error('Selecione o material do estoque.');
       const stock=await requestToPromise(tx.objectStore('stock').get(stockId));
-      const result=(returning?returnConsumption:applyConsumption)({stock,execution,osId,input,at,movementId});
+      const budget=os.budgetId==null?null:await requestToPromise(tx.objectStore('budgets').get(os.budgetId));
+      if(os.budgetId!=null&&!budget)throw Error('Orçamento da OS não está ativo. Revise o vínculo antes de movimentar estoque.');
+      const claimKey=budget?`budget_stock_claims:${budget.id}`:null;
+      const claims=claimKey?(await requestToPromise(tx.objectStore('settings').get(claimKey)))?.value||{}:{};
+      const allocationKey=`material:${stockId}`;
+      const prepaid=returning?0:Math.min(input.qty,Math.max(0,(budget?.stockAllocation?.held?.[allocationKey]||0)-(claims[allocationKey]||0)));
+      const result=(returning?returnConsumption:applyConsumption)({stock,execution,osId,input,at,movementId,prepaid});
+      if(result.changed&&prepaid){claims[allocationKey]=Number(((claims[allocationKey]||0)+prepaid).toFixed(9));tx.objectStore('settings').put({id:claimKey,value:claims,updatedAt:at});}
       if(result.changed){tx.objectStore('stock').put(result.stock);tx.objectStore('settings').put({id:key,value:result.execution});}
       await done;return result.entry;
     }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
   }});
+  Object.defineProperty(repositories,'reviseBudgetWithStock',{value:async(sourceId,next)=>{
+    const tx=db.transaction(['budgets','settings','workOrders'],'readwrite'),done=transactionDone(tx);
+    try{
+      const budgets=tx.objectStore('budgets'),settings=tx.objectStore('settings');
+      const source=await requestToPromise(budgets.get(sourceId));
+      if(!source)throw Error('Orçamento original não encontrado.');
+      const claims=(await requestToPromise(settings.get(`budget_stock_claims:${sourceId}`)))?.value||{};
+      const orders=await requestToPromise(tx.objectStore('workOrders').getAll());
+      if(Object.values(claims).some(q=>q>0)||orders.some(o=>String(o.budgetId)===String(sourceId)))throw Error('Orçamento com baixa vinculado à execução: revise o consumo na OS antes de criar outra revisão.');
+      next={...next,stockAllocation:structuredClone(source.stockAllocation)};
+      budgets.put({...source,stockAllocation:{...source.stockAllocation,held:{}},stockAllocationTransferredTo:next.id});
+      budgets.add(next);
+      settings.put({id:`budget_stock_transfer:${next.id}`,value:{from:sourceId,to:next.id,at:next.updatedAt,held:source.stockAllocation?.held||{}}});
+      await done;return next;
+    }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
+  }});
   Object.defineProperty(repositories,'saveBudgetWithStock',{value:async(record)=>{
-    const tx=db.transaction(['budgets','stock','settings'],'readwrite'),done=transactionDone(tx);
+    const tx=db.transaction(['budgets','stock','settings','workOrders'],'readwrite'),done=transactionDone(tx);
     try {
       const budgets=tx.objectStore('budgets'),stocks=tx.objectStore('stock'),settings=tx.objectStore('settings');
       const [previous,rows,catalog]=await Promise.all([requestToPromise(budgets.get(record.id)),requestToPromise(stocks.getAll()),requestToPromise(settings.get('fp_pecas_rec'))]);
       if(previous && previous.updatedAt!==record.stockExpectedUpdatedAt)throw Error('Orçamento alterado em outra operação. Reabra antes de salvar.');
       const result=budgetStockPlan(record,previous,rows,catalog?.value||[]);
+      if(result.movements.length){
+        const orders=await requestToPromise(tx.objectStore('workOrders').getAll());
+        if(orders.some(o=>String(o.budgetId)===String(record.id)))throw Error('Orçamento vinculado à OS: registre consumo ou devolução na execução, sem alterar a baixa do orçamento.');
+      }
       delete result.record.stockExpectedUpdatedAt;
       budgets.put(result.record);
       for(const movement of result.movements)if(movement.kind==='material')stocks.put(result.stock.find(r=>String(r.id)===String(movement.itemId)));
