@@ -1,12 +1,13 @@
 # Aba Orçamento — situação de encerramento em 28/10/2026
 
-Candidata: estoque-20261028-r1-fix2. URL: https://oseiasfender-rgb.github.io/OficinaOS-V1/homologacao/estoque-r1/ . TESTES SOMENTE, ambiente homologacao_estoque_v1. Mesmos dados da candidata anterior; não migra ou altera automaticamente saldos. Produção e r5 permanecem preservadas.
+Candidata: estoque-20261028-r1-fix3. URL: https://oseiasfender-rgb.github.io/OficinaOS-V1/homologacao/estoque-r1/ . TESTES SOMENTE, ambiente homologacao_estoque_v1. Mesmos dados da candidata anterior; não migra ou altera automaticamente saldos. Produção e r5 permanecem preservadas.
 
 ## Corrigido e verificado por código e testes
 
 - Salvar, repetir salvamento, editar quantidades, duplicar e reabrir sem repetir baixa.
 - Materiais do Estoque e peças do catálogo baixados junto com o orçamento, na mesma transação. Insuficiência reverte a operação completa.
 - Remover linha devolve apenas quantidade efetivamente debitada. Arquivar/lixeira não devolvem automaticamente.
+- Escolher do catálogo abre janela modal de Peças, com busca, filtro, fotos e unidades. Cadastro/edição em janela própria; Escape e proteção de alterações não salvas.
 - Catálogo distingue tipos cadastrados de unidades disponíveis. Campo de quantidade pede preenchimento explícito, sem presumir uma unidade no novo cadastro.
 - Linhas indicam vínculo ao Estoque/catálogo, quantidade disponível e quantidade já baixada neste orçamento. Linhas avulsas avisam que não movimentam estoque.
 - Confirmação de salvamento informa se houve ajuste ou nenhuma nova baixa.
