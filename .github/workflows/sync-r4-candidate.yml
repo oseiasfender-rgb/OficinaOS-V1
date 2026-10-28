@@ -1,0 +1,73 @@
+name: Candidata Sync V2 r4
+on:
+  push:
+    branches: ['homologacao/resolucao-assistida-20261027']
+    paths:
+      - 'homologation/sync-v2-20261027/**'
+      - '.github/workflows/sync-r4-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/checkout@v4
+        with:
+          ref: 3054fedbe8572701761a9b8ad057ee5c30542c2d
+          path: production
+      - name: Build preserved production
+        working-directory: production
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+      - name: Extract existing homologations and new candidate
+        run: |
+          mkdir candidate cloud-candidate sync-v2 sync-r4
+          unzip -q homologation/orcamento-0f898a7/source.zip -d candidate
+          unzip -q homologation/sync-20261021/source.zip -d cloud-candidate
+          unzip -q homologation/sync-v2-20261023/source.zip -d sync-v2
+          unzip -q homologation/sync-v2-20261027/source.zip -d sync-r4
+      - name: Build preserved homologations
+        run: |
+          for app in candidate cloud-candidate sync-v2; do
+            (cd "$app" && npm ci --no-audit --no-fund && npm test && npm run build)
+          done
+      - name: Verify candidate and browser choices
+        working-directory: sync-r4
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+          npx playwright install --with-deps chromium
+          node scripts/check-duplicate-resolution-ui.mjs
+      - name: Add candidate without replacing existing applications
+        run: |
+          mkdir -p production/dist/homologacao/orcamento-0f898a7 production/dist/homologacao/sincronizacao production/dist/homologacao/sincronizacao-v2 production/dist/homologacao/sincronizacao-v2-r4
+          cp -R candidate/dist/. production/dist/homologacao/orcamento-0f898a7/
+          cp -R cloud-candidate/dist/. production/dist/homologacao/sincronizacao/
+          cp -R sync-v2/dist/. production/dist/homologacao/sincronizacao-v2/
+          cp -R sync-r4/dist/. production/dist/homologacao/sincronizacao-v2-r4/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: production/dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
