@@ -122,6 +122,15 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await materialWindow.getByRole('button',{name:'Fechar Materiais',exact:true}).click();
  await page.getByRole('button',{name:'Peças Usadas e Recuperadas',exact:true}).click();
  await picker.waitFor();assert.equal(await picker.getByRole('button',{name:'Usar no orçamento',exact:true}).count(),0);
+ await page.evaluate(async()=>{const r=window.OficinaOSLegacy.repositories;await r.deletionBackups.put({id:'backup-delete-ui',entityType:'partsCatalog',payload:{id:'deleted-ui',nome:'Cabo da porta Karina',qtd:2,foto:window.testPhoto||''}});});
+ await page.keyboard.press('Escape');await page.getByRole('button',{name:'Peças Usadas e Recuperadas',exact:true}).click();
+ await picker.getByRole('button',{name:'Restaurar peça — Cabo da porta Karina',exact:true}).waitFor();
+ page.once('dialog',d=>d.dismiss());await picker.getByRole('button',{name:'Excluir cópia — Cabo da porta Karina',exact:true}).click();
+ assert.equal(await picker.getByRole('button',{name:'Restaurar peça — Cabo da porta Karina',exact:true}).count(),1);
+ page.once('dialog',d=>d.accept());await picker.getByRole('button',{name:'Excluir cópia — Cabo da porta Karina',exact:true}).click();
+ await until(()=>picker.getByRole('button',{name:'Restaurar peça — Cabo da porta Karina',exact:true}).count().then(n=>n===0));
+ assert.equal(await page.evaluate(async()=>Boolean((await window.OficinaOSLegacy.repositories.deletionBackups.get('backup-delete-ui')).payload)),false);
+
  await picker.getByText('Peça criada na janela',{exact:true}).waitFor();
  await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).getByRole('button',{name:'Editar peça',exact:true}).click();
  await editor.getByLabel('Quantidade disponível da peça (unidades)',{exact:true}).fill('8');
@@ -133,5 +142,5 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).getByText(/8 unidades disponíveis/).waitFor();
  assert.equal(await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).locator('img').count(),1);
  assert.deepEqual(await balances(),{material:6,part:4,budgets:2});await page.keyboard.press('Escape');
- assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: incluir/salvar/editor-obsoleto/repetir/editar/insuficiente/duplicar/fotos/devolver/reabrir/avulsa/unidades/janela/busca/filtro/cadastro/Escape/layout/catálogo-compartilhado-Estoque-Orçamento, IndexedDB real no navegador`);await page.close();
+ assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: incluir/salvar/editor-obsoleto/repetir/editar/insuficiente/duplicar/fotos/devolver/reabrir/avulsa/unidades/janela/busca/filtro/cadastro/Escape/layout/catálogo-compartilhado-Estoque-Orçamento/excluir-cópia-cancelar-confirmar, IndexedDB real no navegador`);await page.close();
  }}finally{await browser.close();server.kill();}

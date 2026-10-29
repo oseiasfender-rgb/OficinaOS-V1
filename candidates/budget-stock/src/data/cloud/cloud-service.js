@@ -21,7 +21,7 @@ export async function createCloudService({db,onApplied=()=>{},canApply=()=>false
   const remote=createSupabaseTransport({url:CLOUD_PROJECT.url,publishableKey:CLOUD_PROJECT.publishableKey,getSession:async()=>{
     const {data,error}=await client.auth.getSession();if(error)throw error;return data.session;
   }});
-  function state(){return {phase,enabled,email:session?.user?.email??'',namespace:CLOUD_PROJECT.namespace,lastSync,lastError,busy,verifiedRevision,budgetCount,build:'estoque-20261028-r1-fix5'};}
+  function state(){return {phase,enabled,email:session?.user?.email??'',namespace:CLOUD_PROJECT.namespace,lastSync,lastError,busy,verifiedRevision,budgetCount,build:'estoque-20261028-r1-fix6'};}
   function publish(){for(const fn of subscribers)fn(state());}
   async function configure(next){
     session=next;lastSync=null;verifiedRevision=null;budgetCount=null;
