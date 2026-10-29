@@ -106,6 +106,9 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  const materialWindow=page.getByRole('dialog',{name:'Gerenciar Materiais',exact:true});
  await materialWindow.getByLabel('Material',{exact:true}).fill('Material cadastro livre');
  await materialWindow.getByLabel('Quantidade',{exact:true}).fill('12');
+ const materialPng=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=c.height=2;return c.toDataURL('image/png').split(',')[1];});
+ await materialWindow.getByLabel('Foto do material (JPEG/PNG)',{exact:true}).setInputFiles({name:'material.png',mimeType:'image/png',buffer:Buffer.from(materialPng,'base64')});
+ await until(()=>materialWindow.getByRole('button',{name:'Salvar material',exact:true}).isEnabled());
  await materialWindow.getByRole('button',{name:'Salvar material',exact:true}).click();
  await materialWindow.locator('.stock-row').filter({hasText:'Material cadastro livre'}).getByRole('button',{name:'Editar',exact:true}).click();
  await materialWindow.getByLabel('Material',{exact:true}).fill('Material editado');
@@ -113,6 +116,11 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await materialWindow.getByLabel('Custo unitário',{exact:true}).fill('35');
  await materialWindow.getByRole('button',{name:'Salvar alterações',exact:true}).click();
  await materialWindow.locator('.stock-row').filter({hasText:'Material editado'}).getByText(/Fornecedor teste/).waitFor();
+ const materialRow=materialWindow.locator('.stock-row').filter({hasText:'Material editado'});await until(()=>materialRow.locator('img').evaluateAll(images=>images.length===1&&images[0].complete&&images[0].naturalWidth>0));
+ const materialPhoto=await materialRow.locator('img').getAttribute('src');
+ await materialRow.getByRole('button',{name:'+',exact:true}).click();await until(()=>materialRow.getByText('13 Un',{exact:true}).isVisible());assert.equal(await materialRow.locator('img').getAttribute('src'),materialPhoto);
+ await materialRow.getByRole('button',{name:'Editar',exact:true}).click();await materialWindow.getByRole('button',{name:'Remover foto do material',exact:true}).click();await materialWindow.getByRole('button',{name:'Salvar alterações',exact:true}).click();await until(()=>materialRow.locator('img').count().then(n=>n===0));
+
  page.once('dialog',d=>d.accept());await materialWindow.locator('.stock-row').filter({hasText:'Material editado'}).getByRole('button',{name:'Excluir',exact:true}).click();
  await until(()=>materialWindow.locator('.stock-row').filter({hasText:'Material editado'}).count().then(n=>n===0));
  page.once('dialog',d=>d.accept());await materialWindow.locator('.stock-row').filter({hasText:'Material teste'}).getByRole('button',{name:'Excluir',exact:true}).click();
@@ -142,5 +150,5 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).getByText(/8 unidades disponíveis/).waitFor();
  assert.equal(await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).locator('img').count(),1);
  assert.deepEqual(await balances(),{material:6,part:4,budgets:2});await page.keyboard.press('Escape');
- assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: incluir/salvar/editor-obsoleto/repetir/editar/insuficiente/duplicar/fotos/devolver/reabrir/avulsa/unidades/janela/busca/filtro/cadastro/Escape/layout/catálogo-compartilhado-Estoque-Orçamento/excluir-cópia-cancelar-confirmar, IndexedDB real no navegador`);await page.close();
+ assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: incluir/salvar/editor-obsoleto/repetir/editar/insuficiente/duplicar/fotos/devolver/reabrir/avulsa/unidades/janela/busca/filtro/cadastro/Escape/layout/catálogo-compartilhado-Estoque-Orçamento/excluir-cópia-cancelar-confirmar/foto-material-criar-editar-ajustar-remover, IndexedDB real no navegador`);await page.close();
  }}finally{await browser.close();server.kill();}

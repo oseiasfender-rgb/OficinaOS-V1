@@ -22,10 +22,11 @@ export function createEstoqueService({ repositories, eventBus, store }) {
     const category = safeText(input.cat ?? input.category, 40) || 'outros';
     const unit = safeText(input.unid ?? input.unitName, 24) || 'Un';
     const supplier = safeText(input.forn ?? input.fornecedor, 120);
+    const photo=String(input.foto??'');if(photo&&(!/^data:image\/(jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(photo)||photo.length>2500000))throw new Error('Foto do material inválida ou muito grande. Use JPEG/PNG.');
     return {
       ...clone(input), id, name, nome: name, category, cat: category, unid: unit,
       qty, cost, custo: cost, unit: cost, minimo: minQty, minQty,
-      forn: supplier, updatedAt: new Date().toISOString()
+      forn: supplier, foto: photo, updatedAt: new Date().toISOString()
     };
   }
 

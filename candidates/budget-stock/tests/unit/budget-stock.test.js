@@ -94,3 +94,16 @@ test('edição de material obsoleta é rejeitada na transação sem restaurar sa
  assert.equal((await r.stock.get(100)).qty,8);
  }finally{db.close();}
 });
+test('foto do material persiste na edição, baixa, devolução e cópia de exclusão; imagem inválida é rejeitada',async()=>{
+ globalThis.indexedDB=indexedDB;const db=await createDatabase(),r=createRepositories(db),s=createEstoqueService({repositories:r,eventBus:{emit(){}}});
+ const foto='data:image/png;base64,aGVsbG8=';
+ try{
+ await assert.rejects(s.create({nome:'Inválido',foto:'https://example.com/foto.png'}),/Foto do material inválida/);
+ const item=await s.create({nome:'Material com foto',qty:10,unid:'Un',foto});
+ await s.update(item.id,{forn:'Fornecedor'});assert.equal((await s.get(item.id)).foto,foto);
+ const b=await r.saveBudgetWithStock({id:'photo-material-budget',materials:[{stockId:item.id,qty:2}],parts:[],updatedAt:'one'});
+ assert.equal((await s.get(item.id)).qty,8);assert.equal((await s.get(item.id)).foto,foto);
+ await r.saveBudgetWithStock({...b,materials:[],updatedAt:'two',stockExpectedUpdatedAt:'one'});
+ await s.remove(item.id);const backups=await r.deletionBackups.list();assert.equal(backups.find(b=>b.entityType==='stock'&&b.payload.id===item.id).payload.foto,foto);
+ }finally{db.close();}
+});
