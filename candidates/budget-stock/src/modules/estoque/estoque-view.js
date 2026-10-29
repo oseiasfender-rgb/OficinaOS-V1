@@ -31,7 +31,19 @@ export function renderEstoqueView(root, { service, partsCatalog, onChanged = () 
   const formActions=el('div','row-actions'); const save=button('Salvar material','btn btn-primary','submit'); const cancel=button('Cancelar edição','btn');cancel.hidden=true; formActions.append(save,cancel); form.append(formGrid,formActions); editor.append(form);
 
   const listCard=el('section','module-card'); const listHead=el('div','module-card-head'); const listCount=el('span','muted-small'); listHead.append(el('h2','','Itens do estoque'),listCount); const list=el('div','stock-list'); listCard.append(listHead,list);
-  const sections=el('section','module-card');const sectionTitle=el('h2','','Materiais e peças');const materialButton=button('Materiais','btn btn-primary');const partsButton=button('Peças Usadas e Recuperadas','btn');const shortcuts=el('div','row-actions');shortcuts.append(materialButton,partsButton);sections.append(sectionTitle,el('p','muted-small','Materiais: cadastro e saldo abaixo. Peças: janela com fotos, cadastro, edição e reposição das unidades disponíveis.'),shortcuts);const catalog=partsCatalog?renderPartsCatalog(page,{service:partsCatalog,onChanged}):null;partsButton.disabled=!catalog;partsButton.addEventListener('click',()=>catalog.open().catch(e=>setFeedback(feedback,e.message,'error')));materialButton.addEventListener('click',()=>editor.scrollIntoView({behavior:'smooth',block:'start'}));body.append(sections,metrics,controls,editor,listCard); page.append(head,feedback,body); root.append(page);
+  const sections=el('section','stock-areas');
+  const materialsArea=el('article','module-card'),partsArea=el('article','module-card');
+  const materialButton=button('Abrir Materiais','btn btn-primary'),partsButton=button('Peças Usadas e Recuperadas','btn btn-primary');
+  materialsArea.append(el('h2','','Materiais'),el('p','muted-small','Consultar saldo, cadastrar, editar todos os campos e excluir materiais sem baixa vinculada.'),materialButton);
+  partsArea.append(el('h2','','Peças Usadas e Recuperadas'),el('p','muted-small','Catálogo com fotos, aplicação, condição, valor e unidades. Cadastro, edição e exclusão manual protegida.'),partsButton);
+  sections.append(materialsArea,partsArea);
+  const materialsWindow=el('dialog','budget-stock-dialog stock-materials-window');materialsWindow.setAttribute('aria-label','Gerenciar Materiais');
+  const materialsHead=el('header','module-card-head');const closeMaterials=button('Fechar Materiais','btn');materialsHead.append(el('h2','','Materiais'),closeMaterials);
+  const materialsBody=el('div','module-body');materialsBody.append(metrics,controls,editor,listCard);materialsWindow.append(materialsHead,headActions,feedback,materialsBody);
+  closeMaterials.addEventListener('click',()=>materialsWindow.close());materialButton.addEventListener('click',async()=>{try{await refresh();materialsWindow.showModal();}catch(e){setFeedback(feedback,e.message,'error');}});
+  const catalog=partsCatalog?renderPartsCatalog(page,{service:partsCatalog,onChanged}):null;partsButton.disabled=!catalog;
+  partsButton.addEventListener('click',()=>catalog.open().catch(e=>setFeedback(feedback,e.message,'error')));
+  body.append(sections);page.append(head,body,materialsWindow);root.append(page);
 
   function metric(label){const card=el('article','module-metric');const value=el('strong','module-metric-value','0');card.append(el('span','module-metric-label',label),value);return{card,value};}
   function resetForm(){editingId=null;editorTitle.textContent='Cadastrar material';save.textContent='Salvar material';cancel.hidden=true;name.value='';category.value='outros';unit.value='Un';qty.value='0';cost.value='0';min.value='1';supplier.value='';}
