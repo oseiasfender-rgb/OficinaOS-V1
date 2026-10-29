@@ -100,5 +100,19 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await page.keyboard.press('Escape');await picker.waitFor({state:'hidden'});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Sem rolagem horizontal da página');
  await page.locator('.budget-parts-card').screenshot({path:`/tmp/orcamento-pecas-${viewport.width}.png`});
- assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: incluir/salvar/editor-obsoleto/repetir/editar/insuficiente/duplicar/fotos/devolver/reabrir/avulsa/unidades/janela/busca/filtro/cadastro/Escape/layout, IndexedDB real no navegador`);await page.close();
+ await page.getByRole('navigation',{name:'Módulos da oficina'}).getByRole('button',{name:'Estoque',exact:true}).click();
+ await page.getByRole('button',{name:'Peças Usadas e Recuperadas',exact:true}).click();
+ await picker.waitFor();assert.equal(await picker.getByRole('button',{name:'Usar no orçamento',exact:true}).count(),0);
+ await picker.getByText('Peça criada na janela',{exact:true}).waitFor();
+ await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).getByRole('button',{name:'Editar peça',exact:true}).click();
+ await editor.getByLabel('Quantidade disponível da peça (unidades)',{exact:true}).fill('8');
+ page.once('dialog',d=>d.accept());await editor.getByRole('button',{name:'Salvar peça no catálogo',exact:true}).click();await editor.waitFor({state:'hidden'});
+ await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).getByText(/8 unidades disponíveis/).waitFor();
+ await picker.screenshot({path:`/tmp/estoque-pecas-${viewport.width}.png`});await page.keyboard.press('Escape');
+ await page.getByRole('navigation',{name:'Módulos da oficina'}).getByRole('button',{name:'Orçamento',exact:true}).click();
+ await page.locator('.budget-catalog-link').click();
+ await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).getByText(/8 unidades disponíveis/).waitFor();
+ assert.equal(await picker.locator('.list-row').filter({hasText:'Peça criada na janela'}).locator('img').count(),1);
+ assert.deepEqual(await balances(),{material:6,part:4,budgets:2});await page.keyboard.press('Escape');
+ assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: incluir/salvar/editor-obsoleto/repetir/editar/insuficiente/duplicar/fotos/devolver/reabrir/avulsa/unidades/janela/busca/filtro/cadastro/Escape/layout/catálogo-compartilhado-Estoque-Orçamento, IndexedDB real no navegador`);await page.close();
  }}finally{await browser.close();server.kill();}

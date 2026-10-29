@@ -1,6 +1,6 @@
 # Aba Orçamento — situação de encerramento em 28/10/2026
 
-Candidata: estoque-20261028-r1-fix3. URL: https://oseiasfender-rgb.github.io/OficinaOS-V1/homologacao/estoque-r1/ . TESTES SOMENTE, ambiente homologacao_estoque_v1. Mesmos dados da candidata anterior; não migra ou altera automaticamente saldos. Produção e r5 permanecem preservadas.
+Candidata: estoque-20261028-r1-fix4. URL: https://oseiasfender-rgb.github.io/OficinaOS-V1/homologacao/estoque-r1/ . TESTES SOMENTE, ambiente homologacao_estoque_v1. Mesmos dados da candidata anterior; não migra ou altera automaticamente saldos. Produção e r5 permanecem preservadas.
 
 ## Corrigido e verificado por código e testes
 
