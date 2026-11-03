@@ -1,0 +1,29 @@
+{
+  "candidate": "estoque-20261028-r1-fix7",
+  "at": "2026-11-03T23:32:07.849Z",
+  "scope": "/homologacao/estoque-r1/",
+  "physicalDevices": false,
+  "checks": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "result": "PASS",
+      "backup": "exportar/importar/repetir com igualdade de registros e fotos",
+      "offline": "recarregar/salvar sem nova baixa/editar 8→7/fechar e reabrir",
+      "scope": "cache da outra rota preservado"
+    },
+    {
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "result": "PASS",
+      "backup": "exportar/importar/repetir com igualdade de registros e fotos",
+      "offline": "recarregar/salvar sem nova baixa/editar 8→7/fechar e reabrir",
+      "scope": "cache da outra rota preservado"
+    }
+  ],
+  "result": "PASS"
+}
