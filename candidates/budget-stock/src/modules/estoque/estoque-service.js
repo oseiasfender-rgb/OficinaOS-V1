@@ -82,12 +82,13 @@ export function createEstoqueService({ repositories, eventBus, store }) {
     for(const name of ['budgets','archivedBudgets','trash'])if((await repositories[name]?.list?.()??[]).some(b=>Number(b.stockAllocation?.held?.[`material:${id}`])>0))return true;
     return false;
   }
-  async function update(id, changes = {}) {
+  async function update(id, changes = {}, {expected} = {}) {
     const current = await repo.get(id);
     if (!current) throw new Error('Material não encontrado.');
+    if(expected&&JSON.stringify(current)!==JSON.stringify(expected))throw new Error('O material ou seu saldo mudou. Reabra o cadastro antes de salvar.');
     if(changes.unid!=null&&changes.unid!==current.unid&&await hasConsumption(id))throw new Error('Material vinculado a baixa de orçamento ou consumo de OS: a unidade não pode ser trocada sem conversão e conferência próprias.');
     const record = normalize({ ...current, ...clone(changes) }, current.id);
-    if(repositories.mutateStock)await repositories.mutateStock({action:'update',row:record,expected:current});else await repo.put(record);
+    if(repositories.mutateStock)await repositories.mutateStock({action:'update',row:record,expected:expected??current});else await repo.put(record);
     await syncStore();
     eventBus.emit('estoque:changed', { action: 'update', id: record.id });
     return record;
@@ -97,15 +98,16 @@ export function createEstoqueService({ repositories, eventBus, store }) {
   async function adjustQuantity(id, delta) {
     const current = await repo.get(id);
     if (!current) throw new Error('Material não encontrado.');
-    return update(id, { qty: Math.max(0, number(current.qty, 0) + number(delta, 0)) });
+    return update(id, { qty: Math.max(0, number(current.qty, 0) + number(delta, 0)) },{expected:current});
   }
 
-  async function remove(id) {
+  async function remove(id,{expected}={}) {
     const current = await repo.get(id);
     if (!current) return false;
+    if(expected&&JSON.stringify(current)!==JSON.stringify(expected))throw new Error('O material ou seu saldo mudou. Reabra o cadastro antes de excluir.');
     if(await hasConsumption(id))throw new Error('Material vinculado a baixa de orçamento ou consumo de OS. Preserve o cadastro para histórico e devoluções.');
     const backup={id:`stock_delete_${crypto.randomUUID()}`,at:new Date().toISOString(),entityType:'stock',reason:'delete',payload:clone(current)};
-    if(repositories.mutateStock)await repositories.mutateStock({action:'delete',row:current,expected:current,backup});else{await backupRepo.put(backup);await repo.delete(id);}
+    if(repositories.mutateStock)await repositories.mutateStock({action:'delete',row:current,expected:expected??current,backup});else{await backupRepo.put(backup);await repo.delete(id);}
     await syncStore();
     eventBus.emit('estoque:changed', { action: 'delete', id });
     return true;

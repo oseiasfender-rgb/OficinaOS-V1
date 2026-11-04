@@ -19,7 +19,7 @@ const server=createServer(async(req,res)=>{
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base=`http://127.0.0.1:${server.address().port}${prefix}`;
 const browser=await chromium.launch({headless:true,executablePath:process.env.OFICINAOS_CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});
-const report={candidate:'estoque-20261028-r1-fix7',at:new Date().toISOString(),scope:prefix,physicalDevices:false,checks:[]};
+const report={candidate:'estoque-20261104-r1-fix8',at:new Date().toISOString(),scope:prefix,physicalDevices:false,checks:[]};
 async function ready(page){await page.waitForFunction(()=>Boolean(window.OficinaOSLegacy));}
 async function state(page){return page.evaluate(async()=>{
  const r=window.OficinaOSLegacy.repositories;

@@ -1,6 +1,6 @@
-# Candidata Estoque r1 — situação em 03/11/2026
+# Candidata Estoque r1 — situação em 04/11/2026
 
-Revisão corrente: estoque-20261028-r1-fix7. Resultado atual: 330 testes unitários; testes de interface/documentos/OS e novo backup/offline. Registros abaixo por correção são históricos, com suas contagens da época.
+Revisão corrente: estoque-20261104-r1-fix8. Resultado atual: 347 testes unitários; interface/documentos/OS/backup/offline e regressões das proteções revistas. Registros abaixo por correção são históricos, com suas contagens da época.
 
 TESTES SOMENTE. Banco local oficinaos_homologacao_estoque_20261028 e nuvem homologacao_estoque_v1. Sessão, metadados e saldos separados da r5 e produção. Inicia vazia e pausada, sem importação automática. Não substitui aplicativos instalados.
 
@@ -60,3 +60,6 @@ Cadastro e edição de material aceitam JPEG/PNG com compressão local, prévia,
 
 ## Conferência de backup/offline — 03/11/2026
 Sem mudança funcional ou de build. Exportação/importação e repetição entre perfis isolados preservam fotos de material/peça/etapa, IDs, saldos, alocação e registros de baixa. Reabertura, salvamento sem nova baixa e edição offline conferidos no build local em 1366×768 e 412×915. Script check-budget-backup-offline.mjs incluído no CI. Homologação física PC/G75 e auditoria final seguem pendentes; consulte ENCERRAMENTO_ORCAMENTO_20261028.md.
+
+## Correção 8 — proteções da revisão transversal (04/11/2026)
+Build estoque-20261104-r1-fix8. Mesmo banco, conta e ambiente; sem migração de saldos. Materiais conferem snapshot capturado ao abrir a edição nas duas telas; cadastro/saldo alterados rejeitam formulário antigo. Exclusão de cliente verifica vínculos em transação com os registros relacionados e só exclui cliente livre com cópia preventiva. Renomeação de Meta passa a ser atômica, inclusive diante de falha após inclusão do novo nome. Configurações preserva rascunho ao trocar de aba, oferece descarte confirmado, avisa antes de sair/recarregar e impede aplicação remota durante edição/preparação/gravação. Manual esclarece baixa ao salvar, avulsos, fotos, offline e sincronização. Sem CSV, nova aba, migração de dados ou IA externa. Detalhes: CORRECOES_ABAS_20261104.md. Homologação física e auditoria final continuam pendentes.

@@ -1,3 +1,5 @@
+import {CLIENT_LINK_STORES,hasClientReference} from '../../modules/clientes/client-links.js';
+import {categoryKey} from '../category-model.js';
 import {planPartsCatalogMutation} from '../../modules/orcamento/parts-catalog-mutation.js';
 import {budgetStockPlan} from '../../modules/orcamento/budget-stock.js';
 import {applyConsumption,returnConsumption} from '../../modules/orcamento/stock-consumption.js';
@@ -112,6 +114,26 @@ export function createRepositories(db) {
       if(linked&&(action==='delete'||String(row.unid||'Un')!==String(current.unid||'Un')))throw Error('Material vinculado a baixa de orçamento ou consumo de OS. Preserve o cadastro e a unidade para histórico e devoluções.');
       if(action==='delete'){tx.objectStore('deletionBackups').put({...backup,payload:current});stocks.delete(current.id);}else if(action==='update')stocks.put(row);else throw Error('Operação de estoque inválida.');
       await done;return row;
+    }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
+  }});
+  Object.defineProperty(repositories,'removeClientSafely',{value:async({id,expected,backup})=>{
+    const tx=db.transaction(['clients','deletionBackups',...CLIENT_LINK_STORES],'readwrite'),done=transactionDone(tx);
+    try{
+      const clients=tx.objectStore('clients'),current=await requestToPromise(clients.get(id));
+      if(!current||JSON.stringify(current)!==JSON.stringify(expected))throw Error('O cadastro do cliente mudou. Reabra antes de excluir.');
+      const buckets=await Promise.all(CLIENT_LINK_STORES.map(name=>requestToPromise(tx.objectStore(name).getAll())));
+      if(buckets.some(rows=>hasClientReference(rows,id)))throw Error('Cliente vinculado a orçamento, OS, Agenda ou lançamento. Preserve o cadastro; a exclusão foi bloqueada.');
+      tx.objectStore('deletionBackups').put({...backup,payload:current});clients.delete(id);await done;return current;
+    }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
+  }});
+  Object.defineProperty(repositories,'renameGoalSafely',{value:async({id,expected,row})=>{
+    const tx=db.transaction(['goals'],'readwrite'),done=transactionDone(tx);
+    try{
+      const goals=tx.objectStore('goals'),current=await requestToPromise(goals.get(id));
+      if(!current||JSON.stringify(current)!==JSON.stringify(expected))throw Error('A meta mudou. Reabra antes de salvar.');
+      const rows=await requestToPromise(goals.getAll());
+      if(rows.some(r=>String(r.id)!==String(id)&&(String(r.id)===String(row.id)||categoryKey(r.category??r.cat??r.id)===categoryKey(row.category))))throw Error('Já existe uma meta para essa categoria. Edite a meta existente.');
+      goals.put(row);if(id!==row.id)goals.delete(id);await done;return row;
     }catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}
   }});
   return Object.freeze(repositories);
