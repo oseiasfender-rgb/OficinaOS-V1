@@ -1,0 +1,222 @@
+{
+  "at": "2026-11-04T11:53:11.101Z",
+  "scope": "build local, perfis descartáveis, sem contas nem dados reais",
+  "profiles": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "tabs": [
+        {
+          "tab": "Migração",
+          "headings": [
+            "Migração controlada a partir do Clean v8"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Orçamento",
+          "headings": [
+            "Orçamento"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Financeiro",
+          "headings": [
+            "Financeiro"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Contas",
+          "headings": [
+            "Contas a pagar"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Clientes",
+          "headings": [
+            "Clientes"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Categorias",
+          "headings": [
+            "Categorias"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Estoque",
+          "headings": [
+            "Estoque"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Configurações",
+          "headings": [
+            "Configurações"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Agenda",
+          "headings": [
+            "Agenda"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "OS",
+          "headings": [
+            "Ordens de Serviço"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Históricos",
+          "headings": [
+            "Históricos, Arquivados e Lixeira"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Resultados",
+          "headings": [
+            "Relatórios"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Metas",
+          "headings": [
+            "Metas"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Manual",
+          "headings": [
+            "Manual da oficina"
+          ],
+          "pageOverflow": false
+        }
+      ],
+      "errors": [],
+      "unsavedConfigDraftRetained": false
+    },
+    {
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "tabs": [
+        {
+          "tab": "Migração",
+          "headings": [
+            "Migração controlada a partir do Clean v8"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Orçamento",
+          "headings": [
+            "Orçamento"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Financeiro",
+          "headings": [
+            "Financeiro"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Contas",
+          "headings": [
+            "Contas a pagar"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Clientes",
+          "headings": [
+            "Clientes"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Categorias",
+          "headings": [
+            "Categorias"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Estoque",
+          "headings": [
+            "Estoque"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Configurações",
+          "headings": [
+            "Configurações"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Agenda",
+          "headings": [
+            "Agenda"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "OS",
+          "headings": [
+            "Ordens de Serviço"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Históricos",
+          "headings": [
+            "Históricos, Arquivados e Lixeira"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Resultados",
+          "headings": [
+            "Relatórios"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Metas",
+          "headings": [
+            "Metas"
+          ],
+          "pageOverflow": false
+        },
+        {
+          "tab": "Manual",
+          "headings": [
+            "Manual da oficina"
+          ],
+          "pageOverflow": false
+        }
+      ],
+      "errors": [],
+      "unsavedConfigDraftRetained": false
+    }
+  ]
+}

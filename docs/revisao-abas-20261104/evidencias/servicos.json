@@ -1,0 +1,35 @@
+{
+  "at": "2026-11-04T11:51:53.425Z",
+  "scope": "dados fictícios em fake-indexeddb, sem acesso a dados de usuário",
+  "findings": [
+    {
+      "id": "EST-01",
+      "before": 10,
+      "afterDebit": 8,
+      "afterOldFormSave": 10,
+      "held": 2,
+      "confirmed": true,
+      "detail": "Snapshot antigo do formulário de Material pode restaurar saldo anterior pela API usada na tela."
+    },
+    {
+      "id": "CLI-01",
+      "clientDeleted": true,
+      "budgetStillReferences": 100,
+      "saveError": "Cliente cadastrado não encontrado.",
+      "confirmed": true
+    },
+    {
+      "id": "MET-01",
+      "error": "Falha fictícia de gravação",
+      "oldGoalPresent": false,
+      "newGoalPresent": false,
+      "confirmed": true,
+      "detail": "Renomear exclui registro antigo antes de confirmar gravação do novo."
+    },
+    {
+      "id": "MET-02",
+      "history": [],
+      "detail": "Tela consulta histórico importado; alterações da meta principal não criam histórico novo."
+    }
+  ]
+}
