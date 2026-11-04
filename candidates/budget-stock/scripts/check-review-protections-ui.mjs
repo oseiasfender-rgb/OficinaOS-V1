@@ -17,6 +17,19 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
    await r.budgets.put({id:'client-linked',clientId:9002,cliente:'Cliente vinculado'});
    await s.configuracoes.saveOfficeConfig({nome:'Oficina salva',dono:'Responsável',cidade:'Leme',logo:foto});
   });
+  await page.evaluate(async()=>{
+   const {renderEstoqueView}=await import('/src/modules/estoque/estoque-view.js');const s=window.OficinaOSLegacy.services.estoque;
+   await s.create({id:9003,nome:'Leitura lenta',qty:3,custo:10,unid:'Un'});
+   const host=document.createElement('section');host.id='slow-stock-review';document.body.append(host);
+   renderEstoqueView(host,{service:{...s,get:async id=>{await new Promise(resolve=>{window.releaseReviewMaterialRead=resolve;});return s.get(id);}}});
+  });
+  const slowHost=page.locator('#slow-stock-review');await slowHost.getByRole('button',{name:'Abrir Materiais',exact:true}).click();
+  const slowDialog=slowHost.getByRole('dialog',{name:'Gerenciar Materiais',exact:true});
+  await slowDialog.locator('.stock-row').filter({hasText:'Leitura lenta'}).getByRole('button',{name:'Editar',exact:true}).click();
+  await slowDialog.getByRole('heading',{name:'Carregando material…',exact:true}).waitFor();assert.equal(await slowDialog.getByLabel('Material',{exact:true}).isDisabled(),true);await page.evaluate(()=>window.releaseReviewMaterialRead());
+  await slowDialog.getByLabel('Material',{exact:true}).fill('Leitura lenta editada');await slowDialog.getByRole('button',{name:'Salvar alterações',exact:true}).click();
+  await slowDialog.locator('.stock-row').filter({hasText:'Leitura lenta editada'}).waitFor();
+  await slowDialog.getByRole('button',{name:'Fechar Materiais',exact:true}).click();await page.evaluate(()=>document.querySelector('#slow-stock-review').remove());
   const nav=page.getByRole('navigation',{name:'Módulos da oficina'});
   await nav.getByRole('button',{name:'Estoque',exact:true}).click();await page.getByRole('button',{name:'Abrir Materiais',exact:true}).click();
   const materials=page.getByRole('dialog',{name:'Gerenciar Materiais',exact:true});
@@ -52,6 +65,6 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
   await isolated.getByLabel('Nome da oficina',{exact:true}).fill('Bloquear nuvem');assert.equal(await page.evaluate(()=>window.reviewConfig.canApplyRemote()),false);
   await page.evaluate(()=>window.reviewConfig.refresh());assert.equal(await isolated.getByLabel('Nome da oficina',{exact:true}).inputValue(),'Bloquear nuvem');
   page.once('dialog',d=>d.accept());await isolated.getByRole('button',{name:'Descartar alterações',exact:true}).click();await until(()=>page.evaluate(()=>window.reviewConfig.canApplyRemote()));
-  assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: Material obsoleto rejeitado com saldo/foto preservados; exclusão de cliente vinculado bloqueada; Configurações preserva rascunho, cancela/confirma descarte, salva e bloqueia nuvem; Manual atualizado`);
+  assert.deepEqual(errors,[]);console.log(`PASS ${viewport.width}x${viewport.height}: Material obsoleto rejeitado com saldo/foto preservados; editor aguarda leitura lenta sem sobrescrever digitação; exclusão de cliente vinculado bloqueada; Configurações preserva rascunho, cancela/confirma descarte, salva e bloqueia nuvem; Manual atualizado`);
  }finally{await context.close();}
 }}finally{await browser.close();server.kill();}

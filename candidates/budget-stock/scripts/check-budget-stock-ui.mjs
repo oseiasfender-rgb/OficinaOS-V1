@@ -110,7 +110,9 @@ try{for(const viewport of [{width:1366,height:768},{width:412,height:915}]){
  await materialWindow.getByLabel('Foto do material (JPEG/PNG)',{exact:true}).setInputFiles({name:'material.png',mimeType:'image/png',buffer:Buffer.from(materialPng,'base64')});
  await until(()=>materialWindow.getByRole('button',{name:'Salvar material',exact:true}).isEnabled());
  await materialWindow.getByRole('button',{name:'Salvar material',exact:true}).click();
+ await until(()=>materialWindow.getByRole('button',{name:'Salvar material',exact:true}).isEnabled());
  await materialWindow.locator('.stock-row').filter({hasText:'Material cadastro livre'}).getByRole('button',{name:'Editar',exact:true}).click();
+ await materialWindow.getByRole('heading',{name:'Editar material',exact:true}).waitFor();
  await materialWindow.getByLabel('Material',{exact:true}).fill('Material editado');
  await materialWindow.getByLabel('Fornecedor',{exact:true}).fill('Fornecedor teste');
  await materialWindow.getByLabel('Custo unitário',{exact:true}).fill('35');
