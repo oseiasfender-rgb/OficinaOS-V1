@@ -1,6 +1,6 @@
 # Aba Orçamento — situação de encerramento
 
-Atualizado em 03/11/2026. Candidata: **estoque-20261028-r1-fix7**.
+Atualizado em 04/11/2026. Candidata: **estoque-20261104-r1-fix8**.
 URL: https://oseiasfender-rgb.github.io/OficinaOS-V1/homologacao/estoque-r1/
 Ambiente isolado: homologacao_estoque_v1. TESTES SOMENTE.
 
@@ -9,7 +9,7 @@ A versão instalada de produção não foi substituída. Nenhum saldo real foi c
 
 ## Evidências técnicas concluídas
 
-- 330 testes unitários aprovados na revisão fix7; compilação Vite aprovada.
+- 347 testes unitários aprovados na revisão fix8; compilação Vite aprovada.
 - Interface em Chromium 1366×768 e 412×915, com IndexedDB e serviços reais, dados fictícios: salvar/repetir/editar/duplicar/reabrir, insuficiência com reversão integral, devolução de linha, avulso sem baixa, proteção contra editor obsoleto de peça.
 - Materiais e Peças em janelas distintas no Estoque. Mesmo catálogo de peças acessado pelo Orçamento, sem segundo saldo. Tipos cadastrados e unidades disponíveis separados.
 - Foto de material: inserir, editar outros campos, ajustar saldo, remover; serviço preserva foto na baixa, devolução e cópia de exclusão. Peças e fotos por etapa preservadas nos testes.
@@ -33,7 +33,7 @@ Evidência nova: homologation/sync-v2-20261027/evidence-backup-offline-20261103.
 
 | Item | Critério de aceite | Estado |
 |---|---|---|
-| Saldo físico anterior | 5 Paralama usados + 5 disponíveis; salvar novamente mantém 5 disponíveis | Não comprovado na fix7 |
+| Saldo físico anterior | 5 Paralama usados + 5 disponíveis; salvar novamente mantém 5 disponíveis | Não comprovado na fix8 |
 | PC → Android → PC | Mesma conta/ambiente; mesmo orçamento, foto, saldo e revisão; novo orçamento Android usa 1 peça: 5→4, recebido no PC sem segunda baixa | Pendente físico |
 | Últimas telas | Nos dois aparelhos: foto de material inserir/substituir/remover; edição, exclusão de item livre e cópia preventiva | Teste automatizado aprovado; físico pendente |
 | Documentos | PDF/PNG com valores e fotos; impressão PC e compartilhar Android | Físico pendente; compartilhar apenas simulado |
@@ -43,7 +43,7 @@ Evidência nova: homologation/sync-v2-20261027/evidence-backup-offline-20261103.
 
 ## Roteiro mínimo nos aparelhos
 
-1. Confirmar fix7 e homologacao_estoque_v1 no PC e Android; exportar backup antes do teste.
+1. Confirmar fix8 e homologacao_estoque_v1 no PC e Android; exportar backup antes do teste.
 2. No PC, conferir o saldo real informado de Paralama e o orçamento já baixado. Não forçar uma segunda baixa para corrigir o cadastro.
 3. Salvar de novo o orçamento sem alterar quantidade: saldo deve permanecer 5.
 4. Sincronizar PC; receber no Android; conferir orçamento/fotos/saldo/revisão iguais.
@@ -57,3 +57,6 @@ Movimentações concorrentes de saldo em dois aparelhos são bloqueadas para rev
 ## Auditoria final programada no fluxo de trabalho
 
 Após o aceite funcional: cálculos/margem/desconto/cenários; persistência e numeração; transações, falhas e concorrência; fotos, documentos, backup; vínculos OS/Agenda/receita; isolamento, offline/atualização e regressões. Registrar para cada item: identificado no código, testado, falhou ou não verificado. O número de testes não substitui esse parecer.
+
+## Proteções adicionais — 04/11/2026
+As cinco pendências da revisão transversal foram implementadas e testadas: EST-01, CLI-01, MET-01, CFG-01 e MAN-01. Ver CORRECOES_ABAS_20261104.md e testes review-protections.test.js / check-review-protections-ui.mjs. A reprodução de EST-01 mostrou que a conclusão antiga sobre proteção do editor de Material era ampla demais; fix8 passa a conferir a versão de abertura até a transação de gravação. Nenhuma atualização automática dos saldos anteriores foi feita. Melhorias opcionais da revisão não fazem parte desta correção.
